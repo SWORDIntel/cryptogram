@@ -32,9 +32,10 @@ enum class QuantumAlgorithm {
 
     // Digital Signature algorithms - NIST FIPS 204
     Dilithium2,    // ML-DSA-44 (CRYSTALS-Dilithium) - NIST Level 2
-    Dilithium3,    // ML-DSA-65 (CRYSTALS-Dilithium) - NIST Level 3 [RECOMMENDED]
-    Dilithium5,    // ML-DSA-87 (CRYSTALS-Dilithium) - NIST Level 5
+    Dilithium3,    // ML-DSA-65 (CRYSTALS-Dilithium) - NIST Level 3
+    Dilithium5,    // ML-DSA-87 (CRYSTALS-Dilithium) - NIST Level 5 [RECOMMENDED]
     ML_DSA_65 = Dilithium3,   // NIST standard name alias
+    ML_DSA_87 = Dilithium5,   // NIST standard name alias
 
     // Hash-based signatures - NIST FIPS 205
     SPHINCS_SHA256, // SLH-DSA-SHA2 (SPHINCS+) - Stateless hash-based
@@ -46,7 +47,8 @@ enum class QuantumAlgorithm {
     HybridX25519_Kyber1024,     // X25519 + ML-KEM-1024 [DEFAULT/RECOMMENDED]
     HybridX25519_ML_KEM_1024 = HybridX25519_Kyber1024,  // NIST name alias
     HybridEd25519_Dilithium3,   // Ed25519 + ML-DSA-65
-    HybridEd25519_Dilithium5    // Ed25519 + ML-DSA-87 [HIGH SECURITY]
+    HybridEd25519_Dilithium5,   // Ed25519 + ML-DSA-87 [DEFAULT/RECOMMENDED]
+    HybridEd25519_ML_DSA_87 = HybridEd25519_Dilithium5  // NIST name alias
 };
 
 // Security levels for quantum resistance
@@ -241,8 +243,8 @@ public:
         double averageDecryptTime = 0.0;
         double averageSignTime = 0.0;
         double averageVerifyTime = 0.0;
-        QuantumAlgorithm fastestKEM = QuantumAlgorithm::Kyber768;
-        QuantumAlgorithm fastestSignature = QuantumAlgorithm::Dilithium3;
+        QuantumAlgorithm fastestKEM = QuantumAlgorithm::ML_KEM_1024;
+        QuantumAlgorithm fastestSignature = QuantumAlgorithm::ML_DSA_87;
     };
 
     QuantumPerformanceMetrics getPerformanceMetrics() const;

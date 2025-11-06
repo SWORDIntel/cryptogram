@@ -176,18 +176,18 @@ public:
         const bytes::const_span &classicalPrivateKey,
         QuantumAlgorithm quantumAlgorithm = QuantumAlgorithm::HybridX25519_ML_KEM_1024);  // Hybrid default
 
-    // Quantum-resistant digital signatures
+    // Quantum-resistant digital signatures (NIST FIPS 204 Standard)
     base::expected<CryptoOperationResult, QString> quantumSign(
         const bytes::const_span &message,
         const bytes::const_span &privateKey,
-        QuantumAlgorithm algorithm = QuantumAlgorithm::Dilithium3,
+        QuantumAlgorithm algorithm = QuantumAlgorithm::ML_DSA_87,  // NIST standard default
         AccelerationType preferredAcceleration = AccelerationType::None);
 
     base::expected<CryptoOperationResult, QString> quantumVerify(
         const bytes::const_span &message,
         const bytes::const_span &signature,
         const bytes::const_span &publicKey,
-        QuantumAlgorithm algorithm = QuantumAlgorithm::Dilithium3,
+        QuantumAlgorithm algorithm = QuantumAlgorithm::ML_DSA_87,  // NIST standard default
         AccelerationType preferredAcceleration = AccelerationType::None);
 
     // Quantum-safe key agreement (NIST FIPS 203 Standard)

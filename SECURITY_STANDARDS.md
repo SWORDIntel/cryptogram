@@ -10,11 +10,15 @@
 
 CRYPTOGRAM implements **NIST-approved post-quantum cryptography** combined with battle-tested classical algorithms to provide **quantum-resistant security** for all communications.
 
-**Primary Standard**: **ML-KEM-1024 + X25519 Hybrid**
-- **Post-Quantum**: ML-KEM-1024 (NIST FIPS 203)
-- **Classical**: X25519 (Curve25519)
+**Compliance Standard**: **ML-KEM-1024 + ML-DSA-87 + AES-256-GCM**
+
+**Primary Key Exchange**: **ML-KEM-1024 + X25519 Hybrid**
+- **Post-Quantum KEM**: ML-KEM-1024 (NIST FIPS 203)
+- **Classical ECDH**: X25519 (Curve25519)
+- **Digital Signatures**: ML-DSA-87 (NIST FIPS 204)
+- **Symmetric Cipher**: AES-256-GCM
 - **Security Level**: NIST Level 5 (384+ bit equivalent)
-- **Quantum Resistance**: ✅ Yes (protects against Shor's algorithm)
+- **Quantum Resistance**: ✅ Yes (protects against Shor's and Grover's algorithms)
 
 ---
 
@@ -38,12 +42,12 @@ CRYPTOGRAM implements **NIST-approved post-quantum cryptography** combined with 
 
 ### Digital Signatures
 
-**PRODUCTION DEFAULT**: **ML-DSA-65 (Dilithium3)**
+**PRODUCTION DEFAULT**: **ML-DSA-87 (Dilithium5)**
 
 | Algorithm | Standard | Security Level | Use Case |
 |-----------|----------|----------------|----------|
-| **ML-DSA-65** | NIST FIPS 204 | Level 3 (≥192-bit) | **Default** |
-| ML-DSA-87 | NIST FIPS 204 | Level 5 (≥384-bit) | High Security |
+| **ML-DSA-87** | NIST FIPS 204 | Level 5 (≥384-bit) | **Default** |
+| ML-DSA-65 | NIST FIPS 204 | Level 3 (≥192-bit) | Balanced |
 | SLH-DSA-SHAKE | NIST FIPS 205 | Configurable | Stateless |
 
 ### Symmetric Encryption
@@ -99,10 +103,10 @@ CRYPTOGRAM implements **NIST-approved post-quantum cryptography** combined with 
 | Variant | Security Level | Public Key | Signature Size |
 |---------|----------------|------------|----------------|
 | ML-DSA-44 | Level 2 | 1,312 bytes | 2,420 bytes |
-| **ML-DSA-65** | **Level 3** | **1,952 bytes** | **3,293 bytes** |
-| ML-DSA-87 | Level 5 | 2,592 bytes | 4,595 bytes |
+| ML-DSA-65 | Level 3 | 1,952 bytes | 3,293 bytes |
+| **ML-DSA-87** | **Level 5** | **2,592 bytes** | **4,595 bytes** |
 
-**CRYPTOGRAM Default**: **ML-DSA-65** (Balanced security/performance)
+**CRYPTOGRAM Default**: **ML-DSA-87** (Maximum security, compliance standard)
 
 **Technical Details**:
 - **Problem**: Module Short Integer Solution (MSIS) + Module Learning With Errors (MLWE)
@@ -144,11 +148,11 @@ CRYPTOGRAM implements **NIST-approved post-quantum cryptography** combined with 
 │  1. Identity Key (Long-term)                            │
 │     - Classical: X25519                                 │
 │     - Post-Quantum: ML-KEM-1024                         │
-│     - Signature: ML-DSA-65                              │
+│     - Signature: ML-DSA-87                              │
 │                                                          │
 │  2. Signed PreKey (Medium-term, rotated weekly)         │
 │     - Hybrid: X25519 + ML-KEM-1024                      │
-│     - Signed with ML-DSA-65                             │
+│     - Signed with ML-DSA-87                             │
 │                                                          │
 │  3. One-Time PreKeys (Single-use)                       │
 │     - Hybrid: X25519 + ML-KEM-1024                      │
@@ -219,7 +223,7 @@ CRYPTOGRAM implements **NIST-approved post-quantum cryptography** combined with 
 | **Level 1** | ≥128-bit (AES-128) | ≥128-bit | ML-KEM-512 |
 | **Level 2** | ≥128-bit | ≥128-bit | ML-DSA-44 |
 | **Level 3** | ≥192-bit (AES-192) | ≥192-bit | ML-KEM-768, ML-DSA-65 |
-| **Level 5** | ≥256-bit (AES-256) | ≥256-bit | **ML-KEM-1024** ⭐ |
+| **Level 5** | ≥256-bit (AES-256) | ≥256-bit | **ML-KEM-1024, ML-DSA-87** ⭐ |
 
 **CRYPTOGRAM Standard**: **Level 5** (Maximum security)
 
@@ -324,7 +328,7 @@ Message Decryption:
 |---------|-----------|---------------|
 | **Post-Quantum KEM** | ML-KEM-1024 | NIST FIPS 203 |
 | **Classical ECDH** | X25519 | RFC 7748 |
-| **Post-Quantum Signatures** | ML-DSA-65 | NIST FIPS 204 |
+| **Post-Quantum Signatures** | ML-DSA-87 | NIST FIPS 204 |
 | **Classical Signatures** | Ed25519 | RFC 8032 |
 | **Symmetric Encryption** | AES-256-GCM | NIST SP 800-38D |
 | **Alternative Encryption** | ChaCha20-Poly1305 | RFC 8439 |
