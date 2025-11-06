@@ -12,38 +12,48 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LEGAL
 
 namespace Data {
 
-// CRYPTOGRAM User Visual Identification
-// Displays known CRYPTOGRAM users with red-colored names
-// Only visible to other CRYPTOGRAM users (local client-side feature)
+// CRYPTOGRAM & CAC User Visual Identification
+// Displays known users with colored names (only visible to CRYPTOGRAM/CAC users)
 //
-// Usage:
-// - When rendering peer names, check if peer is CRYPTOGRAM user
-// - If yes, override name color to red
-// - Non-CRYPTOGRAM clients see normal colored names
+// Color Scheme:
+// - RED names: CRYPTOGRAM users (encryption, covert channels)
+// - GREEN names: CAC-authenticated users (military/government smart cards)
+// - Normal colors: Regular Telegram users
 //
-// This helps users identify who they can safely use:
-// - Covert channels with
-// - Double Ratchet encryption
-// - Enhanced privacy features
+// This helps users identify:
+// - Who supports encryption (red)
+// - Who has CAC authentication (green)
+// - Who to use covert channels with (red)
+// - Who has hardware-backed security (green)
 
 // Get the color for a peer's name
-// Returns red for CRYPTOGRAM users, normal color otherwise
+// Returns green for CAC users, red for CRYPTOGRAM users, normal color otherwise
 [[nodiscard]] QColor GetPeerNameColor(not_null<PeerData*> peer);
 
 // Get the style color for a peer's name (for style system)
 [[nodiscard]] style::color GetPeerNameStyleColor(not_null<PeerData*> peer);
 
-// Check if peer should be displayed with red name
+// Check if peer should be displayed with red name (CRYPTOGRAM user)
 [[nodiscard]] bool ShouldShowAsRedName(not_null<PeerData*> peer);
+
+// Check if peer should be displayed with green name (CAC user)
+[[nodiscard]] bool ShouldShowAsGreenName(not_null<PeerData*> peer);
 
 // Auto-register CRYPTOGRAM user when they send encrypted message
 void AutoDetectCryptogramUser(not_null<PeerData*> peer);
+
+// Auto-register CAC user when they present CAC certificate
+void AutoDetectCACUser(not_null<PeerData*> peer, const QString &userDN);
 
 // Constants
 namespace {
     // Red color for CRYPTOGRAM users (visible only to CRYPTOGRAM users)
     constexpr auto kCryptogramUserColor = QColor(220, 20, 60); // Crimson red
     constexpr auto kCryptogramUserColorHex = "#DC143C";
+
+    // Green color for CAC users (visible only to CAC/CRYPTOGRAM users)
+    constexpr auto kCACUserColor = QColor(34, 139, 34); // Forest green
+    constexpr auto kCACUserColorHex = "#228B22";
 }
 
 } // namespace Data

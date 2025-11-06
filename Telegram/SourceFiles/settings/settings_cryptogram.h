@@ -71,6 +71,13 @@ private:
     void createCovertChannelSettings(not_null<Ui::VerticalLayout*> container);
     void createEncryptionStatus(not_null<Ui::VerticalLayout*> container);
 
+    // CAC Card Section (Hardware Security)
+    void setupCACSection(not_null<Ui::VerticalLayout*> container);
+    void createCACCardStatus(not_null<Ui::VerticalLayout*> container);
+    void createCACPINEntry(not_null<Ui::VerticalLayout*> container);
+    void createCACAlgorithmSelection(not_null<Ui::VerticalLayout*> container);
+    void createCACUserIdentification(not_null<Ui::VerticalLayout*> container);
+
     // Translation Section (OpenVINO)
     void setupTranslationSection(not_null<Ui::VerticalLayout*> container);
     void createTranslationToggle(not_null<Ui::VerticalLayout*> container);
@@ -91,6 +98,7 @@ private:
     void updateMiningStatistics();
     void updateTranslationStatus();
     void updateEncryptionStatus();
+    void updateCACStatus();
     void saveSettings();
 
     not_null<Window::SessionController*> _controller;
@@ -107,6 +115,11 @@ private:
     QPointer<Ui::FlatLabel> _encryptionStatusLabel;
     QPointer<Ui::FlatLabel> _keyExchangeStatusLabel;
     QPointer<Ui::FlatLabel> _covertChannelStatusLabel;
+
+    // CAC Card labels
+    QPointer<Ui::FlatLabel> _cacCardStatusLabel;
+    QPointer<Ui::FlatLabel> _cacUserInfoLabel;
+    QPointer<Ui::FlatLabel> _cacAlgorithmLabel;
 
     // Translation labels
     QPointer<Ui::FlatLabel> _translationDeviceLabel;

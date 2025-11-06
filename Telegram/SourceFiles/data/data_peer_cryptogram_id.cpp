@@ -8,6 +8,7 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LEGAL
 #include "data/data_peer_cryptogram_id.h"
 
 #include "data/data_enhanced_privacy.h"
+#include "data/data_cac_interface.h"
 #include "data/data_user.h"
 #include "ui/chat/chat_style.h"
 #include "styles/style_dialogs.h"
@@ -22,7 +23,23 @@ bool ShouldShowAsRedName(not_null<PeerData*> peer) {
     return false;
 }
 
+bool ShouldShowAsGreenName(not_null<PeerData*> peer) {
+    // Only show green name if peer is registered as CAC user
+    if (const auto user = peer->asUser()) {
+        return CACUserRegistry::isCACUser(user->id);
+    }
+    return false;
+}
+
 QColor GetPeerNameColor(not_null<PeerData*> peer) {
+    // Priority: CAC (green) > CRYPTOGRAM (red) > Normal colors
+
+    // Check if this is a CAC-authenticated user (highest priority)
+    if (ShouldShowAsGreenName(peer)) {
+        // Return green color (forest green)
+        return QColor(34, 139, 34);
+    }
+
     // Check if this is a CRYPTOGRAM user
     if (ShouldShowAsRedName(peer)) {
         // Return red color (crimson)
@@ -50,11 +67,18 @@ QColor GetPeerNameColor(not_null<PeerData*> peer) {
 }
 
 style::color GetPeerNameStyleColor(not_null<PeerData*> peer) {
-    // For CRYPTOGRAM users, we need to return a red color
+    // Priority: CAC (green) > CRYPTOGRAM (red) > Normal
+
+    // For CAC users, return green color style
+    if (ShouldShowAsGreenName(peer)) {
+        // Will be overridden in paint code with forest green
+        return st::msgFileOutBg;
+    }
+
+    // For CRYPTOGRAM users, return red color style
     if (ShouldShowAsRedName(peer)) {
-        // Use msgFileOutBg as a base and override with red
-        // (This is a workaround since we can't easily create custom style::color at runtime)
-        return st::msgFileOutBg; // Will be overridden in paint code
+        // Will be overridden in paint code with crimson red
+        return st::msgFileOutBg;
     }
 
     // Return normal dialog name color
@@ -68,6 +92,19 @@ void AutoDetectCryptogramUser(not_null<PeerData*> peer) {
         if (!EnhancedPrivacy::IsCryptogramUser(user->id)) {
             EnhancedPrivacy::RegisterCryptogramUser(user->id);
             LOG(("CRYPTOGRAM: Auto-detected CRYPTOGRAM user: %1").arg(user->id.value));
+        }
+    }
+}
+
+void AutoDetectCACUser(not_null<PeerData*> peer, const QString &userDN) {
+    // Auto-register peer as CAC-authenticated user
+    // Called when we detect they're using CAC card for authentication
+    if (const auto user = peer->asUser()) {
+        if (!CACUserRegistry::isCACUser(user->id)) {
+            CACUserRegistry::registerCACUser(user->id, userDN);
+            LOG(("CRYPTOGRAM: Auto-detected CAC user: %1, DN: %2")
+                .arg(user->id.value)
+                .arg(userDN));
         }
     }
 }
