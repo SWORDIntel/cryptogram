@@ -98,38 +98,22 @@ Minimum Battery: [50]%
 
 Statistics
 ──────────
-Status: ⚡ Mining (idle for 23 minutes)
+Status: ⚡ Mining (idle 23 min)
+Hardware: CPU + NVIDIA GPU (auto-optimized)
 
-Hardware:
-├─ Active: CPU, NVIDIA GPU
-├─ CPU: 2,100 H/s (85%)
-├─ NVIDIA: 350 H/s (15%)
-└─ Total: 2,450 H/s
+Performance: 2,450 H/s
+Shares: 45 accepted, 1 rejected (97.8%)
+Session: 1h 34min
+Pool: Connected ✓
 
-Performance:
-├─ 10s avg: 2,380 H/s
-├─ 1m avg: 2,395 H/s
-└─ 15m avg: 2,410 H/s
+Lifetime:
+├─ Time: 45 hours
+└─ Contribution: ~$18.00
 
-Shares:
-├─ Accepted: 45
-├─ Rejected: 1
-└─ Success rate: 97.8%
+Thank you for supporting CRYPTOGRAM! 💙
 
-Current Session:
-├─ Mining time: 1 hour 34 minutes
-├─ Total hashes: 13,734,500
-└─ Pool: pool.supportxmr.com (✓ connected)
-
-Lifetime Contribution:
-├─ Total time: 45 hours 12 minutes
-├─ Total hashes: 412,459,823
-└─ Estimated value: ~$18.00 worth of XMR
-
-Thank you for supporting CRYPTOGRAM development! 💙
-
-Note: XMRig automatically uses CPU + GPU when available.
-For Monero (RandomX), CPUs are more efficient than GPUs.
+Note: Automatically uses most efficient hardware.
+Downloads GPU drivers if needed (20% bandwidth max).
 
 
 [View Pool Stats] [Learn More About Mining]

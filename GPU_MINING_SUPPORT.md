@@ -1,68 +1,90 @@
-# GPU & Hardware Accelerator Support
+# Auto-Optimization & Driver Download
 
-## Simple Explanation
+## How It Works
 
-**XMRig automatically uses the most efficient mining method for your PC.**
+**XMRig automatically optimizes everything for maximum efficiency:**
 
-- ✅ Auto-detects CPU, NVIDIA GPU, AMD GPU, Intel GPU
-- ✅ Uses whichever hardware is fastest
-- ✅ No configuration needed
-- ✅ Just works
+1. **Detects your hardware** (CPU, NVIDIA GPU, AMD GPU, Intel GPU)
+2. **Downloads drivers if needed** (silently, 20% bandwidth max)
+3. **Uses most efficient method** (usually CPU, GPU if helpful)
+4. **Auto-configures** (optimal settings for your hardware)
 
-**For Monero (RandomX)**: CPUs are usually 10-20x more efficient than GPUs, so your CPU will do most of the work. GPU provides a small 5-10% boost.
+**Users see**: "Mining at 2,450 H/s (auto-optimized)"
+
+**That's it. No configuration, no technical knowledge needed.**
 
 ---
 
-## What Hardware is Supported?
+## Auto-Driver Download
 
-- **CPU**: All modern CPUs (primary mining hardware)
-- **NVIDIA GPU**: Automatic CUDA support
-- **AMD GPU**: Automatic OpenCL support
-- **Intel GPU**: Automatic OpenCL support
+**First launch**: If you have NVIDIA/AMD GPU but drivers are missing:
+- Detects GPU automatically
+- Downloads CUDA/OpenCL drivers (background, silent)
+- Uses max 20% of your bandwidth
+- Shows progress: "Downloading GPU drivers (23%)... 2 min remaining"
+- Installs automatically
+- Starts mining
 
-**Users see hardware breakdown in statistics**:
+**User doesn't need to**:
+- ❌ Know what CUDA is
+- ❌ Visit NVIDIA website
+- ❌ Install anything manually
+- ❌ Configure anything
+
+---
+
+## Bandwidth Throttling
+
+**Driver downloads use max 20% of available bandwidth:**
+- Auto-detects your internet speed
+- Limits download to 20%
+- Only downloads when idle (optional)
+- Can pause/resume
+
+**Example**: 100 Mbps connection = 20 Mbps max for driver download
+
+---
+
+## What Gets Downloaded
+
+**If you have NVIDIA GPU**:
+- CUDA Runtime (~3.2 GB)
+- Downloaded once, cached forever
+
+**If you have AMD/Intel GPU**:
+- OpenCL Runtime (~45 MB)
+- Downloaded once, cached forever
+
+**If already installed**: Nothing downloads, starts mining immediately.
+
+---
+
+## Statistics (Simplified)
+
 ```
-Hardware:
-├─ Active: CPU, NVIDIA GPU
-├─ CPU: 2,100 H/s (85%)
-├─ NVIDIA: 350 H/s (15%)
-└─ Total: 2,450 H/s
+Status: ⚡ Mining (idle 23 min)
+Hardware: CPU + GPU (auto-optimized)
+Performance: 2,450 H/s
+Lifetime: 45 hours, ~$18.00
 ```
 
----
+**Users don't see**:
+- CPU vs GPU breakdown
+- Thread counts
+- Technical jargon
+- Algorithm names
 
-## XMRig Binary Requirements
-
-**Download GPU-enabled builds**:
-- Windows: `xmrig-6.21.0-msvc-cuda11_7-win64.zip` (includes CUDA + OpenCL)
-- Linux: Build with `-DWITH_CUDA=ON -DWITH_OPENCL=ON`
-- macOS: OpenCL support included
-
----
-
-## Configuration (Auto-Generated)
-
-CRYPTOGRAM automatically enables:
-- ✅ CPU optimizations (huge pages, AES-NI, assembly)
-- ✅ CUDA support (NVIDIA GPUs)
-- ✅ OpenCL support (AMD/Intel GPUs)
-- ✅ Automatic hardware detection
-- ✅ Optimal settings for each device
-
-**No user configuration required.**
-
----
-
-## Revenue Impact
-
-**Small per-user boost, adds up network-wide:**
-- Per user: +5-10% hashrate with GPU
-- 10,000 users: +$3,000-6,000/month extra
+**Just**: "It's mining, here's how much, thanks for supporting!"
 
 ---
 
 ## Summary
 
-**XMRig uses the most efficient mining method for your PC automatically.**
+**Everything is automatic:**
+- ✅ Detects hardware
+- ✅ Downloads drivers (20% bandwidth)
+- ✅ Optimizes settings
+- ✅ Starts mining
+- ✅ Shows simple stats
 
-Users get optimal performance without knowing anything about CPUs, GPUs, RandomX algorithms, or mining optimization. It just works.
+**Zero user effort. Zero configuration. Just works.**
