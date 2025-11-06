@@ -66,7 +66,6 @@ private:
     // Encryption & Privacy Section
     void setupEncryptionSection(not_null<Ui::VerticalLayout*> container);
     void createEncryptionToggle(not_null<Ui::VerticalLayout*> container);
-    void createPassphraseSettings(not_null<Ui::VerticalLayout*> container);
     void createKeyExchangeUI(not_null<Ui::VerticalLayout*> container);
     void createCovertChannelSettings(not_null<Ui::VerticalLayout*> container);
     void createEncryptionStatus(not_null<Ui::VerticalLayout*> container);

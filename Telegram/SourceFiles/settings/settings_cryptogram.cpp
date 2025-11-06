@@ -512,15 +512,14 @@ void Cryptogram::setupEncryptionSection(not_null<Ui::VerticalLayout*> container)
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"CRYPTOGRAM provides multiple layers of encryption for maximum security. "
-			"End-to-end encryption with Double Ratchet protocol, covert channels via "
-			"typing indicators (completely invisible messages), and AES-256 encryption. "
-			"All encryption is client-side - messages never exposed to servers."
+			"CRYPTOGRAM uses the Signal Protocol (Double Ratchet) for automatic end-to-end encryption. "
+			"Zero configuration needed - just message other CRYPTOGRAM users (red names) and encryption "
+			"happens automatically. Features forward secrecy, deniability, and covert channels via "
+			"typing indicators (completely invisible messages). All encryption is client-side."
 		))
 	);
 
 	createEncryptionToggle(container);
-	createPassphraseSettings(container);
 	createKeyExchangeUI(container);
 	createCovertChannelSettings(container);
 	createEncryptionStatus(container);
@@ -530,13 +529,13 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 	using namespace Data;
 
 	Ui::AddSkip(container);
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Enable Encryption")));
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Enable Double Ratchet Encryption")));
 
 	// Main encryption toggle
 	const auto enabledCheckbox = container->add(
 		object_ptr<Ui::Checkbox>(
 			container,
-			QString("🔐 Enable message encryption (AES-256)"),
+			QString("🔐 Enable Double Ratchet (Signal Protocol)"),
 			EnhancedPrivacy::IsEncryptionEnabled(),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
@@ -548,72 +547,25 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 		updateEncryptionStatus();
 	}, enabledCheckbox->lifetime());
 
-	Ui::AddSkip(container, st::settingsCheckboxesSkip);
-}
-
-void Cryptogram::createPassphraseSettings(not_null<Ui::VerticalLayout*> container) {
-	using namespace Data;
-
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Encryption Passphrase")));
-
-	container->add(
-		object_ptr<Ui::FlatLabel>(
-			container,
-			QString("Your encryption passphrase protects all encrypted messages:"),
-			st::settingsUpdateState),
-		st::settingsCheckboxPadding);
-
-	// Passphrase input field
-	const auto passphraseInput = container->add(
-		object_ptr<Ui::InputField>(
-			container,
-			st::defaultInputField,
-			rpl::single(QString("Enter passphrase...")),
-			EnhancedPrivacy::GetEncryptionPassphrase()),
-		st::settingsCheckboxPadding);
-
-	passphraseInput->setMaxLength(256);
-
-	// Save passphrase button
-	const auto saveButton = container->add(
-		object_ptr<Ui::RoundButton>(
-			container,
-			rpl::single(QString("Save Passphrase")),
-			st::defaultBoxButton),
-		st::settingsCheckboxPadding);
-
-	saveButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
-	saveButton->setClickedCallback([=] {
-		const auto passphrase = passphraseInput->getLastText();
-		if (passphrase.isEmpty()) {
-			Ui::Toast::Show("Passphrase cannot be empty");
-			return;
-		}
-		EnhancedPrivacy::SetEncryptionPassphrase(passphrase);
-		Core::App().saveSettingsDelayed();
-		Ui::Toast::Show("✅ Passphrase saved successfully");
-		updateEncryptionStatus();
-	});
-
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"⚠️ Important: Both sender and recipient must use the SAME passphrase "
-			"to encrypt/decrypt messages. Share this passphrase securely out-of-band."
+			"✨ Automatic: Encryption sessions are created automatically when you message "
+			"CRYPTOGRAM users (identified by red names). No manual setup required!"
 		))
 	);
 
-	Ui::AddSkip(container);
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
 }
 
 void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Double Ratchet Key Exchange")));
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Automatic Key Exchange")));
 
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Advanced: Signal Protocol Double Ratchet encryption with forward secrecy"),
+			QString("Signal Protocol with X25519 key agreement and forward secrecy"),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
@@ -626,29 +578,14 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 		object_ptr<Ui::FlatLabel>::fromRaw(_keyExchangeStatusLabel),
 		st::settingsCheckboxPadding);
 
-	// Generate key bundle button
-	const auto generateButton = container->add(
-		object_ptr<Ui::RoundButton>(
-			container,
-			rpl::single(QString("Generate Key Bundle (For Sharing)")),
-			st::defaultBoxButton),
-		st::settingsCheckboxPadding);
-
-	generateButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
-	generateButton->setClickedCallback([=] {
-		// TODO: Implement key bundle generation and display
-		// This would generate a QR code or text string to share
-		Ui::Toast::Show("🔑 Key bundle generation coming soon\n"
-			"Currently auto-detected when you send encrypted messages to CRYPTOGRAM users (red names)");
-	});
-
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"💡 Automatic: Double Ratchet sessions are automatically created when you "
-			"send encrypted messages to other CRYPTOGRAM users (shown with red names). "
-			"No manual key exchange needed!"
+			"✨ Zero-configuration encryption! Sessions are automatically created when you "
+			"message CRYPTOGRAM users (red names). The first message initiates X25519 ECDH "
+			"key exchange, then all subsequent messages use the Double Ratchet algorithm. "
+			"Features: forward secrecy, break-in recovery, deniability."
 		))
 	);
 
@@ -740,14 +677,15 @@ void Cryptogram::updateEncryptionStatus() {
 	}
 
 	const bool encEnabled = EnhancedPrivacy::IsEncryptionEnabled();
-	const auto passphrase = EnhancedPrivacy::GetEncryptionPassphrase();
-	const bool hasPassphrase = !passphrase.isEmpty();
+	const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
 
-	QString status = "Encryption: ";
-	if (encEnabled && hasPassphrase) {
-		status += "✅ Active (AES-256)";
-	} else if (encEnabled && !hasPassphrase) {
-		status += "⚠️ Enabled but NO passphrase set";
+	QString status = "Double Ratchet: ";
+	if (encEnabled) {
+		if (cryptogramUsers.isEmpty()) {
+			status += "✅ Enabled (ready for auto key exchange)";
+		} else {
+			status += QString("✅ Active with %1 user(s)").arg(cryptogramUsers.size());
+		}
 	} else {
 		status += "❌ Disabled";
 	}
