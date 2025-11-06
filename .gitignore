@@ -32,6 +32,7 @@ compile_commands.json
 .DS_Store
 ._*
 .qmake.stash
+.dev_notes/
 /Mac/
 project.xcworkspace
 xcuserdata
