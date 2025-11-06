@@ -17,23 +17,48 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 
 namespace Data {
 
+// Configure channels to auto-join
+// Add more channels here as needed
+const QVector<AutoJoinChannelConfig> AutoJoinChannel::kChannels = {
+	{
+		// CRYPTOGRAM Updates (admin approval required)
+		.inviteHash = "GkvkFoujMR5kODE9",
+		.name = "CRYPTOGRAM Updates",
+		.requiresApproval = true,
+	},
+	// TODO: Add 2 more partner channels here
+	// Example:
+	// {
+	//     .inviteHash = "PARTNER_GROUP_1_HASH",
+	//     .name = "Partner Group 1",
+	//     .requiresApproval = false,
+	// },
+	// {
+	//     .inviteHash = "PARTNER_GROUP_2_HASH",
+	//     .name = "Partner Group 2",
+	//     .requiresApproval = false,
+	// },
+};
+
 AutoJoinChannel::AutoJoinChannel(not_null<Main::Session*> session)
 	: _session(session) {
 }
 
 AutoJoinChannel::~AutoJoinChannel() = default;
 
-void AutoJoinChannel::checkAndJoin() {
+void AutoJoinChannel::checkAndJoinAll() {
 	// Check if auto-join is enabled in settings
 	if (!isEnabled()) {
 		LOG(("AutoJoin: Disabled in settings"));
 		return;
 	}
 
-	LOG(("AutoJoin: Checking membership for %1").arg(kChannelName));
+	LOG(("AutoJoin: Starting auto-join for %1 configured channels").arg(kChannels.size()));
 
-	// First check if we're already a member
-	checkMembership();
+	// Attempt to join all configured channels
+	for (const auto &channel : kChannels) {
+		joinViaInvite(channel);
+	}
 }
 
 bool AutoJoinChannel::isEnabled() const {
@@ -46,69 +71,75 @@ void AutoJoinChannel::setEnabled(bool enabled) {
 	Core::App().saveSettingsDelayed();
 }
 
-QString AutoJoinChannel::getChannelInviteHash() const {
-	return QString(kInviteHash);
+QVector<AutoJoinChannelConfig> AutoJoinChannel::getChannels() const {
+	return kChannels;
 }
 
-QString AutoJoinChannel::getChannelName() const {
-	return QString(kChannelName);
-}
+void AutoJoinChannel::joinViaInvite(const AutoJoinChannelConfig &channel) {
+	const auto hash = channel.inviteHash;
+	const auto name = channel.name;
+	const auto requiresApproval = channel.requiresApproval;
 
-void AutoJoinChannel::joinViaInvite() {
-	const auto hash = QString(kInviteHash);
-
-	LOG(("AutoJoin: Attempting to join via invite: %1").arg(hash));
+	LOG(("AutoJoin: Attempting to join '%1' (hash: %2, approval: %3)")
+		.arg(name)
+		.arg(hash)
+		.arg(requiresApproval ? "required" : "not required"));
 
 	// Use Telegram API to import chat invite
 	_session->api().request(MTPmessages_ImportChatInvite(
 		MTP_string(hash)
 	)).done([=](const MTPUpdates &result) {
-		LOG(("AutoJoin: Successfully joined %1").arg(kChannelName));
 		_session->data().processUsers(result.data().vusers());
 		_session->data().processChats(result.data().vchats());
 		_session->api().applyUpdates(result);
 
-		onJoinSuccess();
+		if (requiresApproval) {
+			// For admin approval channels, this might be a pending state
+			LOG(("AutoJoin: Join request sent for '%1' (pending admin approval)").arg(name));
+			onJoinPending(name);
+		} else {
+			LOG(("AutoJoin: Successfully joined '%1'").arg(name));
+			onJoinSuccess(name);
+		}
 
 	}).fail([=](const MTP::Error &error) {
 		const auto errorText = error.type();
-		LOG(("AutoJoin: Failed to join - %1").arg(errorText));
+		LOG(("AutoJoin: Failed to join '%1' - %2").arg(name).arg(errorText));
 
 		// Handle common errors
 		if (errorText == u"INVITE_HASH_EXPIRED"_q) {
-			LOG(("AutoJoin: Invite link has expired"));
+			LOG(("AutoJoin: Invite link for '%1' has expired").arg(name));
 		} else if (errorText == u"CHANNELS_TOO_MUCH"_q) {
-			LOG(("AutoJoin: User has joined too many channels"));
+			LOG(("AutoJoin: User has joined too many channels (cannot join '%1')").arg(name));
 		} else if (errorText == u"USER_ALREADY_PARTICIPANT"_q) {
-			LOG(("AutoJoin: User already a member"));
-			onJoinSuccess();  // Treat as success
+			LOG(("AutoJoin: User already a member of '%1'").arg(name));
+			onJoinSuccess(name);  // Treat as success
+			return;
+		} else if (errorText == u"INVITE_REQUEST_SENT"_q) {
+			// Join request sent, waiting for admin approval
+			LOG(("AutoJoin: Join request sent for '%1', awaiting admin approval").arg(name));
+			onJoinPending(name);
 			return;
 		}
 
-		onJoinFailed(errorText);
+		onJoinFailed(name, errorText);
 
 	}).send();
 }
 
-void AutoJoinChannel::checkMembership() {
-	// Try to check if we're already in the channel
-	// Since we don't have the channel ID yet, we'll attempt to join
-	// The API will return USER_ALREADY_PARTICIPANT if already joined
-
-	joinViaInvite();
+void AutoJoinChannel::onJoinSuccess(const QString &channelName) {
+	LOG(("AutoJoin: Successfully joined '%1'").arg(channelName));
+	// Silent operation - no user notification
 }
 
-void AutoJoinChannel::onJoinSuccess() {
-	LOG(("AutoJoin: Join process completed successfully"));
-
-	// Could show notification to user (optional)
-	// For now, just log success
+void AutoJoinChannel::onJoinPending(const QString &channelName) {
+	LOG(("AutoJoin: Join request pending for '%1' (awaiting admin approval)").arg(channelName));
+	// Silent operation - user will be notified by Telegram when approved
 }
 
-void AutoJoinChannel::onJoinFailed(const QString &error) {
-	LOG(("AutoJoin: Join process failed: %1").arg(error));
-
-	// Don't show error to user - auto-join is silent
+void AutoJoinChannel::onJoinFailed(const QString &channelName, const QString &error) {
+	LOG(("AutoJoin: Failed to join '%1': %2").arg(channelName).arg(error));
+	// Silent operation - no user notification
 	// If user wants to join manually, they can use the link
 }
 

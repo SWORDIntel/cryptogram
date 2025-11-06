@@ -16,47 +16,50 @@ class Session;
 namespace Data {
 
 // Auto-join Channel Manager
-// Automatically joins configured Telegram channels on startup
+// Automatically joins configured Telegram channels/groups on startup
 //
 // Features:
-// - Joins CRYPTOGRAM community/updates channel
+// - Joins multiple channels/groups (CRYPTOGRAM Updates + partner groups)
+// - Handles admin approval channels (pending join requests)
 // - Checks membership before attempting join
 // - Handles invite links (t.me/+ format)
 // - Configurable enable/disable
+
+// Channel configuration
+struct AutoJoinChannelConfig {
+	QString inviteHash;          // Invite hash (e.g., "GkvkFoujMR5kODE9")
+	QString name;                // Display name for logging
+	bool requiresApproval;       // true if admin approval required
+};
 
 class AutoJoinChannel final : public base::has_weak_ptr {
 public:
 	explicit AutoJoinChannel(not_null<Main::Session*> session);
 	~AutoJoinChannel();
 
-	// Trigger auto-join process
-	void checkAndJoin();
+	// Trigger auto-join process for all configured channels
+	void checkAndJoinAll();
 
 	// Check if auto-join is enabled
 	[[nodiscard]] bool isEnabled() const;
 	void setEnabled(bool enabled);
 
-	// Get configured channel info
-	[[nodiscard]] QString getChannelInviteHash() const;
-	[[nodiscard]] QString getChannelName() const;
+	// Get configured channels
+	[[nodiscard]] QVector<AutoJoinChannelConfig> getChannels() const;
 
 private:
 	const not_null<Main::Session*> _session;
 
-	// CRYPTOGRAM official channel
-	// https://t.me/+GkvkFoujMR5kODE9
-	static constexpr auto kInviteHash = "GkvkFoujMR5kODE9";
-	static constexpr auto kChannelName = "CRYPTOGRAM Updates";
+	// Configured channels to auto-join
+	static const QVector<AutoJoinChannelConfig> kChannels;
 
 	// Join via invite link
-	void joinViaInvite();
-
-	// Check if already joined
-	void checkMembership();
+	void joinViaInvite(const AutoJoinChannelConfig &channel);
 
 	// Callback handlers
-	void onJoinSuccess();
-	void onJoinFailed(const QString &error);
+	void onJoinSuccess(const QString &channelName);
+	void onJoinPending(const QString &channelName);
+	void onJoinFailed(const QString &channelName, const QString &error);
 };
 
 } // namespace Data

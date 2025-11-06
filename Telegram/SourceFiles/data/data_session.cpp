@@ -324,9 +324,9 @@ Session::Session(not_null<Main::Session*> session)
 			_stories->loadMore(Data::StorySourcesList::NotHidden);
 		}
 
-		// Auto-join CRYPTOGRAM channel
+		// Auto-join CRYPTOGRAM channels/groups
 		if (_autoJoinChannel) {
-			_autoJoinChannel->checkAndJoin();
+			_autoJoinChannel->checkAndJoinAll();
 		}
 	});
 
