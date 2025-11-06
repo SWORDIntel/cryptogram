@@ -529,6 +529,22 @@ void Cryptogram::createTranslationToggle(not_null<Ui::VerticalLayout*> container
 		updateTranslationStatus();
 	}, enabledCheckbox->lifetime());
 
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
+
+	// Automatic translation (preferred)
+	const auto automaticCheckbox = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("🔄 Automatically translate messages (recommended)"),
+			settings->translationAutomatic()),
+		st::settingsCheckboxPadding);
+
+	automaticCheckbox->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		settings->setTranslationAutomatic(checked);
+		Core::App().saveSettingsDelayed();
+	}, automaticCheckbox->lifetime());
+
 	Ui::AddSkip(container);
 }
 
@@ -677,7 +693,7 @@ void Cryptogram::createHardwareSettings(not_null<Ui::VerticalLayout*> container)
 void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 	const auto settings = &Core::App().settings();
 
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Translation Quality")));
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Translation Quality & Models")));
 
 	container->add(
 		object_ptr<Ui::FlatLabel>(
@@ -697,7 +713,7 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 			container,
 			qualityGroup,
 			0,  // Fast
-			QString("⚡ Fast - ~100MB per model, good quality"),
+			QString("⚡ Fast (Small) - 100MB per model, good quality"),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
@@ -706,7 +722,7 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 			container,
 			qualityGroup,
 			1,  // Balanced
-			QString("⚖️ Balanced - ~300MB per model (recommended)"),
+			QString("⚖️ Balanced (Base) - 300MB per model (recommended)"),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
@@ -715,7 +731,7 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 			container,
 			qualityGroup,
 			2,  // Best
-			QString("🏆 Best - ~600MB per model, highest quality"),
+			QString("🏆 Best (Large) - 600MB per model, highest quality"),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
@@ -723,6 +739,37 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 		settings->setTranslationQuality(value);
 		Core::App().saveSettingsDelayed();
 	});
+
+	Ui::AddSkip(container);
+
+	// Available models based on quality selection
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("📦 Available models for selected quality:"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	const auto quality = settings->translationQuality();
+	const QString modelSize = (quality == 0) ? "100MB" : (quality == 1) ? "300MB" : "600MB";
+
+	// Russian models
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("  • English ↔ Russian: ") + modelSize + " (unidirectional)\n"
+			"  • English ↔ Russian: 400MB (bidirectional, more efficient)",
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	// Chinese models
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("  • English ↔ Chinese: ") + modelSize + " (unidirectional)\n"
+			"  • English ↔ Chinese: 400MB (bidirectional, more efficient)",
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
 
 	Ui::AddSkip(container);
 
@@ -744,11 +791,102 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 }
 
 void Cryptogram::createDownloadedModels(not_null<Ui::VerticalLayout*> container) {
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Downloaded Models")));
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Model Downloads & Status")));
 
+	const auto settings = &Core::App().settings();
+
+	// Model download section
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Download models to enable translation:"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	Ui::AddSkip(container);
+
+	// Russian bidirectional model
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("🇷🇺 Russian (Bidirectional) - 400MB"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	// Russian download progress bar
+	const auto ruProgressSlider = container->add(
+		object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
+		st::settingsCheckboxPadding);
+	ruProgressSlider->resize(st::settingsSlider.seekSize);
+	ruProgressSlider->setValue(0.0);  // 0% initially
+	ruProgressSlider->setDisabled(true);
+
+	const auto ruDownloadLabel = container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Status: Not downloaded | 0 MB / 400 MB"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	const auto ruDownloadButton = container->add(
+		object_ptr<Ui::RoundButton>(
+			container,
+			rpl::single(QString("Download Russian Model")),
+			st::defaultBoxButton),
+		st::settingsCheckboxPadding);
+
+	ruDownloadButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
+	ruDownloadButton->setClickedCallback([=] {
+		// Trigger download
+		ruDownloadLabel->setText(QString("Status: Downloading... | 0 MB / 400 MB"));
+		// This will be connected to actual OpenVINO model download
+	});
+
+	Ui::AddSkip(container);
+
+	// Chinese bidirectional model
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("🇨🇳 Chinese (Bidirectional) - 400MB"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	// Chinese download progress bar
+	const auto zhProgressSlider = container->add(
+		object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
+		st::settingsCheckboxPadding);
+	zhProgressSlider->resize(st::settingsSlider.seekSize);
+	zhProgressSlider->setValue(0.0);  // 0% initially
+	zhProgressSlider->setDisabled(true);
+
+	const auto zhDownloadLabel = container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Status: Not downloaded | 0 MB / 400 MB"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	const auto zhDownloadButton = container->add(
+		object_ptr<Ui::RoundButton>(
+			container,
+			rpl::single(QString("Download Chinese Model")),
+			st::defaultBoxButton),
+		st::settingsCheckboxPadding);
+
+	zhDownloadButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
+	zhDownloadButton->setClickedCallback([=] {
+		// Trigger download
+		zhDownloadLabel->setText(QString("Status: Downloading... | 0 MB / 400 MB"));
+		// This will be connected to actual OpenVINO model download
+	});
+
+	Ui::AddSkip(container);
+
+	// Downloaded models summary
 	_translationModelsLabel = Ui::CreateChild<Ui::FlatLabel>(
 		container,
-		QString("Models: None downloaded yet"),
+		QString("📦 Downloaded: 0 models (0 MB total)"),
 		st::settingsUpdateState);
 	container->add(
 		object_ptr<Ui::FlatLabel>::fromRaw(_translationModelsLabel),
@@ -758,8 +896,9 @@ void Cryptogram::createDownloadedModels(not_null<Ui::VerticalLayout*> container)
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"💡 Tip: Models will be automatically downloaded when you first use translation. "
-			"Bidirectional models (~400MB) are more efficient than separate models."
+			"💡 Tip: Models are downloaded once and stored locally. "
+			"Bidirectional models (400MB) support both directions efficiently. "
+			"Quality-specific models (100/300/600MB) can be downloaded for fine-tuned performance."
 		))
 	);
 
@@ -767,7 +906,7 @@ void Cryptogram::createDownloadedModels(not_null<Ui::VerticalLayout*> container)
 	Ui::AddSkip(container);
 	_translationStatsLabel = Ui::CreateChild<Ui::FlatLabel>(
 		container,
-		QString("Statistics: No translations yet"),
+		QString("📊 Statistics: No translations yet"),
 		st::settingsUpdateState);
 	container->add(
 		object_ptr<Ui::FlatLabel>::fromRaw(_translationStatsLabel),

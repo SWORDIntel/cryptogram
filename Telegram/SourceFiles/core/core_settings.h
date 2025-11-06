@@ -1056,6 +1056,13 @@ public:
 		_translationCacheEnabled = value;
 	}
 
+	[[nodiscard]] bool translationAutomatic() const {
+		return _translationAutomatic;
+	}
+	void setTranslationAutomatic(bool value) {
+		_translationAutomatic = value;
+	}
+
 	void resetOnLastLogout();
 
 private:
@@ -1221,6 +1228,7 @@ private:
 	int _translationQuality = 1;  // 0=Fast, 1=Balanced, 2=Best
 	int _translationDevice = 3;  // 0=CPU, 1=GPU, 2=NPU, 3=AUTO
 	bool _translationCacheEnabled = true;
+	bool _translationAutomatic = true;  // Automatically translate messages (preferred)
 
 };
 

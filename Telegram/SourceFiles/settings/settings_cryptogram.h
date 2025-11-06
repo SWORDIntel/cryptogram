@@ -145,6 +145,7 @@ inline constexpr auto kMiningSharesRejected = "cryptogram/mining/shares_rejected
 
 // Translation Settings (OpenVINO)
 inline constexpr auto kTranslationEnabled = "cryptogram/translation/enabled"_cs;
+inline constexpr auto kTranslationAutomatic = "cryptogram/translation/automatic"_cs;  // Automatically translate messages
 inline constexpr auto kTranslationAutoDetect = "cryptogram/translation/auto_detect"_cs;
 inline constexpr auto kTranslationTargetLanguage = "cryptogram/translation/target_language"_cs;
 inline constexpr auto kTranslationQuality = "cryptogram/translation/quality"_cs;  // 0=Fast, 1=Balanced, 2=Best
