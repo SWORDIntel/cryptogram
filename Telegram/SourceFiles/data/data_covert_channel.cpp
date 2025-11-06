@@ -10,6 +10,7 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LEGAL
 #include "main/main_session.h"
 #include "data/data_session.h"
 #include "data/data_enhanced_privacy.h"
+#include "data/data_peer_cryptogram_id.h"
 #include "core/application.h"
 #include "core/core_settings.h"
 #include "apiwrap.h"
@@ -77,6 +78,9 @@ bool CovertChannel::isEnabled() const {
 
 void CovertChannel::registerCovertPeer(not_null<PeerData*> peer) {
     _covertPeers.insert(peer->id);
+
+    // Also register as CRYPTOGRAM user (red name feature)
+    AutoDetectCryptogramUser(peer);
 }
 
 bool CovertChannel::peerSupportsCovertChannel(not_null<PeerData*> peer) const {

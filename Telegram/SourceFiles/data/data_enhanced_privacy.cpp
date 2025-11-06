@@ -159,6 +159,7 @@ bool EnhancedPrivacy::_trafficPaddingEnabled = false;
 int EnhancedPrivacy::_minPaddingBytes = 1024; // 1KB minimum
 int EnhancedPrivacy::_maxPaddingBytes = 16384; // 16KB maximum
 bool EnhancedPrivacy::_signalProtocolEnabled = false;
+QSet<UserId> EnhancedPrivacy::_cryptogramUsers; // Registry of known CRYPTOGRAM users
 
 namespace {
 
@@ -1653,6 +1654,27 @@ void EnhancedPrivacy::RotateSignalKeys() {
     } catch (const std::exception &e) {
         LOG(("Signal Protocol Error: Failed to rotate keys: %1").arg(e.what()));
     }
+}
+
+// CRYPTOGRAM User Identification (Red Name Feature)
+void EnhancedPrivacy::RegisterCryptogramUser(UserId userId) {
+    _cryptogramUsers.insert(userId);
+}
+
+void EnhancedPrivacy::UnregisterCryptogramUser(UserId userId) {
+    _cryptogramUsers.remove(userId);
+}
+
+bool EnhancedPrivacy::IsCryptogramUser(UserId userId) {
+    return _cryptogramUsers.contains(userId);
+}
+
+const QSet<UserId>& EnhancedPrivacy::GetCryptogramUsers() {
+    return _cryptogramUsers;
+}
+
+void EnhancedPrivacy::ClearCryptogramUsers() {
+    _cryptogramUsers.clear();
 }
 
 } // namespace Data 
