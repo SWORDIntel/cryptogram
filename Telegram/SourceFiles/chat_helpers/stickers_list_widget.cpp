@@ -1805,6 +1805,31 @@ base::unique_qptr<Ui::PopupMenu> StickersListWidget::fillContextMenu(
 		toggleFavedSticker,
 		isFaved ? &icons->menuUnfave : &icons->menuFave);
 
+	// CRYPTOGRAM: Add/remove sticker set to/from curated favorites
+	if (const auto setId = set.id;
+		setId != Data::Stickers::RecentSetId
+		&& setId != Data::Stickers::FavedSetId
+		&& setId != Data::Stickers::CuratedSetId
+		&& setId != Data::Stickers::MegagroupSetId
+		&& !(set.flags & SetFlag::Special)) {
+		const auto &curatedIds = Core::App().settings().curatedStickerSetIds();
+		const auto isCurated = ranges::contains(curatedIds, setId);
+		menu->addAction(
+			(isCurated
+				? QString("Remove from Curated")
+				: QString("Add to Curated")),
+			[=] {
+				if (isCurated) {
+					Core::App().settings().removeCuratedStickerSet(setId);
+				} else {
+					Core::App().settings().addCuratedStickerSet(setId);
+				}
+				Core::App().saveSettingsDelayed();
+				refreshStickers();
+			},
+			isCurated ? &icons->menuUnfave : &icons->menuFave);
+	}
+
 	if (_features.openStickerSets) {
 		menu->addAction(tr::lng_context_pack_info(tr::now), [=, id = set.id] {
 			showStickerSetBox(document, id);
@@ -2091,10 +2116,12 @@ void StickersListWidget::refreshEffects() {
 void StickersListWidget::refreshMySets() {
 	auto wasSets = base::take(_mySets);
 	_favedStickersMap.clear();
-	_mySets.reserve(defaultSetsOrder().size() + 3);
+	_mySets.reserve(defaultSetsOrder().size() + 4);
 
-	refreshFavedStickers();
+	// CRYPTOGRAM: Curated stickers at the top
+	refreshCuratedStickers();
 	refreshRecentStickers(false);
+	refreshFavedStickers();
 	refreshMegagroupStickers(GroupStickersPlace::Visible);
 
 	for (const auto setId : defaultSetsOrder()) {
@@ -2414,6 +2441,58 @@ void StickersListWidget::refreshFavedStickers() {
 		set->stickers.begin(),
 		set->stickers.end()
 	};
+}
+
+void StickersListWidget::refreshCuratedStickers() {
+	// CRYPTOGRAM: Show curated sticker sets if enabled
+	if (_isMasks || !Core::App().settings().curatedStickersEnabled()) {
+		return;
+	}
+
+	const auto &curatedIds = Core::App().settings().curatedStickerSetIds();
+	if (curatedIds.empty()) {
+		return;
+	}
+
+	// Collect all stickers from curated sets
+	QVector<DocumentData*> curatedStickers;
+	const auto &sets = session().data().stickers().sets();
+	const auto skipPremium = !session().premiumPossible();
+
+	for (const auto setId : curatedIds) {
+		const auto it = sets.find(setId);
+		if (it != sets.cend() && it->second) {
+			const auto &pack = it->second->stickers;
+			for (const auto sticker : pack) {
+				if (!skipPremium || !sticker->isPremiumSticker()) {
+					curatedStickers.push_back(sticker);
+				}
+			}
+		}
+	}
+
+	if (curatedStickers.empty()) {
+		return;
+	}
+
+	const auto externalLayout = false;
+	const auto shortName = QString();
+	auto elements = PrepareStickers(curatedStickers, skipPremium);
+	if (elements.empty()) {
+		return;
+	}
+
+	// Insert curated set at the beginning
+	_mySets.insert(_mySets.begin(), Set{
+		Data::Stickers::CuratedSetId,
+		nullptr,
+		(SetFlag::Official | SetFlag::Special),
+		QString("Curated"),  // Title for the curated section
+		shortName,
+		int(elements.size()),
+		externalLayout,
+		std::move(elements)
+	});
 }
 
 void StickersListWidget::refreshMegagroupStickers(GroupStickersPlace place) {

@@ -15,6 +15,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/flags.h"
 #include "emoji.h"
 
+#include <algorithm>
+#include <vector>
+
 enum class RectPart;
 struct LanguageId;
 
@@ -495,6 +498,23 @@ public:
 	}
 	void setMaxStickerSets(int value) {
 		_maxStickerSets = std::clamp(value, 1, 20);
+	}
+	[[nodiscard]] const std::vector<uint64>& curatedStickerSetIds() const {
+		return _curatedStickerSetIds;
+	}
+	void setCuratedStickerSetIds(std::vector<uint64> ids) {
+		_curatedStickerSetIds = std::move(ids);
+	}
+	void addCuratedStickerSet(uint64 setId) {
+		if (std::find(_curatedStickerSetIds.begin(), _curatedStickerSetIds.end(), setId) == _curatedStickerSetIds.end()) {
+			_curatedStickerSetIds.push_back(setId);
+		}
+	}
+	void removeCuratedStickerSet(uint64 setId) {
+		_curatedStickerSetIds.erase(
+			std::remove(_curatedStickerSetIds.begin(), _curatedStickerSetIds.end(), setId),
+			_curatedStickerSetIds.end()
+		);
 	}
 	void setCornerReaction(bool value) {
 		_cornerReaction = value;
@@ -1148,6 +1168,7 @@ private:
 	bool _suggestAnimatedEmoji = true;
 	bool _curatedStickersEnabled = false;
 	int _maxStickerSets = 5;
+	std::vector<uint64> _curatedStickerSetIds;
 	rpl::variable<bool> _cornerReaction = true;
 	rpl::variable<bool> _spellcheckerEnabled = true;
 	PlaybackSpeed _videoPlaybackSpeed;

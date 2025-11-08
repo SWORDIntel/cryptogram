@@ -62,6 +62,9 @@ public:
 	// For cloud-stored faved stickers.
 	static constexpr auto FavedSetId = 0xFFFFFFFFFFFFFFFAULL;
 
+	// CRYPTOGRAM: For user-curated favorite stickers.
+	static constexpr auto CuratedSetId = 0xFFFFFFFFFFFFFFEEULL;
+
 	// For setting up megagroup sticker set.
 	static constexpr auto MegagroupSetId = 0xFFFFFFFFFFFFFFEFULL;
 
