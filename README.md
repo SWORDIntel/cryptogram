@@ -15,6 +15,7 @@ CRYPTOGRAM goes beyond traditional encrypted messaging with advanced features fo
 | Feature | Signal | WhatsApp | Telegram | CRYPTOGRAM |
 |---------|--------|----------|----------|------------|
 | End-to-End Encryption | ✅ | ✅ | 🟡 Secret Chats Only | ✅ |
+| Post-Quantum Cryptography | ❌ | ❌ | ❌ | ✅ **UNIQUE** |
 | AES-256-GCM Encryption | ✅ | ✅ | 🟡 | ✅ |
 | Signal Protocol | ✅ | ✅ | ❌ | ✅ |
 | MLS Group Encryption | ❌ | ❌ | ❌ | ✅ |
@@ -32,6 +33,7 @@ CRYPTOGRAM goes beyond traditional encrypted messaging with advanced features fo
 **For Windows, Linux, and macOS**
 
 Advanced privacy features for high-security communication:
+- **Post-Quantum Secure** - ML-KEM-1024 + ML-DSA-87 (quantum-resistant encryption)
 - **Audio Steganography** - Hide encrypted messages inside voice notes
 - **Location Randomization** - Prevent geolocation tracking with realistic fake locations
 - **Surveillance Detection** - Detect debuggers, monitoring tools, and suspicious activity
@@ -47,9 +49,10 @@ Advanced privacy features for high-security communication:
 **For Android 5.0+**
 
 Military-grade encryption for mobile messaging:
+- **Post-Quantum Secure** - ML-KEM-1024 (Kyber) + ML-DSA-87 (Dilithium)
 - **Signal Protocol** - End-to-end encryption with forward secrecy (1-on-1 chats)
 - **MLS Protocol** - Scalable group encryption with TreeKEM (group chats)
-- **AES-256-GCM** - Military-grade encryption for all messages
+- **AES-256-GCM** - 256-bit keys derived via HKDF-SHA256
 - **Hardware KeyStore** - Secure key storage in Android's hardware security
 - **Visual Indicators** - Lock icons show encryption status
 - **Seamless Integration** - Works automatically with your existing chats
@@ -102,6 +105,12 @@ Evade deep packet inspection and traffic monitoring with covert channels.
 ## 🔒 Security
 
 CRYPTOGRAM provides multiple layers of security:
+
+**Post-Quantum Cryptography** 🆕
+- **ML-KEM-1024** (Kyber) - Quantum-resistant key encapsulation
+- **ML-DSA-87** (Dilithium) - Quantum-resistant digital signatures
+- **HKDF-SHA256** - Derives 256-bit encryption keys from shared secrets
+- **Hybrid Scheme** - Combines post-quantum with classical crypto for maximum security
 
 **Encryption Protocols**
 - Signal Protocol (Double Ratchet) for 1-on-1 chats
