@@ -57,6 +57,10 @@ public class CryptogramSettingsActivity extends BaseFragment {
     private int mlsProtocolRow;
     private int encryptionInfoRow;
 
+    private int uiSectionRow;
+    private int curatedStickersRow;
+    private int uiInfoRow;
+
     private int advancedSectionRow;
     private int libraryVersionRow;
     private int featureStatusRow;
@@ -105,6 +109,11 @@ public class CryptogramSettingsActivity extends BaseFragment {
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(SharedConfig.cryptogramMLSEnabled);
                 }
+            } else if (position == curatedStickersRow) {
+                SharedConfig.toggleCryptogramCuratedStickers();
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(SharedConfig.cryptogramCuratedStickersEnabled);
+                }
             } else if (position == featureStatusRow) {
                 showFeatureStatusDialog();
             }
@@ -124,6 +133,10 @@ public class CryptogramSettingsActivity extends BaseFragment {
         doubleRatchetRow = rowCount++;
         mlsProtocolRow = rowCount++;
         encryptionInfoRow = rowCount++;
+
+        uiSectionRow = rowCount++;
+        curatedStickersRow = rowCount++;
+        uiInfoRow = rowCount++;
 
         advancedSectionRow = rowCount++;
         libraryVersionRow = rowCount++;
@@ -191,6 +204,8 @@ public class CryptogramSettingsActivity extends BaseFragment {
                         headerCell.setText("🔐 CRYPTOGRAM");
                     } else if (position == encryptionSectionRow) {
                         headerCell.setText("Encryption Protocols");
+                    } else if (position == uiSectionRow) {
+                        headerCell.setText("UI/UX Preferences");
                     } else if (position == advancedSectionRow) {
                         headerCell.setText("Advanced");
                     }
@@ -205,6 +220,9 @@ public class CryptogramSettingsActivity extends BaseFragment {
                     } else if (position == mlsProtocolRow) {
                         textCheckCell.setTextAndCheck("MLS for Groups (RFC 9420)",
                             SharedConfig.cryptogramMLSEnabled, true);
+                    } else if (position == curatedStickersRow) {
+                        textCheckCell.setTextAndCheck("Curated Stickers",
+                            SharedConfig.cryptogramCuratedStickersEnabled, true);
                     }
                     break;
                 }
@@ -217,6 +235,9 @@ public class CryptogramSettingsActivity extends BaseFragment {
                         cell.setText("• Double Ratchet: End-to-end encryption for 1-on-1 chats using Signal Protocol (X25519, Ed25519, AES-256-GCM)\n\n" +
                                     "• MLS Protocol: Scalable group encryption with TreeKEM (O(log n) operations, supports 10,000+ members)\n\n" +
                                     "Both protocols provide forward secrecy and post-compromise security.");
+                    } else if (position == uiInfoRow) {
+                        cell.setText("Curated Stickers: Show a favorites section at the top of your sticker picker with your most-used sticker sets for quick access. All stickers remain searchable.\n\n" +
+                                    "Long-press any sticker to add or remove its set from your curated favorites.");
                     } else if (position == advancedInfoRow) {
                         cell.setText("CRYPTOGRAM uses battle-tested cryptographic primitives. All encryption is performed locally on your device.\n\n" +
                                     "For technical details, see the CRYPTOGRAM documentation.");
@@ -266,11 +287,11 @@ public class CryptogramSettingsActivity extends BaseFragment {
                 return 0; // Shadow
             } else if (position == cryptogramStatusRow || position == libraryVersionRow || position == featureStatusRow) {
                 return 1; // TextSettingsCell
-            } else if (position == cryptogramHeaderRow || position == encryptionSectionRow || position == advancedSectionRow) {
+            } else if (position == cryptogramHeaderRow || position == encryptionSectionRow || position == uiSectionRow || position == advancedSectionRow) {
                 return 2; // HeaderCell
-            } else if (position == doubleRatchetRow || position == mlsProtocolRow) {
+            } else if (position == doubleRatchetRow || position == mlsProtocolRow || position == curatedStickersRow) {
                 return 3; // TextCheckCell
-            } else if (position == encryptionInfoRow || position == advancedInfoRow) {
+            } else if (position == encryptionInfoRow || position == uiInfoRow || position == advancedInfoRow) {
                 return 4; // TextInfoPrivacyCell
             }
             return 0;
