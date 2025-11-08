@@ -70,6 +70,9 @@ private:
     void createCovertChannelSettings(not_null<Ui::VerticalLayout*> container);
     void createEncryptionStatus(not_null<Ui::VerticalLayout*> container);
 
+    // UI/UX Preferences Section
+    void setupUIPreferencesSection(not_null<Ui::VerticalLayout*> container);
+
     // CAC Card Section (Hardware Security)
     void setupCACSection(not_null<Ui::VerticalLayout*> container);
     void createCACCardStatus(not_null<Ui::VerticalLayout*> container);

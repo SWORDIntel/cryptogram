@@ -52,9 +52,10 @@ jobs:
 
       - name: Build Linux Docker image
         run: |
-          docker build \
+          docker buildx build \
+            --load \
             --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
             -t cryptogram-linux:latest \
             docker/linux/
 
@@ -68,16 +69,19 @@ jobs:
             --release
 
       - name: Upload Linux binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cryptogram-linux-x64
           path: out/CRYPTOGRAM-linux-x64
           if-no-files-found: error
 
       - name: Move cache
+        if: always()
         run: |
           rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          if [ -d /tmp/.buildx-cache-new ]; then
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          fi
 
   # Build for Windows (cross-compile)
   build-windows:
@@ -107,9 +111,10 @@ jobs:
 
       - name: Build Windows Docker image
         run: |
-          docker build \
+          docker buildx build \
+            --load \
             --cache-from=type=local,src=/tmp/.buildx-cache \
-            --cache-to=type=local,dest=/tmp/.buildx-cache-new \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
             -t cryptogram-windows:latest \
             docker/windows/
 
@@ -125,16 +130,19 @@ jobs:
 
       - name: Upload Windows binary
         if: success()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cryptogram-windows-x64
           path: out/CRYPTOGRAM-windows-x64.exe
           if-no-files-found: warn
 
       - name: Move cache
+        if: always()
         run: |
           rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          if [ -d /tmp/.buildx-cache-new ]; then
+            mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+          fi
 
   # Native Windows build (alternative to cross-compile)
   build-windows-native:
@@ -185,7 +193,7 @@ jobs:
           cp build/Release/CRYPTOGRAM.exe out/ || cp build/Release/Telegram.exe out/CRYPTOGRAM.exe
 
       - name: Upload Windows binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: cryptogram-windows-x64-native
           path: out/CRYPTOGRAM.exe
@@ -200,13 +208,13 @@ jobs:
 
     steps:
       - name: Download Linux artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: cryptogram-linux-x64
           path: artifacts/
 
       - name: Download Windows artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: cryptogram-windows-x64-native
           path: artifacts/
