@@ -1273,18 +1273,19 @@ void Cryptogram::setupUIPreferencesSection(not_null<Ui::VerticalLayout*> contain
 		container,
 		rpl::single(QString(
 			"Customize your CRYPTOGRAM experience with curated interface options. "
-			"Curated Stickers Mode limits sticker sets to your favorites for a cleaner, faster picker."
+			"Curated Stickers adds a favorites section at the top of your sticker picker with "
+			"your most-used sets for quick access. All stickers remain searchable."
 		))
 	);
 
 	// Curated Stickers toggle
 	Ui::AddSkip(container);
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Curated Stickers Mode")));
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Curated Stickers Favorites")));
 
 	const auto curatedStickersCheckbox = container->add(
 		object_ptr<Ui::Checkbox>(
 			container,
-			tr::lng_settings_enable(tr::now),
+			QString("Show curated favorites section"),
 			Core::App().settings().curatedStickersEnabled()),
 		st::settingsCheckbox);
 
@@ -1294,41 +1295,13 @@ void Cryptogram::setupUIPreferencesSection(not_null<Ui::VerticalLayout*> contain
 		Core::App().saveSettingsDelayed();
 	}, curatedStickersCheckbox->lifetime());
 
-	// Max sticker sets slider
-	Ui::AddSkip(container);
-
-	const auto maxSetsLabel = container->add(
-		object_ptr<Ui::FlatLabel>(
-			container,
-			QString("Maximum Sticker Sets: %1").arg(
-				Core::App().settings().maxStickerSets()),
-			st::boxLabel),
-		st::settingsCheckboxPadding);
-
-	const auto maxSetsSlider = container->add(
-		object_ptr<Ui::MediaSlider>(
-			container,
-			st::defaultContinuousSlider),
-		st::settingsSliderPadding);
-
-	maxSetsSlider->resize(st::defaultContinuousSlider.seekSize);
-	maxSetsSlider->setPseudoDiscrete(
-		20,  // max: 20 sticker sets
-		[](int val) { return val + 1; },  // min: 1
-		Core::App().settings().maxStickerSets() - 1,
-		[=](int val) {
-			const auto sets = val + 1;
-			Core::App().settings().setMaxStickerSets(sets);
-			maxSetsLabel->setText(QString("Maximum Sticker Sets: %1").arg(sets));
-			Core::App().saveSettingsDelayed();
-		});
-
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"Tip: Set to 3-5 sets for your most-used stickers. "
-			"You can always access more through sticker search."
+			"When enabled, adds a 'Curated' tab with your favorite sticker sets at the top of "
+			"the sticker picker. Right-click any sticker set and select 'Add to Curated' to pin it. "
+			"All stickers remain accessible through search and browsing."
 		))
 	);
 }
