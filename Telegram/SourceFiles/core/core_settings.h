@@ -484,6 +484,18 @@ public:
 	void setSuggestAnimatedEmoji(bool value) {
 		_suggestAnimatedEmoji = value;
 	}
+	[[nodiscard]] bool curatedStickersEnabled() const {
+		return _curatedStickersEnabled;
+	}
+	void setCuratedStickersEnabled(bool value) {
+		_curatedStickersEnabled = value;
+	}
+	[[nodiscard]] int maxStickerSets() const {
+		return _maxStickerSets;
+	}
+	void setMaxStickerSets(int value) {
+		_maxStickerSets = std::clamp(value, 1, 20);
+	}
 	void setCornerReaction(bool value) {
 		_cornerReaction = value;
 	}
@@ -1134,6 +1146,8 @@ private:
 	bool _suggestEmoji = true;
 	bool _suggestStickersByEmoji = true;
 	bool _suggestAnimatedEmoji = true;
+	bool _curatedStickersEnabled = false;
+	int _maxStickerSets = 5;
 	rpl::variable<bool> _cornerReaction = true;
 	rpl::variable<bool> _spellcheckerEnabled = true;
 	PlaybackSpeed _videoPlaybackSpeed;
