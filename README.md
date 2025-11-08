@@ -15,6 +15,7 @@ CRYPTOGRAM goes beyond traditional encrypted messaging with advanced features fo
 | Feature | Signal | WhatsApp | Telegram | CRYPTOGRAM |
 |---------|--------|----------|----------|------------|
 | End-to-End Encryption | ✅ | ✅ | 🟡 Secret Chats Only | ✅ |
+| AES-256-GCM Encryption | ✅ | ✅ | 🟡 | ✅ |
 | Signal Protocol | ✅ | ✅ | ❌ | ✅ |
 | MLS Group Encryption | ❌ | ❌ | ❌ | ✅ |
 | Hide Messages in Audio | ❌ | ❌ | ❌ | ✅ Desktop |
@@ -36,7 +37,7 @@ Advanced privacy features for high-security communication:
 - **Surveillance Detection** - Detect debuggers, monitoring tools, and suspicious activity
 - **Covert Channels** - Bypass censorship and deep packet inspection
 - **Enhanced Privacy** - Extra encryption layers and metadata protection
-- **Double Ratchet + MLS** - Signal Protocol and group encryption
+- **Double Ratchet + MLS** - Signal Protocol with AES-256-GCM encryption
 
 [📥 Download Desktop](https://github.com/SWORDOps/CRYPTOGRAM/releases) | [📖 Desktop Features](FIVE_FEATURES_PORT.md)
 
@@ -48,6 +49,7 @@ Advanced privacy features for high-security communication:
 Military-grade encryption for mobile messaging:
 - **Signal Protocol** - End-to-end encryption with forward secrecy (1-on-1 chats)
 - **MLS Protocol** - Scalable group encryption with TreeKEM (group chats)
+- **AES-256-GCM** - Military-grade encryption for all messages
 - **Hardware KeyStore** - Secure key storage in Android's hardware security
 - **Visual Indicators** - Lock icons show encryption status
 - **Seamless Integration** - Works automatically with your existing chats
