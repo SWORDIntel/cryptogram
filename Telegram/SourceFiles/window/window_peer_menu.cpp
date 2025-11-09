@@ -8,6 +8,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "window/window_peer_menu.h"
 
 #include "base/call_delayed.h"
+#include "core/peer_trust.h"
+#include "boxes/device_trust_box.h"
 #include "menu/menu_check_item.h"
 #include "boxes/about_box.h"
 #include "boxes/share_box.h"
@@ -297,6 +299,7 @@ private:
 	void addCreateTodoList();
 	void addThemeEdit();
 	void addBlockUser();
+	void addVerifyIdentity();
 	void addViewDiscussion();
 	void addDirectMessages();
 	void addToggleTopicClosed();
@@ -875,6 +878,36 @@ void Filler::addBlockUser() {
 	if (user->blockStatus() == UserData::BlockStatus::Unknown) {
 		user->session().api().requestFullPeer(user);
 	}
+}
+
+void Filler::addVerifyIdentity() {
+	const auto user = _peer->asUser();
+	if (!user || user->isSelf() || user->isBot()) {
+		return;
+	}
+
+	auto trustManager = Core::App().peerTrustManager();
+	if (!trustManager || !trustManager->isEnabled()) {
+		return;
+	}
+
+	const auto hasTrust = trustManager->hasPeerTrust(user->id);
+	const auto text = hasTrust
+		? QString("Re-verify Identity")
+		: QString("Verify Identity (CAC)");
+
+	const auto session = &_controller->session();
+	_addAction(text, [=] {
+		auto trustManager = Core::App().peerTrustManager();
+		if (!trustManager) {
+			return;
+		}
+		const auto challenge = trustManager->generateChallenge();
+		_controller->show(Box<VerifyIdentityBox>(
+			session,
+			user,
+			challenge));
+	});
 }
 
 void Filler::addViewDiscussion() {
@@ -1646,6 +1679,7 @@ void Filler::fillProfileActions() {
 	addExportChat();
 	addToggleFolder();
 	addBlockUser();
+	addVerifyIdentity();
 	addReport();
 	addLeaveChat();
 	addDeleteContact();

@@ -27,6 +27,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "info/profile/info_profile_emoji_status_panel.h"
 #include "info/profile/info_profile_music_button.h"
 #include "info/profile/info_profile_values.h"
+#include "info/profile/info_profile_trust_flag.h"
 #include "info/saved/info_saved_music_widget.h"
 #include "info/info_controller.h"
 #include "info/info_memento.h"
@@ -36,6 +37,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "lang/lang_keys.h"
 #include "ui/boxes/show_or_premium_box.h"
 #include "ui/controls/stars_rating.h"
+#include "core/application.h"
+#include "core/peer_trust.h"
 #include "ui/controls/userpic_button.h"
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/labels.h"
@@ -921,6 +924,28 @@ void Cover::initViewers(rpl::producer<QString> title) {
 	) | rpl::start_with_next([=](const QString &title) {
 		_name->setText(title);
 		refreshNameGeometry(width());
+
+		if (const auto user = _peer->asUser()) {
+			if (!user->isSelf() && !user->isBot()) {
+				auto trustManager = Core::App().peerTrustManager();
+				if (trustManager && trustManager->hasPeerTrust(_peer->id)) {
+					const auto trustInfo = trustManager->getPeerTrust(_peer->id);
+					if (!_trustFlag) {
+						_trustFlag = std::make_unique<TrustFlag>(
+							this,
+							trustInfo.flag,
+							trustInfo.domain,
+							trustInfo.verifiedAt);
+						_trustFlag->widget()->show();
+					}
+					const auto nameRight = _name->x() + _name->width();
+					const auto flagLeft = nameRight + st::normalFont->spacew;
+					_trustFlag->move(flagLeft, _name->y());
+				} else {
+					_trustFlag = nullptr;
+				}
+			}
+		}
 	}, lifetime());
 
 	rpl::combine(

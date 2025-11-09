@@ -174,6 +174,7 @@ private:
 	std::optional<QImage> _personalChosen;
 	object_ptr<TopicIconButton> _iconButton;
 	object_ptr<Ui::FlatLabel> _name = { nullptr };
+	std::unique_ptr<TrustFlag> _trustFlag;
 	std::unique_ptr<Ui::StarsRating> _starsRating;
 	object_ptr<Ui::FlatLabel> _status = { nullptr };
 	object_ptr<Ui::FlatLabel> _id = { nullptr };

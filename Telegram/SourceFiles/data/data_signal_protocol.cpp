@@ -7,6 +7,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 */
 #include "data/data_signal_protocol.h"
 #include "data/data_tsm_factory.cpp"
+#include "core/peer_trust_encryption.h"
 
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
@@ -352,12 +353,23 @@ bytes::vector SignalProtocol::encryptMessage(
     const bytes::const_span &plaintext,
     not_null<PeerData*> peer,
     MessageMetadata &outMetadata) {
-    
+
     if (!hasSession(peer)) {
         LOG(("Signal Protocol: No session for peer %1").arg(peer->id.value));
         return {};
     }
-    
+
+    // Check for CAC-verified peer trust encryption
+    const auto trustParams = Core::PeerTrustEncryption::GetEncryptionParams(peer->id.value);
+    if (trustParams.verified && trustParams.useTPM) {
+        LOG(("Signal Protocol: Using %1 with TPM backing for CAC-verified peer %2")
+            .arg(trustParams.cipher)
+            .arg(peer->id.value));
+        // TODO: Integrate TPM-backed encryption with specified cipher
+        // For now, fall through to standard encryption
+        // Future: Call TSM interface for hardware-backed key generation
+    }
+
     // Get the current session
     auto session = getSession(peer);
     

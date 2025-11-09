@@ -6,6 +6,7 @@ For license and copyright information please follow this link:
 https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 */
 #include "settings/settings_cryptogram.h"
+#include "settings/settings_trust_history.h"
 
 #include "ui/wrap/vertical_layout.h"
 #include "ui/wrap/slide_wrap.h"
@@ -1416,6 +1417,30 @@ void Cryptogram::setupCACSection(not_null<Ui::VerticalLayout*> container) {
 	createCACPINEntry(container);
 	createCACAlgorithmSelection(container);
 	createCACUserIdentification(container);
+
+	// Add Trust History button
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Verified Identities")));
+
+	const auto trustHistoryButton = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("View Verified Identities")),
+			st::settingsButton),
+		st::settingsCheckboxPadding);
+
+	trustHistoryButton->setClickedCallback([=] {
+		_controller->showSettings(Settings::TrustHistory::Id());
+	});
+
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		rpl::single(QString(
+			"View and manage all CAC-verified user identities. "
+			"Verified identities expire after 6 months and require re-verification."
+		))
+	);
 
 	// Initial status update
 	updateCACStatus();
