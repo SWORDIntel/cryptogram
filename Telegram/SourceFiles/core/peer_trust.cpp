@@ -77,6 +77,10 @@ void PeerTrustManager::requestVerification(uint64 userId) {
     emit verificationRequested(userId, challenge);
 }
 
+std::map<uint64, PeerTrustInfo> PeerTrustManager::getTrustedPeers() const {
+    return _private->trustedPeers;
+}
+
 QByteArray PeerTrustManager::generateChallenge() {
     QByteArray challenge(32, 0);
     for (int i = 0; i < 32; ++i) {

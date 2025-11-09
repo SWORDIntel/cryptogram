@@ -36,6 +36,9 @@ public:
     void requestVerification(uint64 userId);
     void respondToChallenge(uint64 userId, const QByteArray &challenge);
 
+    [[nodiscard]] QByteArray generateChallenge();
+    [[nodiscard]] std::map<uint64, PeerTrustInfo> getTrustedPeers() const;
+
     [[nodiscard]] QString getPreferredCipher() const;
     void setPreferredCipher(const QString &cipher);
 
@@ -56,8 +59,6 @@ private:
     void storePeerTrust(uint64 userId, const PeerTrustInfo &info);
     void loadPeerTrusts();
     void savePeerTrusts();
-
-    QByteArray generateChallenge();
 };
 
 } // namespace Core
