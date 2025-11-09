@@ -100,12 +100,12 @@ RUN chmod +x /usr/local/bin/build-linux.sh
 ENTRYPOINT ["/usr/local/bin/build-linux.sh"]
 CMD ["--help"]
 
-# Build artifacts will be in /build/CRYPTOGRAM/build/
+# Build artifacts will be in /tmp/build-linux/
 # Mount volumes:
-# - Source: -v $(pwd):/build/CRYPTOGRAM
+# - Source: -v $(pwd):/build/CRYPTOGRAM:ro (read-only)
 # - Cache: -v cryptogram-ccache:/build/.ccache
 # - Output: -v $(pwd)/out:/output
 
 # Example usage:
 # docker build -t cryptogram-linux docker/linux/
-# docker run --rm -v $(pwd):/build/CRYPTOGRAM -v cryptogram-ccache:/build/.ccache cryptogram-linux --release
+# docker run --rm -v $(pwd):/build/CRYPTOGRAM:ro -v cryptogram-ccache:/build/.ccache -v $(pwd)/out:/output cryptogram-linux --release
