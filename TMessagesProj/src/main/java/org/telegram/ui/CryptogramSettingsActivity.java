@@ -57,6 +57,12 @@ public class CryptogramSettingsActivity extends BaseFragment {
     private int mlsProtocolRow;
     private int encryptionInfoRow;
 
+    private int privacySectionRow;
+    private int hideOnlineStatusRow;
+    private int hideTypingIndicatorRow;
+    private int hideReadReceiptsRow;
+    private int privacyInfoRow;
+
     private int uiSectionRow;
     private int curatedStickersRow;
     private int uiInfoRow;
@@ -109,6 +115,21 @@ public class CryptogramSettingsActivity extends BaseFragment {
                 if (view instanceof TextCheckCell) {
                     ((TextCheckCell) view).setChecked(SharedConfig.cryptogramMLSEnabled);
                 }
+            } else if (position == hideOnlineStatusRow) {
+                SharedConfig.toggleCryptogramHideOnlineStatus();
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(SharedConfig.cryptogramHideOnlineStatus);
+                }
+            } else if (position == hideTypingIndicatorRow) {
+                SharedConfig.toggleCryptogramHideTypingIndicator();
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(SharedConfig.cryptogramHideTypingIndicator);
+                }
+            } else if (position == hideReadReceiptsRow) {
+                SharedConfig.toggleCryptogramHideReadReceipts();
+                if (view instanceof TextCheckCell) {
+                    ((TextCheckCell) view).setChecked(SharedConfig.cryptogramHideReadReceipts);
+                }
             } else if (position == curatedStickersRow) {
                 SharedConfig.toggleCryptogramCuratedStickers();
                 if (view instanceof TextCheckCell) {
@@ -133,6 +154,12 @@ public class CryptogramSettingsActivity extends BaseFragment {
         doubleRatchetRow = rowCount++;
         mlsProtocolRow = rowCount++;
         encryptionInfoRow = rowCount++;
+
+        privacySectionRow = rowCount++;
+        hideOnlineStatusRow = rowCount++;
+        hideTypingIndicatorRow = rowCount++;
+        hideReadReceiptsRow = rowCount++;
+        privacyInfoRow = rowCount++;
 
         uiSectionRow = rowCount++;
         curatedStickersRow = rowCount++;
@@ -204,6 +231,8 @@ public class CryptogramSettingsActivity extends BaseFragment {
                         headerCell.setText("🔐 CRYPTOGRAM");
                     } else if (position == encryptionSectionRow) {
                         headerCell.setText("Encryption Protocols");
+                    } else if (position == privacySectionRow) {
+                        headerCell.setText("Privacy Settings");
                     } else if (position == uiSectionRow) {
                         headerCell.setText("UI/UX Preferences");
                     } else if (position == advancedSectionRow) {
@@ -220,6 +249,15 @@ public class CryptogramSettingsActivity extends BaseFragment {
                     } else if (position == mlsProtocolRow) {
                         textCheckCell.setTextAndCheck("MLS for Groups (RFC 9420)",
                             SharedConfig.cryptogramMLSEnabled, true);
+                    } else if (position == hideOnlineStatusRow) {
+                        textCheckCell.setTextAndCheck("Hide Online Status",
+                            SharedConfig.cryptogramHideOnlineStatus, true);
+                    } else if (position == hideTypingIndicatorRow) {
+                        textCheckCell.setTextAndCheck("Hide Typing Indicator",
+                            SharedConfig.cryptogramHideTypingIndicator, true);
+                    } else if (position == hideReadReceiptsRow) {
+                        textCheckCell.setTextAndCheck("Hide Read Receipts",
+                            SharedConfig.cryptogramHideReadReceipts, false);
                     } else if (position == curatedStickersRow) {
                         textCheckCell.setTextAndCheck("Curated Stickers",
                             SharedConfig.cryptogramCuratedStickersEnabled, true);
@@ -235,6 +273,11 @@ public class CryptogramSettingsActivity extends BaseFragment {
                         cell.setText("• Double Ratchet: End-to-end encryption for 1-on-1 chats using Signal Protocol (X25519, Ed25519, AES-256-GCM)\n\n" +
                                     "• MLS Protocol: Scalable group encryption with TreeKEM (O(log n) operations, supports 10,000+ members)\n\n" +
                                     "Both protocols provide forward secrecy and post-compromise security.");
+                    } else if (position == privacyInfoRow) {
+                        cell.setText("• Hide Online Status: Prevents sending your online/offline status to other users\n\n" +
+                                    "• Hide Typing Indicator: Stops sending typing notifications when you compose messages\n\n" +
+                                    "• Hide Read Receipts: Prevents sending read confirmations (double ticks) when you view messages\n\n" +
+                                    "These settings enhance your privacy by controlling what activity information is shared.");
                     } else if (position == uiInfoRow) {
                         cell.setText("Curated Stickers: Show a favorites section at the top of your sticker picker with your most-used sticker sets for quick access. All stickers remain searchable.\n\n" +
                                     "Long-press any sticker to add or remove its set from your curated favorites.");
@@ -287,11 +330,11 @@ public class CryptogramSettingsActivity extends BaseFragment {
                 return 0; // Shadow
             } else if (position == cryptogramStatusRow || position == libraryVersionRow || position == featureStatusRow) {
                 return 1; // TextSettingsCell
-            } else if (position == cryptogramHeaderRow || position == encryptionSectionRow || position == uiSectionRow || position == advancedSectionRow) {
+            } else if (position == cryptogramHeaderRow || position == encryptionSectionRow || position == privacySectionRow || position == uiSectionRow || position == advancedSectionRow) {
                 return 2; // HeaderCell
-            } else if (position == doubleRatchetRow || position == mlsProtocolRow || position == curatedStickersRow) {
+            } else if (position == doubleRatchetRow || position == mlsProtocolRow || position == hideOnlineStatusRow || position == hideTypingIndicatorRow || position == hideReadReceiptsRow || position == curatedStickersRow) {
                 return 3; // TextCheckCell
-            } else if (position == encryptionInfoRow || position == uiInfoRow || position == advancedInfoRow) {
+            } else if (position == encryptionInfoRow || position == privacyInfoRow || position == uiInfoRow || position == advancedInfoRow) {
                 return 4; // TextInfoPrivacyCell
             }
             return 0;
