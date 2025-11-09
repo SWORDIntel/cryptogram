@@ -24,6 +24,9 @@ CRYPTOGRAM goes beyond traditional encrypted messaging with advanced features fo
 | Surveillance Detection | ❌ | ❌ | ❌ | ✅ Desktop |
 | Hardware Security (TPM/KeyStore) | ❌ | ❌ | ❌ | ✅ |
 | Metadata Stripping | 🟡 | ❌ | ❌ | ✅ |
+| Hide Online Status | ❌ | ❌ | ❌ | ✅ **UNIQUE** |
+| Hide Typing Indicator | ❌ | ❌ | ❌ | ✅ **UNIQUE** |
+| Hide Read Receipts | ❌ | ❌ | ❌ | ✅ **UNIQUE** |
 
 ---
 
@@ -39,9 +42,10 @@ Advanced privacy features for high-security communication:
 - **Surveillance Detection** - Detect debuggers, monitoring tools, and suspicious activity
 - **Covert Channels** - Bypass censorship and deep packet inspection
 - **Enhanced Privacy** - Extra encryption layers and metadata protection
+- **Privacy Controls** - Hide online status, typing indicator, and read receipts
 - **Double Ratchet + MLS** - Signal Protocol with AES-256-GCM encryption
 
-[📥 Download Desktop](https://github.com/SWORDOps/CRYPTOGRAM/releases) | [📖 Desktop Features](FIVE_FEATURES_PORT.md)
+[📥 Download Desktop](https://github.com/SWORDOps/CRYPTOGRAM/releases) | [📖 Desktop Features](docs/implementation/FIVE_FEATURES_PORT.md)
 
 ---
 
@@ -55,9 +59,10 @@ Military-grade encryption for mobile messaging:
 - **AES-256-GCM** - 256-bit keys derived via HKDF-SHA256
 - **Hardware KeyStore** - Secure key storage in Android's hardware security
 - **Visual Indicators** - Lock icons show encryption status
+- **Privacy Controls** - Hide online status, typing indicator, and read receipts
 - **Seamless Integration** - Works automatically with your existing chats
 
-[📥 Download Android APK](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml) | [📖 Android Features](CRYPTOGRAM_ANDROID_COMPLETE.md)
+[📥 Download Android APK](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml) | [📖 Android Features](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md)
 
 ---
 
@@ -70,7 +75,7 @@ Military-grade encryption for mobile messaging:
 3. Open Telegram → Settings → 🔐 CRYPTOGRAM
 4. Enable encryption features
 
-See [Android installation guide](CRYPTOGRAM_ANDROID_COMPLETE.md#installation) for details.
+See [Android installation guide](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md#installation) for details.
 
 ### Desktop Installation
 
@@ -130,7 +135,7 @@ CRYPTOGRAM provides multiple layers of security:
 - Location privacy with realistic decoys
 - DPI-resistant covert channels
 
-See [technical specifications](CRYPTOGRAM_ANDROID_COMPLETE.md#cryptographic-algorithms) for details.
+See [technical specifications](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md#cryptographic-algorithms) for details.
 
 ### Responsible Disclosure
 
@@ -143,23 +148,26 @@ We offer bug bounty rewards for responsibly disclosed vulnerabilities.
 ## 📖 Documentation
 
 ### Getting Started
-- **[Android Guide](CRYPTOGRAM_ANDROID_COMPLETE.md)** - Complete Android implementation and features
-- **[Desktop Features](FIVE_FEATURES_PORT.md)** - Advanced security features guide
+- **[Android Guide](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md)** - Complete Android implementation and features
+- **[Desktop Features](docs/implementation/FIVE_FEATURES_PORT.md)** - Advanced security features guide
 - **[Building Instructions](docs/)** - Platform-specific build guides
+- **[Docker Build Guide](DOCKER_BUILD.md)** - Multi-platform Docker builds
+- **[GitHub Actions CI/CD](GITHUB_ACTIONS_BUILD.md)** - Automated builds
 
 ### Technical Details
-- **[Signal Protocol Implementation](DOUBLE_RATCHET_PORT.md)** - Double Ratchet details
-- **[MLS Protocol](CRYPTOGRAM_ANDROID_COMPLETE.md#mls-protocol)** - Group encryption specification
-- **[Message Flow](MESSAGE_FLOW_COMPLETE.md)** - Encryption/decryption flow
-- **[Test Results](TEST_RESULTS.md)** - Comprehensive test coverage
-- **[CI/CD Pipeline](GITHUB_ACTIONS_BUILD.md)** - Automated builds
+- **[Signal Protocol Implementation](docs/implementation/DOUBLE_RATCHET_PORT.md)** - Double Ratchet details
+- **[MLS Protocol](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md#mls-protocol)** - Group encryption specification
+- **[Message Flow](docs/implementation/MESSAGE_FLOW_COMPLETE.md)** - Encryption/decryption flow
+- **[Test Results](docs/status/TEST_RESULTS.md)** - Comprehensive test coverage
+- **[Implementation Status](docs/status/FINAL_STATUS.md)** - Current project status
 
 ### Feature Documentation
-- **[Audio Steganography](FIVE_FEATURES_PORT.md#1--audio-steganography-engine)** - Hide messages in audio
-- **[Location Randomization](FIVE_FEATURES_PORT.md#2--location-randomization-system)** - Anti-tracking system
-- **[Surveillance Detection](FIVE_FEATURES_PORT.md#3--surveillance-detection-system)** - Threat monitoring
-- **[Covert Channels](FIVE_FEATURES_PORT.md#4--covert-channel-engine)** - Censorship bypass
-- **[Enhanced Privacy](FIVE_FEATURES_PORT.md#5--enhanced-privacy-system)** - Extra protection layers
+- **[Audio Steganography](docs/implementation/FIVE_FEATURES_PORT.md#1--audio-steganography-engine)** - Hide messages in audio
+- **[Location Randomization](docs/implementation/FIVE_FEATURES_PORT.md#2--location-randomization-system)** - Anti-tracking system
+- **[Surveillance Detection](docs/implementation/FIVE_FEATURES_PORT.md#3--surveillance-detection-system)** - Threat monitoring
+- **[Covert Channels](docs/implementation/FIVE_FEATURES_PORT.md#4--covert-channel-engine)** - Censorship bypass
+- **[Enhanced Privacy](docs/implementation/FIVE_FEATURES_PORT.md#5--enhanced-privacy-system)** - Extra protection layers
+- **[Privacy Controls](docs/features/)** - Online status, typing indicators, read receipts
 
 ---
 
