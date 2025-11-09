@@ -112,6 +112,13 @@ void Cryptogram::setupContent() {
 	Ui::AddDivider(content);
 	Ui::AddSkip(content);
 
+	// Privacy Controls Section
+	setupPrivacyControlsSection(content);
+
+	Ui::AddSkip(content);
+	Ui::AddDivider(content);
+	Ui::AddSkip(content);
+
 	// UI/UX Preferences Section
 	setupUIPreferencesSection(content);
 
@@ -766,6 +773,89 @@ void Cryptogram::updateEncryptionStatus() {
 				.arg(cryptogramUsers.size())
 		);
 	}
+}
+
+// ========== Privacy Controls Section ==========
+
+void Cryptogram::setupPrivacyControlsSection(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Privacy Controls")));
+
+	Ui::AddSkip(container);
+
+	// Info text
+	Ui::AddDividerText(
+		container,
+		rpl::single(QString(
+			"Control what activity information is shared with other users. "
+			"These settings enhance your privacy by allowing you to selectively hide "
+			"your online status, typing indicators, and read receipts."
+		))
+	);
+
+	createPrivacyToggles(container);
+}
+
+void Cryptogram::createPrivacyToggles(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+
+	// Hide Online Status toggle
+	const auto hideOnlineCheckbox = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("Hide Online Status"),
+			Core::App().settings().cryptogramHideOnlineStatus()),
+		st::settingsCheckbox);
+
+	hideOnlineCheckbox->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		Core::App().settings().setCryptogramHideOnlineStatus(checked);
+		Core::App().saveSettingsDelayed();
+	}, hideOnlineCheckbox->lifetime());
+
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
+
+	// Hide Typing Indicator toggle
+	const auto hideTypingCheckbox = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("Hide Typing Indicator"),
+			Core::App().settings().cryptogramHideTypingIndicator()),
+		st::settingsCheckbox);
+
+	hideTypingCheckbox->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		Core::App().settings().setCryptogramHideTypingIndicator(checked);
+		Core::App().saveSettingsDelayed();
+	}, hideTypingCheckbox->lifetime());
+
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
+
+	// Hide Read Receipts toggle
+	const auto hideReadReceiptsCheckbox = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("Hide Read Receipts"),
+			Core::App().settings().cryptogramHideReadReceipts()),
+		st::settingsCheckbox);
+
+	hideReadReceiptsCheckbox->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		Core::App().settings().setCryptogramHideReadReceipts(checked);
+		Core::App().saveSettingsDelayed();
+	}, hideReadReceiptsCheckbox->lifetime());
+
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		rpl::single(QString(
+			"• Hide Online Status: Prevents sending your online/offline status to other users\n"
+			"• Hide Typing Indicator: Stops sending typing notifications when you compose messages\n"
+			"• Hide Read Receipts: Prevents sending read confirmations (double ticks) when you view messages\n\n"
+			"Note: These settings only affect what YOU send to others. "
+			"They do not affect what you receive from others."
+		))
+	);
 }
 
 } // namespace Settings
