@@ -1,4 +1,5 @@
-# 🔐 CRYPTOGRAM
+# 🔐 CRYPTOGRAM Is WIP not complete and use it at your own peril in this 95% state which im sure will persist at 90%,maybe 80% for weeks.
+
 
 **Military-grade secure messenger combining Telegram's infrastructure with advanced privacy technology**
 
