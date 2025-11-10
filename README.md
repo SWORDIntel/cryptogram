@@ -1,116 +1,154 @@
-# 🔐 CRYPTOGRAM
+Here’s a **clean, de-conflicted README.md**—no merge markers, consistent tone, and both branches’ useful content preserved. I removed jokes/insults and kept it professional while retaining your WIP caveats.
 
-**Military-grade secure messenger combining Telegram's infrastructure with advanced cryptography**
+---
+
+# 🔐 CRYPTOGRAM (WIP)
+
+**Use at your own risk — this is ~90–95% complete and may remain in flux for weeks.**
+
+**Military-grade secure messenger combining Telegram’s infrastructure with advanced cryptography**
 
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-lightgrey.svg)](#platforms)
-[![Security](https://img.shields.io/badge/security-military--grade-green.svg)](#security)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20Android-lightgrey.svg)](#-platforms)
+[![Security](https://img.shields.io/badge/security-military--grade-green.svg)](#-security)
 [![Build Android](https://github.com/SWORDOps/CRYPTOGRAM/workflows/Build%20CRYPTOGRAM%20Android%20APK/badge.svg)](https://github.com/SWORDOps/CRYPTOGRAM/actions)
 
-CRYPTOGRAM provides military-grade encryption and advanced privacy features for journalists, activists, whistleblowers, and anyone who values digital privacy.
+CRYPTOGRAM provides advanced end-to-end encryption and privacy features for journalists, activists, whistleblowers, and anyone who values digital privacy.
 
 ---
 
 ## 🌟 Key Features
 
-| Feature | Description | Platforms |
-|---------|-------------|-----------|
-| **End-to-End Encryption** | Signal Protocol + MLS | 🖥️ 📱 |
-| **Post-Quantum Security** | ML-KEM-1024 + ML-DSA-87 | 🖥️ 📱 |
-| **Audio Steganography** | Hide messages in voice notes | 🖥️ |
-| **Location Privacy** | Randomize GPS coordinates | 🖥️ |
-| **Surveillance Detection** | Detect monitoring attempts | 🖥️ |
-| **Tor/I2P Integration** | Anonymous routing | 🖥️ |
-| **Hardware Security** | TPM/KeyStore integration | 🖥️ 📱 |
-| **Premium Features** | All Telegram Premium features | 🖥️ 📱 |
+### Capability Matrix
 
-🖥️ = Desktop (Windows/Linux/macOS) | 📱 = Android
+| Feature                        | Description                                  | Platforms |
+| ------------------------------ | -------------------------------------------- | --------- |
+| **End-to-End Encryption**      | Signal Protocol + MLS                        | 🖥️ 📱    |
+| **Post-Quantum Security**      | ML-KEM-1024 + ML-DSA-87                      | 🖥️ 📱    |
+| **Audio Steganography**        | Hide messages in voice notes                 | 🖥️       |
+| **Location Privacy**           | Randomize GPS coordinates                    | 🖥️       |
+| **Surveillance Detection**     | Detect monitoring/VM/debuggers               | 🖥️       |
+| **Tor/I2P Integration**        | Anonymous routing                            | 🖥️       |
+| **Hardware Security**          | TPM/KeyStore integration                     | 🖥️ 📱    |
+| **Premium Features (Testing)** | Access Telegram Premium features for testing | 🖥️ 📱    |
+
+🖥️ = Desktop (Windows/Linux/macOS) | 📱 = Android
+
+### Comparison (at a glance)
+
+| Feature                  | Signal | WhatsApp | Telegram             | **CRYPTOGRAM** |
+| ------------------------ | ------ | -------- | -------------------- | -------------- |
+| End-to-End Encryption    | ✅      | ✅        | 🟡 Secret Chats only | ✅              |
+| Post-Quantum Crypto      | ❌      | ❌        | ❌                    | ✅ **Unique**   |
+| AES-256-GCM              | ✅      | ✅        | 🟡                   | ✅              |
+| Signal Protocol          | ✅      | ✅        | ❌                    | ✅              |
+| MLS (Groups)             | ❌      | ❌        | ❌                    | ✅              |
+| Hide in Audio            | ❌      | ❌        | ❌                    | ✅ (Desktop)    |
+| Location Randomization   | ❌      | ❌        | ❌                    | ✅ (Desktop)    |
+| Surveillance Detection   | ❌      | ❌        | ❌                    | ✅ (Desktop)    |
+| Hardware KeyStore/TPM    | ❌      | ❌        | ❌                    | ✅              |
+| Metadata Stripping       | 🟡     | ❌        | ❌                    | ✅              |
+| Hide Online/Typing/Reads | ❌      | ❌        | ❌                    | ✅ **Unique**   |
 
 ---
 
 ## 🚀 Quick Start
 
-### Android
+### 📱 Android
+
 ```bash
-# Download latest APK from GitHub Actions
-wget https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml
+# 1) Download latest APK (GitHub Actions artifact)
+xdg-open https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml
 
-# Install
+# 2) Install (example with adb)
 adb install cryptogram-debug.apk
-
-# Enable encryption
-# Settings → 🔐 CRYPTOGRAM → Enable features
 ```
 
-### Desktop
+Then open **Telegram → Settings → 🔐 CRYPTOGRAM** and enable features.
+
+### 🖥️ Desktop
+
 ```bash
-# Download from releases
-https://github.com/SWORDOps/CRYPTOGRAM/releases
+# Download binaries
+xdg-open https://github.com/SWORDOps/CRYPTOGRAM/releases
 
 # Or build from source
 git clone https://github.com/SWORDOps/CRYPTOGRAM
 cd CRYPTOGRAM
-# See docs/setup/ for build instructions
+# See docs/setup/ for platform build instructions
 ```
 
 ---
 
 ## 📱 Platforms
 
-### 🖥️ CRYPTOGRAM Desktop
-**Windows 10/11, Linux, macOS 10.15+**
+### 🖥️ CRYPTOGRAM Desktop (Windows 10/11, Linux, macOS 10.15+)
 
-Full-featured desktop client with advanced security:
+**Core Encryption**
 
-**Core Encryption**:
-- Signal Protocol (Double Ratchet)
-- MLS Protocol (RFC 9420)
-- Post-Quantum Cryptography (ML-KEM-1024, ML-DSA-87)
+* Signal Protocol (Double Ratchet)
+* MLS (RFC 9420)
+* Post-Quantum: ML-KEM-1024, ML-DSA-87
 
-**Advanced Security**:
-- Audio Steganography (8 methods, 40dB SNR)
-- Location Randomization (realistic fake GPS)
-- Surveillance Detection (debugger/VM/monitoring detection)
-- Covert Channels (DPI-resistant communication)
-- Enhanced Privacy (metadata stripping)
+**Advanced Security**
 
-**Network Privacy**:
-- Tor Integration (SOCKS5 + Snowflake bridges)
-- I2P Integration (Garlic routing)
+* Audio steganography (multiple methods)
+* Location randomization (realistic GPS fuzzing)
+* Surveillance detection (debugger/VM/monitoring)
+* Covert channels (DPI-resistant)
+* Enhanced privacy (metadata stripping)
 
-**Optional Features**:
-- OpenVINO Translation (100+ languages, offline)
-- Monero Mining (optional, configurable)
+**Network Privacy**
 
-**Premium Override**:
-- All Telegram Premium features enabled for testing
+* Tor (SOCKS5, Snowflake bridges)
+* I2P (Garlic routing)
 
-[📖 Desktop Features Guide](docs/features/desktop-features.md)
+**Optional**
+
+* OpenVINO translation (offline, 100+ languages)
+* *Monero mining* (opt-in, configurable)
+
+**Premium Override (Testing)**
+
+* Enable Telegram Premium features for testing only
+
+[📥 Download Desktop](https://github.com/SWORDOps/CRYPTOGRAM/releases) · [📖 Desktop Features](docs/features/desktop-features.md)
 
 ---
 
-### 📱 CRYPTOGRAM Android
-**Android 5.0+ (API 21+)**
+### 📱 CRYPTOGRAM Android (API 21+)
 
-Mobile security with military-grade encryption:
+**Core Encryption**
 
-**Core Encryption**:
-- Signal Protocol (X25519, Ed25519, AES-256-GCM)
-- MLS Protocol (TreeKEM for groups)
-- Post-Quantum (ML-KEM-1024, ML-DSA-87)
+* Signal Protocol (X25519, Ed25519, AES-256-GCM)
+* MLS (TreeKEM groups)
+* Post-Quantum: ML-KEM-1024, ML-DSA-87
 
-**Privacy**:
-- Hardware KeyStore integration
-- Metadata stripping (EXIF, GPS)
-- Visual encryption indicators (lock icons)
+**Privacy**
 
-**Premium Override**:
-- All Telegram Premium features enabled for testing
+* Hardware KeyStore integration
+* Metadata stripping (EXIF/GPS)
+* Visual lock indicators
 
-**Architecture Support**:
-- armeabi-v7a, arm64-v8a, x86, x86_64
+**Premium Override (Testing)**
 
-[📖 Android Features Guide](docs/features/android-features.md) | [📥 Download APK](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml)
+* Enable Telegram Premium features for testing only
+
+**Architectures**
+
+* armeabi-v7a, arm64-v8a, x86, x86_64
+
+[📥 Android APK](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml) · [📖 Android Guide](docs/features/android-features.md)
+
+---
+
+## 🎯 Who Is CRYPTOGRAM For?
+
+* **Journalists** — covert channels, surveillance detection, location privacy
+* **Activists** — censorship bypass (Tor/I2P), MLS secure groups
+* **Whistleblowers** — audio stego, forward secrecy, anonymous routing
+* **Privacy Advocates** — hardware-backed keys, metadata protection
+* **Users in Restrictive Countries** — DPI evasion, protocol mimicry
 
 ---
 
@@ -118,84 +156,48 @@ Mobile security with military-grade encryption:
 
 ### Cryptographic Primitives
 
-**Symmetric Encryption**:
-- AES-256-GCM (authenticated encryption)
-- ChaCha20-Poly1305 (alternative cipher)
+**Symmetric:** AES-256-GCM, ChaCha20-Poly1305
+**Asymmetric:** X25519 (KX), Ed25519 (sig)
+**Post-Quantum:** ML-KEM-1024 (Kyber), ML-DSA-87 (Dilithium)
+**Hash/KDF:** SHA-256/512, BLAKE2b, HKDF-SHA256
 
-**Asymmetric Cryptography**:
-- X25519 (Diffie-Hellman key exchange)
-- Ed25519 (digital signatures)
+**Security Properties**
 
-**Post-Quantum**:
-- ML-KEM-1024 (Kyber, NIST approved)
-- ML-DSA-87 (Dilithium, NIST approved)
+* ✅ Forward Secrecy
+* ✅ Post-Compromise Security
+* ✅ Deniability
+* ✅ Quantum-resistant key exchange & signatures
+* ✅ Hardware-backed key storage (TPM/KeyStore)
+* ✅ Metadata minimization (GPS/EXIF/timestamps)
 
-**Hashing & KDF**:
-- SHA-256, SHA-512, BLAKE2b
-- HKDF-SHA256 (key derivation)
-
-### Security Properties
-
-✅ **Forward Secrecy** - Past messages safe if keys compromised
-✅ **Post-Compromise Security** - Future messages safe after compromise
-✅ **Deniability** - Cannot prove who sent a message
-✅ **Quantum Resistance** - Protected against quantum computers
-✅ **Hardware Security** - TPM/KeyStore integration
-✅ **Metadata Protection** - GPS, EXIF, timestamp stripping
-
-[📖 Security Overview](docs/features/security-overview.md)
-
----
-
-## 🎯 Use Cases
-
-### 📰 Journalists
-- **Protect Sources**: Audio steganography for covert messages
-- **Location Privacy**: Randomize GPS when meeting sources
-- **Anti-Surveillance**: Detect monitoring attempts
-
-### 🎗️ Activists
-- **Secure Groups**: MLS protocol for encrypted group chats
-- **Bypass Censorship**: Tor/I2P integration
-- **Privacy Protection**: Location randomization, metadata stripping
-
-### 📢 Whistleblowers
-- **Anonymous Communication**: Tor routing + covert channels
-- **Plausible Deniability**: Hidden messages in audio
-- **Forward Secrecy**: Past messages protected
-
-### 🛡️ Privacy Advocates
-- **Maximum Encryption**: All protocols enabled
-- **Post-Quantum Security**: Future-proof cryptography
-- **Hardware Security**: TPM/KeyStore integration
-
-### 🌐 Users in Restrictive Countries
-- **Bypass DPI**: Covert channel engine
-- **Traffic Obfuscation**: Protocol mimicry
-- **Anonymous Access**: Tor/I2P networks
+See **[Technical Specifications](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md#cryptographic-algorithms)** and **[Security Overview](docs/features/security-overview.md)**.
 
 ---
 
 ## 📖 Documentation
 
 ### Getting Started
-- [Android Features](docs/features/android-features.md) - Complete Android feature guide
-- [Desktop Features](docs/features/desktop-features.md) - Complete desktop feature guide
-- [Security Overview](docs/features/security-overview.md) - Security architecture & threat model
+
+* [Android Features](docs/features/android-features.md)
+* [Desktop Features](docs/features/desktop-features.md)
+* [Security Overview](docs/features/security-overview.md)
 
 ### Building from Source
-- [Windows Build Guide](docs/setup/building-win-x64.md)
-- [Linux Build Guide](docs/setup/building-linux.md)
-- [macOS Build Guide](docs/setup/building-mac.md)
-- [API Credentials](docs/setup/api_credentials.md)
 
-### Development
-- [CHANGELOG](CHANGELOG.md) - Version history
-- [SECURITY](SECURITY_STANDARDS.md) - Security standards
-- [GitHub Actions](docs/archive/GITHUB_ACTIONS_BUILD.md) - CI/CD pipeline
+* [Windows](docs/setup/building-win-x64.md)
+* [Linux](docs/setup/building-linux.md)
+* [macOS](docs/setup/building-mac.md)
+* [API Credentials](docs/setup/api_credentials.md)
+* [Docker Build](DOCKER_BUILD.md)
+* [CI/CD (GitHub Actions)](GITHUB_ACTIONS_BUILD.md) or [docs/archive/GITHUB_ACTIONS_BUILD.md](docs/archive/GITHUB_ACTIONS_BUILD.md)
 
-### Archived Documentation
-See [docs/archive/](docs/archive/) for historical documentation.
+### Technical Details
+
+* [Signal (Double Ratchet)](docs/implementation/DOUBLE_RATCHET_PORT.md)
+* [MLS Protocol](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md#mls-protocol)
+* [Message Flow](docs/implementation/MESSAGE_FLOW_COMPLETE.md)
+* [Test Results](docs/status/TEST_RESULTS.md)
+* [Implementation Status](docs/status/FINAL_STATUS.md)
 
 ---
 
@@ -203,122 +205,117 @@ See [docs/archive/](docs/archive/) for historical documentation.
 
 We welcome contributions in:
 
-**Android**:
-- UI/UX improvements
-- Performance optimization
-- New encryption features
-- Bug fixes
+**Android**
 
-**Desktop**:
-- Platform-specific features
-- Security enhancements
-- Performance improvements
+* UI/UX improvements, performance, features, bug fixes
 
-**Both**:
-- Documentation
-- Translations
-- Testing
-- Bug reports
+**Desktop**
 
-**How to Contribute**:
+* Platform features, security hardening, performance
+
+**Both**
+
+* Docs, localization, testing, bug reports
+
+**How to Contribute**
+
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit (`git commit -m "Add amazing feature"`)
+4. Push (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-[📖 Contributing Guidelines](CONTRIBUTING.md) (coming soon)
+[📖 Contributing Guidelines](CONTRIBUTING.md) *(coming soon)*
 
 ---
 
 ## 📜 License
 
-CRYPTOGRAM is released under the **GNU General Public License v3.0** with OpenSSL exception.
+CRYPTOGRAM is released under **GNU GPL v3.0 with OpenSSL exception**.
 
-This means:
-- ✅ Free to use, modify, distribute
-- ✅ Must share source code modifications
-- ✅ Must use same GPL license
-- ✅ No warranty provided
+* ✅ Free to use, modify, distribute
+* ✅ Share source for modifications
+* ✅ Copyleft (GPL-compatible)
+* ⚠️ No warranty
 
-See [LICENSE](LICENSE) for full details.
+See [LICENSE](LICENSE) for details.
 
 ---
 
 ## 🙏 Credits
 
-**Based On**:
-- [Telegram Desktop](https://github.com/telegramdesktop/tdesktop) - Core messaging infrastructure
-- [Telegram Android](https://github.com/DrKLO/Telegram) - Android client base
-- [64Gram](https://github.com/TDesktop-x64/tdesktop) - Enhanced Telegram client
+**Based On**
 
-**Cryptography**:
-- [Signal Protocol](https://signal.org/docs/) - Double Ratchet algorithm
-- [MLS Protocol](https://messaginglayersecurity.rocks/) - RFC 9420 group encryption
-- [BoringSSL](https://boringssl.googlesource.com/boringssl/) - Cryptographic primitives
-- [OpenSSL](https://www.openssl.org/) - Additional crypto support
+* [Telegram Desktop](https://github.com/telegramdesktop/tdesktop)
+* [Telegram Android](https://github.com/DrKLO/Telegram)
+* [64Gram](https://github.com/TDesktop-x64/tdesktop)
 
-**Post-Quantum**:
-- [NIST PQC](https://csrc.nist.gov/projects/post-quantum-cryptography) - ML-KEM, ML-DSA standards
+**Cryptography**
 
-**Development**:
-- CRYPTOGRAM Team - Integration and advanced features
-- Open Source Community - Contributions and feedback
+* [Signal Protocol](https://signal.org/docs/)
+* [MLS (RFC 9420)](https://messaginglayersecurity.rocks/)
+* [BoringSSL](https://boringssl.googlesource.com/boringssl/)
+* [OpenSSL](https://www.openssl.org/)
+
+**Post-Quantum**
+
+* [NIST PQC](https://csrc.nist.gov/projects/post-quantum-cryptography)
+* [Literally the NSA for...encryption in general]
+**Development**
+
+* CRYPTOGRAM Team & Open-source community
 
 ---
 
 ## 🔗 Links
 
-- **GitHub**: [github.com/SWORDOps/CRYPTOGRAM](https://github.com/SWORDOps/CRYPTOGRAM)
-- **Releases**: [GitHub Releases](https://github.com/SWORDOps/CRYPTOGRAM/releases)
-- **Android Builds**: [GitHub Actions](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml)
-- **Issues**: [GitHub Issues](https://github.com/SWORDOps/CRYPTOGRAM/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/SWORDOps/CRYPTOGRAM/discussions)
-- **Security**: security@cryptogram.org
+* **GitHub:** [https://github.com/SWORDOps/CRYPTOGRAM](https://github.com/SWORDOps/CRYPTOGRAM)
+* **Releases:** [https://github.com/SWORDOps/CRYPTOGRAM/releases](https://github.com/SWORDOps/CRYPTOGRAM/releases)
+* **Android Builds:** [https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml)
+* **Issues:** [https://github.com/SWORDOps/CRYPTOGRAM/issues](https://github.com/SWORDOps/CRYPTOGRAM/issues)
+* **Discussions:** [https://github.com/SWORDOps/CRYPTOGRAM/discussions](https://github.com/SWORDOps/CRYPTOGRAM/discussions)
+* **Security Contact:** [intel@swordintelligence.airforce](mailto:intel@swordintelligence.airforce)
 
 ---
 
 ## ⚠️ Disclaimer
 
-CRYPTOGRAM is designed for legitimate privacy and security purposes. Users are responsible for complying with all applicable laws and regulations in their jurisdiction.
+CRYPTOGRAM is intended for legitimate privacy/security use. Ensure compliance with local laws.
+Status: **not externally audited**; use at your own risk.
 
-**Important**:
-- Not audited by external security experts yet
-- Use at your own risk
-- Good for: Journalists, activists, privacy advocates
-- Not recommended for: National security secrets (until audited)
+* Good for: journalists, activists, privacy advocates
+* Not recommended for: classified/national-security secrets (until audited)
 
 ---
 
-## 🌟 Star This Project
+## ⭐ Star This Project
 
-If CRYPTOGRAM helps protect your privacy, please star this repository!
+If CRYPTOGRAM helps protect your privacy, please consider starring the repo.
 
 [![GitHub stars](https://img.shields.io/github/stars/SWORDOps/CRYPTOGRAM?style=social)](https://github.com/SWORDOps/CRYPTOGRAM/stargazers)
 
 ---
 
-## 📊 Project Status
+## 📊 Project Status (Alpha/WIP)
 
-| Component | Status | Version |
-|-----------|--------|---------|
-| Desktop (Windows) | ✅ Stable | 1.0.0 |
-| Desktop (Linux) | ✅ Stable | 1.0.0 |
-| Desktop (macOS) | ✅ Stable | 1.0.0 |
-| Android | ✅ Stable | 1.0.0 |
-| Signal Protocol | ✅ Implemented | - |
-| MLS Protocol | ✅ Implemented | - |
-| Post-Quantum | ✅ Implemented | - |
-| Audio Steganography | ✅ Implemented (Desktop) | - |
-| Location Privacy | ✅ Implemented (Desktop) | - |
-| Surveillance Detection | ✅ Implemented (Desktop) | - |
-| Tor/I2P | ✅ Implemented (Desktop) | - |
-| Premium Override | ✅ Implemented | - |
-| External Audit | ⏳ Planned | - |
-| Bug Bounty | ⏳ Coming Soon | - |
+| Component              | Status        | Notes                   |
+| ---------------------- | ------------- | ----------------------- |
+| Desktop (Windows)      | 🟡 Alpha      | Core features usable    |
+| Desktop (Linux)        | 🟡 Alpha      | Core features usable    |
+| Desktop (macOS)        | 🟡 Alpha      | Core features usable    |
+| Android                | 🟡 Alpha      | Core features usable    |
+| Signal Protocol        | ✅ Implemented | 1:1 chats               |
+| MLS Protocol           | ✅ Implemented | Groups                  |
+| Post-Quantum           | ✅ Implemented | ML-KEM-1024 / ML-DSA-87 |
+| Audio Steganography    | ✅ Desktop     | Multiple methods        |
+| Location Privacy       | ✅ Desktop     | GPS fuzzing             |
+| Surveillance Detection | ✅ Desktop     | VM/debugger checks      |
+| Tor/I2P                | ✅ Desktop     | Tor + I2P               |
+| Premium Override       | ✅ Testing     | For test only           |
+| External Audit         | ⏳ Planned     | Pending                 |
+| Bug Bounty             | ⏳ Coming Soon | Pending                 |
 
 ---
 
-**Built with ❤️ and 🔐 for a more private world**
-
+**Built with 🔐 for a more private world.**
 **Available on Desktop and Android** 🖥️ 📱

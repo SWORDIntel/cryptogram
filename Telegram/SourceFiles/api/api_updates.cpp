@@ -54,6 +54,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "history/history_streamed_drafts.h"
 #include "history/history_unread_things.h"
 #include "core/application.h"
+#include "core/core_settings.h"
 #include "storage/storage_account.h"
 #include "storage/storage_facade.h"
 #include "storage/storage_user_photos.h"
@@ -1019,18 +1020,22 @@ void Updates::updateOnline(crl::time lastNonIdleTime, bool gotOtherOffline) {
 
 		_lastWasOnline = isOnline;
 		_lastSetOnline = ms;
-		if (!Core::Quitting()) {
-			_onlineRequest = api().request(MTPaccount_UpdateStatus(
-				MTP_bool(!isOnline)
-			)).send();
-		} else {
-			_onlineRequest = api().request(MTPaccount_UpdateStatus(
-				MTP_bool(!isOnline)
-			)).done([=] {
-				Core::App().quitPreventFinished();
-			}).fail([=] {
-				Core::App().quitPreventFinished();
-			}).send();
+
+		// CRYPTOGRAM: Check if user wants to hide online status
+		if (!Core::App().settings().cryptogramHideOnlineStatus()) {
+			if (!Core::Quitting()) {
+				_onlineRequest = api().request(MTPaccount_UpdateStatus(
+					MTP_bool(!isOnline)
+				)).send();
+			} else {
+				_onlineRequest = api().request(MTPaccount_UpdateStatus(
+					MTP_bool(!isOnline)
+				)).done([=] {
+					Core::App().quitPreventFinished();
+				}).fail([=] {
+					Core::App().quitPreventFinished();
+				}).send();
+			}
 		}
 
 		const auto self = session().user();

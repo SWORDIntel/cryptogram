@@ -17,7 +17,6 @@ WORKDIR /build
 RUN apt-get update && apt-get install -y \
     # Build essentials
     build-essential \
-    cmake \
     ninja-build \
     git \
     wget \
@@ -77,6 +76,14 @@ RUN apt-get update && apt-get install -y \
     patchelf \
     && rm -rf /var/lib/apt/lists/*
 
+# Install CMake 3.25+ (Ubuntu 22.04 only has 3.22)
+# Using Kitware's official installer
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-linux-x86_64.sh -O /tmp/cmake-install.sh && \
+    chmod +x /tmp/cmake-install.sh && \
+    /tmp/cmake-install.sh --skip-license --prefix=/usr/local && \
+    rm /tmp/cmake-install.sh && \
+    cmake --version
+
 # Set up ccache for faster rebuilds
 ENV PATH="/usr/lib/ccache:${PATH}"
 ENV CCACHE_DIR="/build/.ccache"
@@ -93,12 +100,12 @@ RUN chmod +x /usr/local/bin/build-linux.sh
 ENTRYPOINT ["/usr/local/bin/build-linux.sh"]
 CMD ["--help"]
 
-# Build artifacts will be in /build/CRYPTOGRAM/build/
+# Build artifacts will be in /tmp/build-linux/
 # Mount volumes:
-# - Source: -v $(pwd):/build/CRYPTOGRAM
+# - Source: -v $(pwd):/build/CRYPTOGRAM:ro (read-only)
 # - Cache: -v cryptogram-ccache:/build/.ccache
 # - Output: -v $(pwd)/out:/output
 
 # Example usage:
 # docker build -t cryptogram-linux docker/linux/
-# docker run --rm -v $(pwd):/build/CRYPTOGRAM -v cryptogram-ccache:/build/.ccache cryptogram-linux --release
+# docker run --rm -v $(pwd):/build/CRYPTOGRAM:ro -v cryptogram-ccache:/build/.ccache -v $(pwd)/out:/output cryptogram-linux --release

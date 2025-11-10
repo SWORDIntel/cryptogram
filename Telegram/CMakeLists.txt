@@ -644,7 +644,6 @@ PRIVATE
     data/data_monero_miner.h
     data/data_msg_id.h
     data/data_network_integration.cpp
-    data/data_network_integration.h
     data/data_network_mesh.cpp
     data/data_network_mesh.h
     data/data_network_mtproto_integration.cpp

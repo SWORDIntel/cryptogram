@@ -1110,6 +1110,28 @@ public:
 		_cryptogramPremiumOverride = value;
 	}
 
+	// Privacy Controls
+	[[nodiscard]] bool cryptogramHideOnlineStatus() const {
+		return _cryptogramHideOnlineStatus;
+	}
+	void setCryptogramHideOnlineStatus(bool value) {
+		_cryptogramHideOnlineStatus = value;
+	}
+
+	[[nodiscard]] bool cryptogramHideTypingIndicator() const {
+		return _cryptogramHideTypingIndicator;
+	}
+	void setCryptogramHideTypingIndicator(bool value) {
+		_cryptogramHideTypingIndicator = value;
+	}
+
+	[[nodiscard]] bool cryptogramHideReadReceipts() const {
+		return _cryptogramHideReadReceipts;
+	}
+	void setCryptogramHideReadReceipts(bool value) {
+		_cryptogramHideReadReceipts = value;
+	}
+
 	void resetOnLastLogout();
 
 private:
@@ -1285,6 +1307,11 @@ private:
 
 	// Premium Override for Testing
 	bool _cryptogramPremiumOverride = true;  // Enable all premium features by default for testing
+
+	// Privacy Controls
+	bool _cryptogramHideOnlineStatus = false;  // OFF by default
+	bool _cryptogramHideTypingIndicator = false;  // OFF by default
+	bool _cryptogramHideReadReceipts = false;  // OFF by default
 
 };
 
