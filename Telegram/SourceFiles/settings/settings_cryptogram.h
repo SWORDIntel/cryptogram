@@ -70,6 +70,10 @@ private:
     void createCovertChannelSettings(not_null<Ui::VerticalLayout*> container);
     void createEncryptionStatus(not_null<Ui::VerticalLayout*> container);
 
+    // Privacy Controls Section
+    void setupPrivacyControlsSection(not_null<Ui::VerticalLayout*> container);
+    void createPrivacyToggles(not_null<Ui::VerticalLayout*> container);
+
     // UI/UX Preferences Section
     void setupUIPreferencesSection(not_null<Ui::VerticalLayout*> container);
 
@@ -181,6 +185,11 @@ inline constexpr auto kTranslationQuality = "cryptogram/translation/quality"_cs;
 inline constexpr auto kTranslationDevice = "cryptogram/translation/device"_cs;  // 0=CPU, 1=GPU, 2=NPU, 3=AUTO
 inline constexpr auto kTranslationCacheEnabled = "cryptogram/translation/cache_enabled"_cs;
 inline constexpr auto kTranslationSelectedModels = "cryptogram/translation/selected_models"_cs;
+
+// Privacy Settings
+inline constexpr auto kPrivacyHideOnlineStatus = "cryptogram/privacy/hide_online_status"_cs;
+inline constexpr auto kPrivacyHideTypingIndicator = "cryptogram/privacy/hide_typing_indicator"_cs;
+inline constexpr auto kPrivacyHideReadReceipts = "cryptogram/privacy/hide_read_receipts"_cs;
 
 } // namespace CryptogramSettings
 

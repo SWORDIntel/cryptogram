@@ -270,6 +270,11 @@ public class SharedConfig {
     public static int cryptogramMaxStickerSets = 5;
     public static boolean cryptogramPremiumOverride = true; // Enable all premium features by default for testing
 
+    // CRYPTOGRAM Privacy Settings
+    public static boolean cryptogramHideOnlineStatus = false;
+    public static boolean cryptogramHideTypingIndicator = false;
+    public static boolean cryptogramHideReadReceipts = false;
+
     private static int lastLocalId = -210000;
 
     public static String storageCacheDir;
@@ -660,6 +665,12 @@ public class SharedConfig {
             cryptogramCuratedStickersEnabled = preferences.getBoolean("cryptogramCuratedStickers", false);
             cryptogramMaxStickerSets = preferences.getInt("cryptogramMaxStickerSets", 5);
             cryptogramPremiumOverride = preferences.getBoolean("cryptogramPremiumOverride", true);
+
+            // CRYPTOGRAM Privacy Settings
+            cryptogramHideOnlineStatus = preferences.getBoolean("cryptogramHideOnlineStatus", false);
+            cryptogramHideTypingIndicator = preferences.getBoolean("cryptogramHideTypingIndicator", false);
+            cryptogramHideReadReceipts = preferences.getBoolean("cryptogramHideReadReceipts", false);
+
             lockRecordAudioVideoHint = preferences.getInt("lockRecordAudioVideoHint", 0);
             disableVoiceAudioEffects = preferences.getBoolean("disableVoiceAudioEffects", false);
             noiseSupression = preferences.getBoolean("noiseSupression", false);
@@ -1117,6 +1128,31 @@ public class SharedConfig {
         SharedPreferences preferences = MessagesController.getGlobalMainSettings();
         SharedPreferences.Editor editor = preferences.edit();
         editor.putBoolean("cryptogramPremiumOverride", cryptogramPremiumOverride);
+        editor.apply();
+    }
+
+    // CRYPTOGRAM Privacy toggle methods
+    public static void toggleCryptogramHideOnlineStatus() {
+        cryptogramHideOnlineStatus = !cryptogramHideOnlineStatus;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("cryptogramHideOnlineStatus", cryptogramHideOnlineStatus);
+        editor.apply();
+    }
+
+    public static void toggleCryptogramHideTypingIndicator() {
+        cryptogramHideTypingIndicator = !cryptogramHideTypingIndicator;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("cryptogramHideTypingIndicator", cryptogramHideTypingIndicator);
+        editor.apply();
+    }
+
+    public static void toggleCryptogramHideReadReceipts() {
+        cryptogramHideReadReceipts = !cryptogramHideReadReceipts;
+        SharedPreferences preferences = MessagesController.getGlobalMainSettings();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("cryptogramHideReadReceipts", cryptogramHideReadReceipts);
         editor.apply();
     }
 

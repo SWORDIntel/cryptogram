@@ -385,10 +385,10 @@ For clean builds, clear cache:
 
 ## 🔗 Related Documentation
 
-- **CRYPTOGRAM_ANDROID_COMPLETE.md** - Full implementation guide
-- **BUILD_INSTRUCTIONS.md** - Local build instructions
-- **FINAL_STATUS.md** - Project status
-- **TEST_RESULTS.md** - Test results
+- **[docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.md)** - Full implementation guide
+- **[docs/](docs/)** - Build instructions for all platforms
+- **[docs/status/FINAL_STATUS.md](docs/status/FINAL_STATUS.md)** - Project status
+- **[docs/status/TEST_RESULTS.md](docs/status/TEST_RESULTS.md)** - Test results
 
 ---
 

@@ -9885,20 +9885,23 @@ public class MessagesController extends BaseController implements NotificationCe
                             getConnectionsManager().cancelRequest(statusRequest, true);
                         }
 
-                        TL_account.updateStatus req = new TL_account.updateStatus();
-                        req.offline = false;
-                        statusRequest = getConnectionsManager().sendRequest(req, (response, error) -> {
-                            if (error == null) {
-                                lastStatusUpdateTime = System.currentTimeMillis();
-                                offlineSent = false;
-                                statusSettingState = 0;
-                            } else {
-                                if (lastStatusUpdateTime != 0) {
-                                    lastStatusUpdateTime += 5000;
+                        // CRYPTOGRAM: Check if user wants to hide online status
+                        if (!SharedConfig.cryptogramHideOnlineStatus) {
+                            TL_account.updateStatus req = new TL_account.updateStatus();
+                            req.offline = false;
+                            statusRequest = getConnectionsManager().sendRequest(req, (response, error) -> {
+                                if (error == null) {
+                                    lastStatusUpdateTime = System.currentTimeMillis();
+                                    offlineSent = false;
+                                    statusSettingState = 0;
+                                } else {
+                                    if (lastStatusUpdateTime != 0) {
+                                        lastStatusUpdateTime += 5000;
+                                    }
                                 }
-                            }
-                            statusRequest = 0;
-                        });
+                                statusRequest = 0;
+                            });
+                        }
                     }
                 }
             } else if (statusSettingState != 2 && !offlineSent && Math.abs(System.currentTimeMillis() - getConnectionsManager().getPauseTime()) >= 2000) {
@@ -9906,17 +9909,19 @@ public class MessagesController extends BaseController implements NotificationCe
                 if (statusRequest != 0) {
                     getConnectionsManager().cancelRequest(statusRequest, true);
                 }
-                TL_account.updateStatus req = new TL_account.updateStatus();
-                req.offline = true;
-                statusRequest = getConnectionsManager().sendRequest(req, (response, error) -> {
-                    if (error == null) {
-                        offlineSent = true;
-                    } else {
-                        if (lastStatusUpdateTime != 0) {
-                            lastStatusUpdateTime += 5000;
+                // CRYPTOGRAM: Check if user wants to hide online status
+                if (!SharedConfig.cryptogramHideOnlineStatus) {
+                    TL_account.updateStatus req = new TL_account.updateStatus();
+                    req.offline = true;
+                    statusRequest = getConnectionsManager().sendRequest(req, (response, error) -> {
+                        if (error == null) {
+                            offlineSent = true;
+                        } else {
+                            if (lastStatusUpdateTime != 0) {
+                                lastStatusUpdateTime += 5000;
+                            }
                         }
-                    }
-                    statusRequest = 0;
+                        statusRequest = 0;
                 });
             }
 
@@ -10725,6 +10730,10 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean sendTyping(long dialogId, long threadMsgId, int action, String emojicon, int classGuid) {
+        // CRYPTOGRAM: Check if user wants to hide typing indicator
+        if (SharedConfig.cryptogramHideTypingIndicator) {
+            return false;
+        }
         if (action < 0 || action >= sendingTypings.length || dialogId == 0) {
             return false;
         }
@@ -13808,45 +13817,51 @@ public class MessagesController extends BaseController implements NotificationCe
 
             });
         } else if (!DialogObject.isEncryptedDialog(task.dialogId)) {
-            TLRPC.InputPeer inputPeer = getInputPeer(task.dialogId);
-            TLObject req;
+            // CRYPTOGRAM: Check if user wants to hide read receipts
+            if (!SharedConfig.cryptogramHideReadReceipts) {
+                TLRPC.InputPeer inputPeer = getInputPeer(task.dialogId);
+                TLObject req;
 
-            if (task.monoForumPeerId != 0) {
-                TLRPC.TL_messages_readSavedHistory request = new TLRPC.TL_messages_readSavedHistory();
-                request.parent_peer = getInputPeer(task.dialogId);
-                request.peer = getInputPeer(task.monoForumPeerId);
-                request.max_id = task.maxId;
-                req = request;
-            } else if (inputPeer instanceof TLRPC.TL_inputPeerChannel) {
-                TLRPC.TL_channels_readHistory request = new TLRPC.TL_channels_readHistory();
-                request.channel = getInputChannel(-task.dialogId);
-                request.max_id = task.maxId;
-                req = request;
-            } else {
-                TLRPC.TL_messages_readHistory request = new TLRPC.TL_messages_readHistory();
-                request.peer = inputPeer;
-                request.max_id = task.maxId;
-                req = request;
-            }
-            getConnectionsManager().sendRequest(req, (response, error) -> {
-                if (error == null) {
-                    if (response instanceof TLRPC.TL_messages_affectedMessages) {
-                        TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
-                        processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
-                    }
+                if (task.monoForumPeerId != 0) {
+                    TLRPC.TL_messages_readSavedHistory request = new TLRPC.TL_messages_readSavedHistory();
+                    request.parent_peer = getInputPeer(task.dialogId);
+                    request.peer = getInputPeer(task.monoForumPeerId);
+                    request.max_id = task.maxId;
+                    req = request;
+                } else if (inputPeer instanceof TLRPC.TL_inputPeerChannel) {
+                    TLRPC.TL_channels_readHistory request = new TLRPC.TL_channels_readHistory();
+                    request.channel = getInputChannel(-task.dialogId);
+                    request.max_id = task.maxId;
+                    req = request;
+                } else {
+                    TLRPC.TL_messages_readHistory request = new TLRPC.TL_messages_readHistory();
+                    request.peer = inputPeer;
+                    request.max_id = task.maxId;
+                    req = request;
                 }
-            });
-        } else {
-            TLRPC.EncryptedChat chat = getEncryptedChat(DialogObject.getEncryptedChatId(task.dialogId));
-            if (chat.auth_key != null && chat.auth_key.length > 1 && chat instanceof TLRPC.TL_encryptedChat) {
-                TLRPC.TL_messages_readEncryptedHistory req = new TLRPC.TL_messages_readEncryptedHistory();
-                req.peer = new TLRPC.TL_inputEncryptedChat();
-                req.peer.chat_id = chat.id;
-                req.peer.access_hash = chat.access_hash;
-                req.max_date = task.maxDate;
                 getConnectionsManager().sendRequest(req, (response, error) -> {
-
+                    if (error == null) {
+                        if (response instanceof TLRPC.TL_messages_affectedMessages) {
+                            TLRPC.TL_messages_affectedMessages res = (TLRPC.TL_messages_affectedMessages) response;
+                            processNewDifferenceParams(-1, res.pts, -1, res.pts_count);
+                        }
+                    }
                 });
+            }
+        } else {
+            // CRYPTOGRAM: Check if user wants to hide read receipts
+            if (!SharedConfig.cryptogramHideReadReceipts) {
+                TLRPC.EncryptedChat chat = getEncryptedChat(DialogObject.getEncryptedChatId(task.dialogId));
+                if (chat.auth_key != null && chat.auth_key.length > 1 && chat instanceof TLRPC.TL_encryptedChat) {
+                    TLRPC.TL_messages_readEncryptedHistory req = new TLRPC.TL_messages_readEncryptedHistory();
+                    req.peer = new TLRPC.TL_inputEncryptedChat();
+                    req.peer.chat_id = chat.id;
+                    req.peer.access_hash = chat.access_hash;
+                    req.max_date = task.maxDate;
+                    getConnectionsManager().sendRequest(req, (response, error) -> {
+
+                    });
+                }
             }
         }
     }
