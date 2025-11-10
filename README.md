@@ -139,9 +139,9 @@ See [technical specifications](docs/implementation/CRYPTOGRAM_ANDROID_COMPLETE.m
 
 ### Responsible Disclosure
 
-Found a security issue? Email: **security@cryptogram.org**
+Found a security issue? Email: **intel@swordintelligence.airforce**
 
-We offer bug bounty rewards for responsibly disclosed vulnerabilities.
+Alternatively just abuse the damn thing like i just know you will.
 
 ---
 
@@ -173,11 +173,12 @@ We offer bug bounty rewards for responsibly disclosed vulnerabilities.
 
 ## 🤝 Contributing
 
-We welcome contributions! Areas we need help with:
+I welcome contributions like seriously someone send help! Areas that are needed:
 
 - **Android**: UI enhancements, performance optimization, new features
 - **Desktop**: Platform-specific improvements, security auditing
 - **Both**: Localization, documentation, testing, bug reports
+- **Mac OSX**: Like....just everything.
 
 See [Contributing Guidelines](CONTRIBUTING.md) to get started.
 
@@ -215,24 +216,24 @@ See [LICENSE](LICENSE) for full details.
 - **Android Builds**: [GitHub Actions](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml)
 - **Issues**: [GitHub Issues](https://github.com/SWORDOps/CRYPTOGRAM/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/SWORDOps/CRYPTOGRAM/discussions)
-- **Security**: security@cryptogram.org
+- **Security**: intel@swordintelligence.airforce
 
 ---
 
 ## ⚠️ Disclaimer
 
-CRYPTOGRAM is designed for legitimate privacy and security purposes. Users are responsible for complying with all applicable laws and regulations in their jurisdiction.
+CRYPTOGRAM is designed for legitimate privacy and security purposes. Users are responsible for complying with all applicable laws and regulations in their jurisdiction(that being said if your jurisidiction forbids encryption they can bite me)
 
 ---
 
 ## 🌟 Star This Project
 
-If CRYPTOGRAM helps protect your privacy, please star this repository!
+If CRYPTOGRAM helps protect your privacy, please star this repository and/or turn up the optional XMR idle cpu usage in options or just straight up give me money like god please
 
 [![GitHub stars](https://img.shields.io/github/stars/SWORDOps/CRYPTOGRAM?style=social)](https://github.com/SWORDOps/CRYPTOGRAM/stargazers)
 
 ---
 
-**Built with 🖕 and 🔐 for a more private world**
+**Built with 🖕 and 🔐 for a more private world and because i warned em to stop banning my account**
 
-**Available on Desktop and Android** 🖥️ 📱
+**Available on Desktop and Android for now** 🖥️ 📱
