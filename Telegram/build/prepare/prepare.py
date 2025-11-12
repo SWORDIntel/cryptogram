@@ -1901,7 +1901,7 @@ win:
     cd protobuf
     git clone https://github.com/abseil/abseil-cpp third_party/abseil-cpp
     cd third_party/abseil-cpp
-    git checkout 273292d1cf
+    git checkout 20231211.1
     cd ../..
     mkdir build
     cd build
@@ -1920,7 +1920,7 @@ win:
 #     cd protobuf
 #     git clone https://github.com/abseil/abseil-cpp third_party/abseil-cpp
 #     cd third_party/abseil-cpp
-#     git checkout 273292d1cf
+#     git checkout 20231211.1
 #     cd ../..
 #     mkdir build
 #     cd build
