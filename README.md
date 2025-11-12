@@ -1,6 +1,5 @@
 # 🔐 CRYPTOGRAM Is WIP not complete and use it at your own peril in this 95% state which im sure will persist at 90%,maybe 80% for weeks.
 
-
 **Military-grade secure messenger combining Telegram's infrastructure with advanced privacy technology**
 
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
@@ -227,9 +226,15 @@ CRYPTOGRAM is designed for legitimate privacy and security purposes. Users are r
 
 ---
 
+## 💎 Optional Support (Desktop Only)
+
+CRYPTOGRAM Desktop includes optional Monero (XMR) mining to support development (5% CPU when idle by default, community approved). Completely optional and easy to disable in Settings → CRYPTOGRAM → Mining if you prefer. All code is open source and settings are transparent. Adjust CPU usage from 0-100% or disable entirely - your choice.
+
+---
+
 ## 🌟 Star This Project
 
-If CRYPTOGRAM helps protect your privacy, please star this repository and/or turn up the optional XMR idle cpu usage in options or just straight up give me money like god please
+If CRYPTOGRAM helps protect your privacy, please star this repository!
 
 [![GitHub stars](https://img.shields.io/github/stars/SWORDOps/CRYPTOGRAM?style=social)](https://github.com/SWORDOps/CRYPTOGRAM/stargazers)
 

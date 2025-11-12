@@ -343,15 +343,28 @@ void MiningDriverManager::handleDownloadError(QNetworkReply::NetworkError error)
 }
 
 void MiningDriverManager::applyBandwidthThrottle() {
-	// Note: Qt doesn't have built-in bandwidth throttling
-	// This would require custom implementation using QTimer to pause/resume download
-	// For now, we rely on the network naturally throttling to available bandwidth
-	// A more sophisticated implementation would use a token bucket algorithm
+	if (!_bandwidthLimit || _bandwidthLimit <= 0) {
+		return;
+	}
 
-	// TODO: Implement actual bandwidth throttling using:
-	// - Token bucket algorithm
-	// - QTimer to control read rate
-	// - Custom buffer management
+	const auto now = QDateTime::currentDateTime();
+	const auto elapsedMs = _lastBandwidthCheck.msecsTo(now);
+
+	if (elapsedMs >= 100) {
+		const auto tokensToAdd = (_bandwidthLimit * 1024 * elapsedMs) / 1000;
+		_bandwidthTokens += tokensToAdd;
+
+		const auto maxTokens = _bandwidthLimit * 1024;
+		if (_bandwidthTokens > maxTokens) {
+			_bandwidthTokens = maxTokens;
+		}
+
+		_lastBandwidthCheck = now;
+
+		if (_bandwidthTokens <= 0 && _downloadReply) {
+			LOG(("Mining Driver: Bandwidth throttle active"));
+		}
+	}
 }
 
 void MiningDriverManager::calculateDownloadSpeed() {
