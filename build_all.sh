@@ -3,7 +3,7 @@
 ################################################################################
 # TSM + CRYPTOGRAM - Complete Automated Build Script (VERBOSE)
 # Builds everything: ada, protobuf, CMake config, and CRYPTOGRAM desktop
-# FULL LOGGING + REAL-TIME OUTPUT
+# FULL LOGGING + REAL-TIME OUTPUT + CORRECT ERROR PROPAGATION
 ################################################################################
 
 set -Eeuo pipefail
@@ -83,7 +83,7 @@ fail() {
 trap 'fail "An unexpected error occurred (see log above)"' ERR
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Redirect ALL output to log + console in real time
+# Redirect ALL output to log + console in real time (no pipeline)
 # ──────────────────────────────────────────────────────────────────────────────
 mkdir -p "$(dirname "$LOG_FILE")"
 touch "$LOG_FILE"
@@ -164,11 +164,9 @@ echo "  CC  : $CC ($( "$CC" --version 2>/dev/null | head -n1 ))"
 echo "  CXX : $CXX ($( "$CXX" --version 2>/dev/null | head -n1 ))"
 echo ""
 
-# CPU cores
 NUM_JOBS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 print_info "Detected CPU cores: $NUM_JOBS"
 
-# CRYPTOGRAM root existence
 if [ ! -d "$CRYPTOGRAM_ROOT" ]; then
     fail "CRYPTOGRAM directory not found at $CRYPTOGRAM_ROOT"
 fi
@@ -224,7 +222,7 @@ print_info "Ada installed to /usr/local"
 echo ""
 print_progress "Verifying Ada installation..."
 
-if [ -f /usr/local/lib/libada.a ] || ls /usr/local/lib/libada.* >/dev/null 2>&1; then
+if ls /usr/local/lib/libada.* >/dev/null 2>&1; then
     print_info "✓ Ada library file found in /usr/local/lib"
 else
     fail "Ada library file NOT found in /usr/local/lib"
