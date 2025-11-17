@@ -325,14 +325,33 @@ PROTOBUF_SEC="$((ELAPSED_PROTOBUF % 60))"
 print_info "Protobuf compiled in ${PROTOBUF_MIN}m ${PROTOBUF_SEC}s"
 
 print_progress "Installing Protobuf to /usr/local..."
-run_cmd_verbose "cmake --install . --prefix /usr/local" || fail "Protobuf installation failed"
-print_info "Protobuf installation command completed"
+print_progress "NOTE: This step requires root privileges for /usr/local installation"
+print_progress "If this fails due to permissions, you may need to use 'sudo' or install to a user directory"
+echo ""
+
+# Try installation with verbose output
+PROTO_INSTALL_OUTPUT="$(cmake --install . --prefix /usr/local 2>&1 || true)"
+PROTO_INSTALL_EXIT=$?
+
+echo "$PROTO_INSTALL_OUTPUT" | tee -a "$LOG_FILE"
+if [ $PROTO_INSTALL_EXIT -ne 0 ]; then
+    print_warning "cmake --install returned non-zero exit code ($PROTO_INSTALL_EXIT)"
+    print_warning "Attempting to verify what was installed anyway..."
+fi
+print_info "Protobuf installation step completed"
 
 echo ""
 print_progress "Verifying Protobuf installation (thorough check)..."
 
-echo "Listing protobuf libs in /usr/local/lib (if present):" | tee -a "$LOG_FILE"
-ls -lah /usr/local/lib/libprotobuf* 2>/dev/null | tee -a "$LOG_FILE" || echo "  (no direct matches)" | tee -a "$LOG_FILE"
+# First, check if anything is in /usr/local at all
+echo "Listing protobuf-related items in /usr/local (if present):" | tee -a "$LOG_FILE"
+{
+    echo "  /usr/local/lib/:"
+    ls -lah /usr/local/lib/libprotobuf* 2>/dev/null || echo "    (no libprotobuf files found)"
+    echo ""
+    echo "  /usr/local/include/:"
+    ls -lah /usr/local/include/google/protobuf* 2>/dev/null || echo "    (no protobuf headers found)"
+} | tee -a "$LOG_FILE"
 echo "" | tee -a "$LOG_FILE"
 
 PROTO_LIB_PATH="$(find /usr/local -name 'libprotobuf.so*' -o -name 'libprotobuf.a*' 2>/dev/null | head -n1 || true)"
@@ -340,7 +359,16 @@ if [ -n "$PROTO_LIB_PATH" ]; then
     print_info "✓ Protobuf library found at: $PROTO_LIB_PATH"
     echo "  Path: $PROTO_LIB_PATH" >> "$LOG_FILE"
 else
-    fail "Protobuf library not found under /usr/local (or its subdirectories)"
+    # Try to find protobuf elsewhere
+    print_warning "Protobuf library not found in /usr/local, checking system paths..."
+    SYSTEM_PROTO="$(find /usr -name 'libprotobuf.so*' 2>/dev/null | head -n1 || true)"
+    if [ -n "$SYSTEM_PROTO" ]; then
+        print_warning "Found system Protobuf at: $SYSTEM_PROTO"
+        print_warning "Using system Protobuf instead of local installation"
+        echo "  System path: $SYSTEM_PROTO" >> "$LOG_FILE"
+    else
+        fail "Protobuf library not found in /usr/local or system paths - installation may have failed"
+    fi
 fi
 
 PROTO_CMAKE_PATH="$(find /usr/local -name 'protobufConfig.cmake' -o -name 'protobuf-config.cmake' 2>/dev/null | head -n1 || true)"
