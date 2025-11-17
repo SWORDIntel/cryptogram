@@ -212,6 +212,35 @@ fi
 print_info "CRYPTOGRAM root found: $CRYPTOGRAM_ROOT"
 echo ""
 
+# Check write permissions for /usr/local (needed for Ada and Protobuf installation)
+print_progress "Checking installation directory permissions..."
+if [ ! -w /usr/local ]; then
+    print_warning "/usr/local is NOT writable by current user"
+    echo ""
+    echo "IMPORTANT: This script needs to install Ada and Protobuf libraries to /usr/local"
+    echo "Options to fix this:"
+    echo ""
+    echo "1. Run the script with sudo (EASIEST):"
+    echo "   sudo bash $0"
+    echo ""
+    echo "2. Grant yourself write access to /usr/local:"
+    echo "   sudo chown -R \$USER /usr/local"
+    echo ""
+    echo "3. Install to a user directory instead (ADVANCED):"
+    echo "   Edit this script and change '/usr/local' to '\$HOME/.local'"
+    echo ""
+    read -rp "Continue anyway? (y/N): " -n 1 CONTINUE
+    echo ""
+    if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
+        echo "Aborting. Please fix permissions and try again."
+        exit 1
+    fi
+    print_warning "Continuing with potentially limited permissions..."
+else
+    print_info "/usr/local is writable - proceeding with installation"
+fi
+echo ""
+
 read -rp "Press ENTER to start the full build, or Ctrl+C to cancel..."
 
 TOTAL_START="$(date +%s)"
