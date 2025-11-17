@@ -8,6 +8,10 @@
 
 set -Eeuo pipefail
 
+# Disable external hardware detection scripts (keep build process clean and fast)
+export SKIP_HARDWARE_DETECTION=1
+export PYTHONWARNINGS=ignore
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Colors
 # ──────────────────────────────────────────────────────────────────────────────
