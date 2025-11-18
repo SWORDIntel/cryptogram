@@ -56,13 +56,25 @@ if [ ! -t 0 ] || [ ! -t 1 ]; then
     INTERACTIVE_MODE=0
 fi
 
-# Paths - validate CRYPTOGRAM_ROOT exists
-if [ -n "${CRYPTOGRAM_ROOT:-}" ] && [ ! -d "${CRYPTOGRAM_ROOT}" ]; then
-    echo "ERROR: CRYPTOGRAM_ROOT is set but directory doesn't exist: ${CRYPTOGRAM_ROOT}"
+# ──────────────────────────────────────────────────────────────────────────────
+# Paths (derive dynamically, then validate)
+# ──────────────────────────────────────────────────────────────────────────────
+# Base directory where this script lives
+readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# CRYPTOGRAM root: allow override via env, otherwise use script directory
+CRYPTOGRAM_ROOT="${CRYPTOGRAM_ROOT:-$SCRIPT_DIR}"
+
+# Validate CRYPTOGRAM_ROOT exists
+if [ ! -d "${CRYPTOGRAM_ROOT}" ]; then
+    echo "ERROR: CRYPTOGRAM_ROOT directory does not exist: ${CRYPTOGRAM_ROOT}"
+    echo "Set it explicitly, e.g.:"
+    echo "  export CRYPTOGRAM_ROOT=/path/to/CRYPTOGRAM"
+    echo "  $0"
     exit 1
 fi
 
-readonly CRYPTOGRAM_ROOT="${CRYPTOGRAM_ROOT:-$HOME/CRYPTOGRAM}"
+readonly CRYPTOGRAM_ROOT
 readonly BUILD_DIR="${CRYPTOGRAM_ROOT}/build_release"
 
 # Make log directory user-specific to avoid permission conflicts
@@ -127,6 +139,28 @@ declare -A BUILD_STATE=(
 # Timing tracking
 declare -A COMPONENT_TIMES
 declare -A STEP_START_TIMES
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Git Submodule Management (simple helper – not used in main, kept for future)
+# ──────────────────────────────────────────────────────────────────────────────
+ensure_submodules() {
+    # If this is not a git checkout or there are no submodules, skip.
+    if [ ! -d "$CRYPTOGRAM_ROOT/.git" ] || [ ! -f "$CRYPTOGRAM_ROOT/.gitmodules" ]; then
+        return 0
+    fi
+
+    print_progress "Ensuring git submodules are initialized (recursive)..."
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Would run: git submodule update --init --recursive"
+        return 0
+    fi
+
+    (
+        cd "$CRYPTOGRAM_ROOT" || exit 1
+        git submodule update --init --recursive
+    ) || fail "Failed to initialize git submodules"
+}
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Initialize Environment
@@ -278,8 +312,9 @@ print_step() {
 print_step_complete() {
     local step_id="$1"
     if [ -n "${STEP_START_TIMES[$step_id]:-}" ]; then
-        local elapsed=$(($(date +%s) - ${STEP_START_TIMES[$step_id]}))
-        log "STEP" "$step_id completed in $(format_time $elapsed)"
+        local elapsed
+        elapsed=$(($(date +%s) - ${STEP_START_TIMES[$step_id]}))
+        log "STEP" "$step_id completed in $(format_time "$elapsed")"
     fi
 }
 
@@ -325,12 +360,14 @@ run_cmd() {
     fi
 
     if eval "$cmd" >> "$LOG_FILE" 2>&1; then
-        local elapsed=$(($(date +%s) - cmd_start))
+        local elapsed
+        elapsed=$(($(date +%s) - cmd_start))
         log "CMD" "Completed in ${elapsed}s: $cmd"
         return 0
     else
         local exit_code=$?
-        local elapsed=$(($(date +%s) - cmd_start))
+        local elapsed
+        elapsed=$(($(date +%s) - cmd_start))
         log "ERROR" "Command failed (exit $exit_code) after ${elapsed}s: $cmd"
         return "$exit_code"
     fi
@@ -352,7 +389,8 @@ run_cmd_verbose() {
     # Use tee to show output and save to log
     if eval "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
         local exit_code=${PIPESTATUS[0]}
-        local elapsed=$(($(date +%s) - cmd_start))
+        local elapsed
+        elapsed=$(($(date +%s) - cmd_start))
         if [ "$exit_code" -eq 0 ]; then
             log "CMD" "Completed in ${elapsed}s: $cmd"
             return 0
@@ -362,7 +400,8 @@ run_cmd_verbose() {
         fi
     else
         local exit_code=$?
-        local elapsed=$(($(date +%s) - cmd_start))
+        local elapsed
+        elapsed=$(($(date +%s) - cmd_start))
         log "ERROR" "Command failed (exit $exit_code) after ${elapsed}s: $cmd"
         return "$exit_code"
     fi
@@ -446,12 +485,13 @@ fail() {
     save_state
 
     # Calculate total build time
-    local total_time=$(($(date +%s) - BUILD_START_TIME))
+    local total_time
+    total_time=$(($(date +%s) - BUILD_START_TIME))
 
     # Show diagnostic info
     {
         echo ""
-        echo "Build failed after $(format_time $total_time)"
+        echo "Build failed after $(format_time "$total_time")"
         echo ""
         echo "Error Details:"
         echo "  Message: $msg"
@@ -483,8 +523,9 @@ cleanup() {
 
     if [ "$exit_code" -eq 0 ]; then
         generate_summary
-        local total_time=$(($(date +%s) - BUILD_START_TIME))
-        print_info "Build completed successfully in $(format_time $total_time)!"
+        local total_time
+        total_time=$(($(date +%s) - BUILD_START_TIME))
+        print_info "Build completed successfully in $(format_time "$total_time")!"
         log "INFO" "Build completed successfully"
     else
         save_state
@@ -686,126 +727,129 @@ check_permissions() {
 check_submodules() {
     print_step "4/9" "Git Submodules Check"
 
-    # Check if we're in a git repository
-    if ! git rev-parse --git-dir >/dev/null 2>&1; then
-        print_warning "Not in a git repository, skipping submodule check"
-        log "SUBMODULE" "Not in git repository, skipping"
-        print_step_complete "4/9"
-        echo ""
-        return 0
-    fi
+    # Work in CRYPTOGRAM_ROOT to avoid CWD surprises
+    (
+        cd "$CRYPTOGRAM_ROOT" || fail "Cannot change to CRYPTOGRAM_ROOT ($CRYPTOGRAM_ROOT)"
 
-    # Check if there are any submodules configured
-    if [ ! -f ".gitmodules" ]; then
-        print_info "No submodules configured, skipping"
-        log "SUBMODULE" "No .gitmodules file found"
-        print_step_complete "4/9"
-        echo ""
-        return 0
-    fi
-
-    print_progress "Checking git submodules..."
-    log "SUBMODULE" "Starting submodule initialization"
-
-    # Get list of submodules
-    local submodule_count
-    submodule_count=$(git config --file .gitmodules --get-regexp path 2>/dev/null | wc -l)
-    if [ "$submodule_count" -eq 0 ]; then
-        print_info "No submodules found in .gitmodules"
-        log "SUBMODULE" "No submodules configured"
-        print_step_complete "4/9"
-        echo ""
-        return 0
-    fi
-
-    print_info "Found $submodule_count submodule(s)"
-    log "SUBMODULE" "Found $submodule_count submodules"
-
-    # Check for broken submodule directories
-    print_progress "Checking for broken submodule directories..."
-    local fixed_count=0
-    local broken_paths=()
-
-    while IFS= read -r submodule_path; do
-        if [ -d "$submodule_path" ] && [ ! -d "$submodule_path/.git" ]; then
-            # Directory exists but is not a git repository
-            if [ -z "$(ls -A "$submodule_path" 2>/dev/null)" ]; then
-                # Directory is empty, safe to remove
-                print_warning "Removing empty submodule directory: $submodule_path"
-                log "SUBMODULE" "Removing empty directory: $submodule_path"
-                if rmdir "$submodule_path" 2>/dev/null; then
-                    ((fixed_count++))
-                    log "SUBMODULE" "Successfully removed: $submodule_path"
-                else
-                    print_warning "Failed to remove $submodule_path"
-                    log "WARN" "Could not remove directory: $submodule_path"
-                    broken_paths+=("$submodule_path")
-                fi
-            else
-                # Directory has content but no .git - this is problematic
-                print_error "Submodule directory exists but is not a git repository: $submodule_path"
-                print_error "Directory contains files:"
-                # shellcheck disable=SC2012
-                ls -la "$submodule_path" | head -10 | sed 's/^/  /'
-                echo ""
-                echo "Please manually remove or backup this directory:"
-                echo "  mv $submodule_path ${submodule_path}.backup"
-                echo "  # or"
-                echo "  rm -rf $submodule_path"
-                echo ""
-                log "ERROR" "Broken submodule directory with content: $submodule_path"
-                fail "Broken submodule state detected - manual intervention required"
-            fi
+        # Check if we're in a git repository
+        if ! git rev-parse --git-dir >/dev/null 2>&1; then
+            print_warning "Not in a git repository, skipping submodule check"
+            log "SUBMODULE" "Not in git repository, skipping"
+            exit 0
         fi
-    done < <(git config --file .gitmodules --get-regexp path 2>/dev/null | awk '{print $2}')
 
-    if [ $fixed_count -gt 0 ]; then
-        print_info "Fixed $fixed_count broken submodule director(ies)"
-        log "SUBMODULE" "Fixed $fixed_count broken directories"
-    fi
+        # Check if there are any submodules configured
+        if [ ! -f ".gitmodules" ]; then
+            print_info "No submodules configured, skipping"
+            log "SUBMODULE" "No .gitmodules file found"
+            exit 0
+        fi
 
-    # Initialize submodules
-    print_progress "Initializing git submodules..."
-    log "SUBMODULE" "Running git submodule init"
+        print_progress "Checking git submodules..."
+        log "SUBMODULE" "Starting submodule initialization"
 
-    if ! git submodule init 2>&1 | tee -a "$LOG_FILE"; then
-        print_error "Failed to initialize git submodules"
-        log "ERROR" "git submodule init failed"
-        fail "Failed to initialize git submodules"
-    fi
-    print_info "Submodules initialized"
-    log "SUBMODULE" "Submodules initialized successfully"
+        # Get list of submodules
+        local submodule_count
+        submodule_count=$(git config --file .gitmodules --get-regexp path 2>/dev/null | wc -l)
+        if [ "$submodule_count" -eq 0 ]; then
+            print_info "No submodules found in .gitmodules"
+            log "SUBMODULE" "No submodules configured"
+            exit 0
+        fi
 
-    # Update submodules
-    print_progress "Updating git submodules (this may take a while)..."
-    log "SUBMODULE" "Running git submodule update --init --recursive"
+        print_info "Found $submodule_count submodule(s)"
+        log "SUBMODULE" "Found $submodule_count submodules"
 
-    local update_start
-    update_start=$(date +%s)
-    if ! git submodule update --init --recursive 2>&1 | tee -a "$LOG_FILE"; then
-        print_error "Failed to update git submodules"
-        log "ERROR" "git submodule update --init --recursive failed"
-        echo ""
-        echo "Common solutions:"
-        echo "  1. Check network connectivity"
-        echo "  2. Ensure you have access to all submodule repositories"
-        echo "  3. Verify .gitmodules configuration"
-        echo "  4. Try manually: git submodule update --init --recursive --force"
-        echo ""
-        fail "Failed to update git submodules"
-    fi
+        # Check for broken submodule directories
+        print_progress "Checking for broken submodule directories..."
+        local fixed_count=0
 
-    local update_time=$(($(date +%s) - update_start))
-    print_info "Submodules updated successfully in $(format_time $update_time)"
-    log "SUBMODULE" "Submodules updated in $(format_time $update_time)"
+        while IFS= read -r submodule_path; do
+            if [ -d "$submodule_path" ] && [ ! -d "$submodule_path/.git" ]; then
+                # Directory exists but is not a git repository
+                if [ -z "$(ls -A "$submodule_path" 2>/dev/null)" ]; then
+                    # Directory is empty, safe to remove
+                    print_warning "Removing empty submodule directory: $submodule_path"
+                    log "SUBMODULE" "Removing empty directory: $submodule_path"
+                    if rmdir "$submodule_path" 2>/dev/null; then
+                        ((fixed_count++))
+                        log "SUBMODULE" "Successfully removed: $submodule_path"
+                    else
+                        print_warning "Failed to remove $submodule_path"
+                        log "WARN" "Could not remove directory: $submodule_path"
+                    fi
+                else
+                    # Directory has content but no .git - this is problematic
+                    print_error "Submodule directory exists but is not a git repository: $submodule_path"
+                    print_error "Directory contains files:"
+                    # shellcheck disable=SC2012
+                    ls -la "$submodule_path" | head -10 | sed 's/^/  /'
+                    echo ""
+                    echo "Please manually remove or backup this directory:"
+                    echo "  mv $submodule_path ${submodule_path}.backup"
+                    echo "  # or"
+                    echo "  rm -rf $submodule_path"
+                    echo ""
+                    log "ERROR" "Broken submodule directory with content: $submodule_path"
+                    fail "Broken submodule state detected - manual intervention required"
+                fi
+            fi
+        done < <(git config --file .gitmodules --get-regexp path 2>/dev/null | awk '{print $2}')
 
-    # Show submodule status for verification
-    print_debug "Verifying submodule status..."
-    if git submodule status --recursive >> "$LOG_FILE" 2>&1; then
-        log "SUBMODULE" "Submodule status verified"
-    else
-        log "WARN" "Could not verify submodule status"
-    fi
+        if [ $fixed_count -gt 0 ]; then
+            print_info "Fixed $fixed_count broken submodule director(ies)"
+            log "SUBMODULE" "Fixed $fixed_count broken directories"
+        fi
+
+        if [ "$DRY_RUN" -eq 1 ]; then
+            print_info "[DRY RUN] Would run: git submodule init && git submodule update --init --recursive"
+            exit 0
+        fi
+
+        # Initialize submodules
+        print_progress "Initializing git submodules..."
+        log "SUBMODULE" "Running git submodule init"
+
+        if ! git submodule init 2>&1 | tee -a "$LOG_FILE"; then
+            print_error "Failed to initialize git submodules"
+            log "ERROR" "git submodule init failed"
+            fail "Failed to initialize git submodules"
+        fi
+        print_info "Submodules initialized"
+        log "SUBMODULE" "Submodules initialized successfully"
+
+        # Update submodules
+        print_progress "Updating git submodules (this may take a while)..."
+        log "SUBMODULE" "Running git submodule update --init --recursive"
+
+        local update_start
+        update_start=$(date +%s)
+        if ! git submodule update --init --recursive 2>&1 | tee -a "$LOG_FILE"; then
+            print_error "Failed to update git submodules"
+            log "ERROR" "git submodule update --init --recursive failed"
+            echo ""
+            echo "Common solutions:"
+            echo "  1. Check network connectivity"
+            echo "  2. Ensure you have access to all submodule repositories"
+            echo "  3. Verify .gitmodules configuration"
+            echo "  4. Try manually: git submodule update --init --recursive --force"
+            echo ""
+            fail "Failed to update git submodules"
+        fi
+
+        local update_time
+        update_time=$(($(date +%s) - update_start))
+        print_info "Submodules updated successfully in $(format_time "$update_time")"
+        log "SUBMODULE" "Submodules updated in $(format_time "$update_time")"
+
+        # Show submodule status for verification
+        print_debug "Verifying submodule status..."
+        if git submodule status --recursive >> "$LOG_FILE" 2>&1; then
+            log "SUBMODULE" "Submodule status verified"
+        else
+            log "WARN" "Could not verify submodule status"
+        fi
+    )
 
     BUILD_STATE["submodules_initialized"]=1
     save_state
@@ -948,6 +992,13 @@ build_ada() {
     BUILD_STATE["ada_cloned"]=1
     save_state
 
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Skipping Ada configure/build/install steps"
+        print_step_complete "6/9"
+        echo ""
+        return 0
+    fi
+
     print_progress "Configuring Ada build..."
     cd "$ada_dir" || fail "Cannot change to Ada directory"
     mkdir -p build || fail "Cannot create Ada build directory"
@@ -1036,10 +1087,11 @@ build_ada() {
     cd / || true
     rm -rf "$ada_dir" 2>/dev/null || print_warning "Could not remove temporary Ada directory"
 
-    local elapsed=$(($(date +%s) - start_time))
+    local elapsed
+    elapsed=$(($(date +%s) - start_time))
     COMPONENT_TIMES["ada"]=$elapsed
-    print_info "Ada built and installed in $(format_time $elapsed)"
-    log "BUILD" "Ada build completed in $(format_time $elapsed)"
+    print_info "Ada built and installed in $(format_time "$elapsed")"
+    log "BUILD" "Ada build completed in $(format_time "$elapsed")"
 
     print_step_complete "6/9"
     echo ""
@@ -1079,6 +1131,13 @@ build_protobuf() {
 
     BUILD_STATE["protobuf_cloned"]=1
     save_state
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Skipping Protobuf configure/build/install steps"
+        print_step_complete "7/9"
+        echo ""
+        return 0
+    fi
 
     print_progress "Configuring Protobuf build..."
     cd "$protobuf_dir" || fail "Cannot change to Protobuf directory"
@@ -1209,10 +1268,11 @@ build_protobuf() {
     cd / || true
     rm -rf "$protobuf_dir" 2>/dev/null || print_warning "Could not remove temporary Protobuf directory"
 
-    local elapsed=$(($(date +%s) - start_time))
+    local elapsed
+    elapsed=$(($(date +%s) - start_time))
     COMPONENT_TIMES["protobuf"]=$elapsed
-    print_info "Protobuf built and installed in $(format_time $elapsed)"
-    log "BUILD" "Protobuf build completed in $(format_time $elapsed)"
+    print_info "Protobuf built and installed in $(format_time "$elapsed")"
+    log "BUILD" "Protobuf build completed in $(format_time "$elapsed")"
 
     print_step_complete "7/9"
     echo ""
@@ -1252,31 +1312,36 @@ configure_cryptogram() {
     print_progress "Running CMake configuration..."
     log "BUILD" "Running CMake with Release configuration"
 
-    if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release \
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Would run CMake configuration for CRYPTOGRAM"
+    else
+        if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_PREFIX_PATH='$INSTALL_PREFIX' \
         -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
         -DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
         '$CRYPTOGRAM_ROOT'"; then
-        print_error "CMake configuration failed"
-        echo ""
-        echo "Common issues:"
-        echo "  - Missing dependencies (Qt, etc.)"
-        echo "  - Ada or Protobuf not found"
-        echo "  - CMake version too old"
-        echo ""
-        echo "Check the log file for detailed error messages:"
-        echo "  $LOG_FILE"
-        echo ""
-        fail "CMake configuration failed"
+            print_error "CMake configuration failed"
+            echo ""
+            echo "Common issues:"
+            echo "  - Missing dependencies (Qt, etc.)"
+            echo "  - Ada or Protobuf not found"
+            echo "  - CMake version too old"
+            echo ""
+            echo "Check the log file for detailed error messages:"
+            echo "  $LOG_FILE"
+            echo ""
+            fail "CMake configuration failed"
+        fi
     fi
 
     BUILD_STATE["cryptogram_configured"]=1
     save_state
 
-    local elapsed=$(($(date +%s) - start_time))
+    local elapsed
+    elapsed=$(($(date +%s) - start_time))
     COMPONENT_TIMES["configure"]=$elapsed
-    print_info "Configuration completed in $(format_time $elapsed)"
-    log "BUILD" "Configuration completed in $(format_time $elapsed)"
+    print_info "Configuration completed in $(format_time "$elapsed")"
+    log "BUILD" "Configuration completed in $(format_time "$elapsed")"
 
     print_step_complete "8/9"
     echo ""
@@ -1309,28 +1374,33 @@ build_cryptogram() {
     print_info "Progress will be shown in real-time below"
     echo ""
 
-    if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
-        print_error "CRYPTOGRAM build failed"
-        echo ""
-        echo "Common issues:"
-        echo "  - Compilation errors"
-        echo "  - Missing dependencies"
-        echo "  - Insufficient memory"
-        echo "  - Disk space issues"
-        echo ""
-        echo "Check the log file for detailed error messages:"
-        echo "  $LOG_FILE"
-        echo ""
-        fail "CRYPTOGRAM build compilation failed"
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Would run CRYPTOGRAM build"
+    else
+        if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
+            print_error "CRYPTOGRAM build failed"
+            echo ""
+            echo "Common issues:"
+            echo "  - Compilation errors"
+            echo "  - Missing dependencies"
+            echo "  - Insufficient memory"
+            echo "  - Disk space issues"
+            echo ""
+            echo "Check the log file for detailed error messages:"
+            echo "  $LOG_FILE"
+            echo ""
+            fail "CRYPTOGRAM build compilation failed"
+        fi
+
+        BUILD_STATE["cryptogram_built"]=1
+        save_state
     fi
 
-    BUILD_STATE["cryptogram_built"]=1
-    save_state
-
-    local elapsed=$(($(date +%s) - start_time))
+    local elapsed
+    elapsed=$(($(date +%s) - start_time))
     COMPONENT_TIMES["cryptogram"]=$elapsed
-    print_info "CRYPTOGRAM built in $(format_time $elapsed)"
-    log "BUILD" "CRYPTOGRAM build completed in $(format_time $elapsed)"
+    print_info "CRYPTOGRAM built in $(format_time "$elapsed")"
+    log "BUILD" "CRYPTOGRAM build completed in $(format_time "$elapsed")"
 
     # Verify executable
     print_progress "Verifying build output..."
@@ -1370,7 +1440,8 @@ build_cryptogram() {
 # Summary Generation with Enhanced Metrics
 # ──────────────────────────────────────────────────────────────────────────────
 generate_summary() {
-    local total_time=$(($(date +%s) - BUILD_START_TIME))
+    local total_time
+    total_time=$(($(date +%s) - BUILD_START_TIME))
     local component_time=0
 
     for time in "${COMPONENT_TIMES[@]}"; do
@@ -1385,7 +1456,7 @@ generate_summary() {
         echo "Build Information:"
         echo "  Build ID: $BUILD_ID"
         echo "  Completed: $(date '+%Y-%m-%d %H:%M:%S')"
-        echo "  Total Time: $(format_time $total_time)"
+        echo "  Total Time: $(format_time "$total_time")"
         echo "  Script Version: $SCRIPT_VERSION"
         echo ""
         echo "Component Build Times:"
@@ -1395,11 +1466,11 @@ generate_summary() {
             fi
         done
         echo "  ────────────────────────────────────────────"
-        printf "  %-20s: %s\n" "Total (components)" "$(format_time $component_time)"
-        printf "  %-20s: %s\n" "Total (wall clock)" "$(format_time $total_time)"
+        printf "  %-20s: %s\n" "Total (components)" "$(format_time "$component_time")"
+        printf "  %-20s: %s\n" "Total (wall clock)" "$(format_time "$total_time")"
         local overhead=$((total_time - component_time))
         if [ $overhead -gt 0 ]; then
-            printf "  %-20s: %s\n" "Overhead" "$(format_time $overhead)"
+            printf "  %-20s: %s\n" "Overhead" "$(format_time "$overhead")"
         fi
         echo ""
         echo "Build Configuration:"
@@ -1567,7 +1638,7 @@ OPTIONS:
     -q, --quiet         Quiet mode
 
 ENVIRONMENT:
-    CRYPTOGRAM_ROOT     Source directory (default: $HOME/CRYPTOGRAM)
+    CRYPTOGRAM_ROOT     Source directory (default: directory containing this script: $SCRIPT_DIR)
     LOG_DIR             Log directory (default: auto-detected)
     INSTALL_PREFIX      Installation prefix
     CC/CXX              Compiler override
