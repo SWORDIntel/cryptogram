@@ -25,8 +25,10 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly CYAN='\033[0;36m'
 readonly MAGENTA='\033[0;35m'
+# shellcheck disable=SC2034
 readonly WHITE='\033[1;37m'
 readonly GRAY='\033[0;90m'
+# shellcheck disable=SC2034
 readonly BOLD='\033[1m'
 readonly NC='\033[0m'
 
@@ -35,14 +37,17 @@ readonly CHECK="✓"
 readonly CROSS="✗"
 readonly WARN="⚠"
 readonly ARROW="→"
+# shellcheck disable=SC2034
 readonly INFO="ℹ"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Configuration
 # ──────────────────────────────────────────────────────────────────────────────
 readonly SCRIPT_VERSION="3.1.0"
+# shellcheck disable=SC2155
 readonly BUILD_DATE="$(date +%Y%m%d_%H%M%S)"
 readonly BUILD_ID="${BUILD_DATE}_$$"
+# shellcheck disable=SC2155
 readonly BUILD_START_TIME="$(date +%s)"
 
 # Detect if running in interactive mode
@@ -88,7 +93,9 @@ readonly USER_PREFIX="${HOME}/.local"
 INSTALL_PREFIX="${INSTALL_PREFIX:-$DEFAULT_PREFIX}"
 
 # Auto-detect available tools
+# shellcheck disable=SC2155
 readonly NUM_CORES="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
+# shellcheck disable=SC2155
 readonly TOTAL_MEMORY="$(free -b 2>/dev/null | awk '/^Mem:/{print $2}' || echo 0)"
 
 # Build flags with validation
@@ -181,7 +188,7 @@ initialize() {
         echo "  Architecture: $(uname -m)"
         echo "  CPU Cores: $NUM_CORES"
         echo "  Parallel Jobs: $PARALLEL_JOBS"
-        echo "  Interactive Mode: $([ $INTERACTIVE_MODE -eq 1 ] && echo "Yes" || echo "No")"
+        echo "  Interactive Mode: $([ "$INTERACTIVE_MODE" -eq 1 ] && echo "Yes" || echo "No")"
         echo ""
         echo "Build Options:"
         echo "  Verbose: $VERBOSE_MODE"
@@ -238,7 +245,8 @@ log() {
     local level="$1"
     shift
     local msg="$*"
-    local timestamp="$(get_timestamp)"
+    local timestamp
+    timestamp="$(get_timestamp)"
 
     # Write to main log
     echo "[${timestamp}] [${level}] ${msg}" >> "$LOG_FILE" 2>/dev/null || true
@@ -296,7 +304,7 @@ print_progress() {
 }
 
 print_debug() {
-    [ $VERBOSE_MODE -eq 1 ] && echo -e "${GRAY}[DEBUG] $1${NC}"
+    [ "$VERBOSE_MODE" -eq 1 ] && echo -e "${GRAY}[DEBUG] $1${NC}"
     log "DEBUG" "$1"
 }
 
@@ -305,12 +313,13 @@ print_debug() {
 # ──────────────────────────────────────────────────────────────────────────────
 run_cmd() {
     local cmd="$*"
-    local cmd_start="$(date +%s)"
+    local cmd_start
+    cmd_start="$(date +%s)"
 
     print_debug "Executing: $cmd"
     log "CMD" "Running: $cmd"
 
-    if [ $DRY_RUN -eq 1 ]; then
+    if [ "$DRY_RUN" -eq 1 ]; then
         print_info "[DRY RUN] Would execute: $cmd"
         return 0
     fi
@@ -323,18 +332,19 @@ run_cmd() {
         local exit_code=$?
         local elapsed=$(($(date +%s) - cmd_start))
         log "ERROR" "Command failed (exit $exit_code) after ${elapsed}s: $cmd"
-        return $exit_code
+        return "$exit_code"
     fi
 }
 
 run_cmd_verbose() {
     local cmd="$*"
-    local cmd_start="$(date +%s)"
+    local cmd_start
+    cmd_start="$(date +%s)"
 
     print_debug "Executing (verbose): $cmd"
     log "CMD" "Running (verbose): $cmd"
 
-    if [ $DRY_RUN -eq 1 ]; then
+    if [ "$DRY_RUN" -eq 1 ]; then
         print_info "[DRY RUN] Would execute: $cmd"
         return 0
     fi
@@ -343,18 +353,18 @@ run_cmd_verbose() {
     if eval "$cmd" 2>&1 | tee -a "$LOG_FILE"; then
         local exit_code=${PIPESTATUS[0]}
         local elapsed=$(($(date +%s) - cmd_start))
-        if [ $exit_code -eq 0 ]; then
+        if [ "$exit_code" -eq 0 ]; then
             log "CMD" "Completed in ${elapsed}s: $cmd"
             return 0
         else
             log "ERROR" "Command failed (exit $exit_code) after ${elapsed}s: $cmd"
-            return $exit_code
+            return "$exit_code"
         fi
     else
         local exit_code=$?
         local elapsed=$(($(date +%s) - cmd_start))
         log "ERROR" "Command failed (exit $exit_code) after ${elapsed}s: $cmd"
-        return $exit_code
+        return "$exit_code"
     fi
 }
 
@@ -393,7 +403,7 @@ save_state() {
 }
 
 load_state() {
-    if [ -f "$STATE_FILE" ] && [ $RESUME_BUILD -eq 1 ]; then
+    if [ -f "$STATE_FILE" ] && [ "$RESUME_BUILD" -eq 1 ]; then
         print_info "Loading previous build state..."
         log "STATE" "Attempting to load state from $STATE_FILE"
 
@@ -471,7 +481,7 @@ fail() {
 cleanup() {
     local exit_code=$?
 
-    if [ $exit_code -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         generate_summary
         local total_time=$(($(date +%s) - BUILD_START_TIME))
         print_info "Build completed successfully in $(format_time $total_time)!"
@@ -499,7 +509,8 @@ check_system() {
 
     # OS Detection with validation
     print_progress "Checking operating system..."
-    local os_info="$(uname -s) $(uname -r) $(uname -m)"
+    local os_info
+    os_info="$(uname -s) $(uname -r) $(uname -m)"
     print_info "System: $os_info"
     log "SYSTEM" "Operating system: $os_info"
 
@@ -536,13 +547,14 @@ check_system() {
     print_info "Parallel jobs: $PARALLEL_JOBS"
     log "SYSTEM" "CPU cores: $NUM_CORES, parallel jobs: $PARALLEL_JOBS"
 
-    if [ $NUM_CORES -lt 2 ]; then
+    if [ "$NUM_CORES" -lt 2 ]; then
         print_warning "Single core detected - build will be slow"
     fi
 
     # Disk Space with critical checks
     print_progress "Checking disk space..."
-    local available_space=$(df "$HOME" 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)
+    local available_space
+    available_space=$(df "$HOME" 2>/dev/null | awk 'NR==2 {print $4}' || echo 0)
     local available_gb=$((available_space / 1048576))
     print_info "Available disk: ${available_gb}GB"
     log "SYSTEM" "Available disk space: ${available_gb}GB"
@@ -567,7 +579,8 @@ check_tools() {
     for tool in "${tools[@]}"; do
         print_progress "Checking for $tool..."
         if command -v "$tool" >/dev/null 2>&1; then
-            local version=$($tool --version 2>/dev/null | head -n1 || echo "unknown")
+            local version
+            version=$($tool --version 2>/dev/null | head -n1 || echo "unknown")
             print_info "$tool found: $version"
             log "TOOL" "$tool: $version"
         else
@@ -591,11 +604,14 @@ check_tools() {
 
     # Check CMake version
     if command -v cmake >/dev/null 2>&1; then
-        local cmake_version=$(cmake --version | head -n1 | grep -oP '\d+\.\d+\.\d+' || echo "0.0.0")
-        local cmake_major=$(echo "$cmake_version" | cut -d. -f1)
-        local cmake_minor=$(echo "$cmake_version" | cut -d. -f2)
+        local cmake_version
+        cmake_version=$(cmake --version | head -n1 | grep -oP '\d+\.\d+\.\d+' || echo "0.0.0")
+        local cmake_major
+        cmake_major=$(echo "$cmake_version" | cut -d. -f1)
+        local cmake_minor
+        cmake_minor=$(echo "$cmake_version" | cut -d. -f2)
 
-        if [ "$cmake_major" -lt 3 ] || ([ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -lt 16 ]); then
+        if [ "$cmake_major" -lt 3 ] || { [ "$cmake_major" -eq 3 ] && [ "$cmake_minor" -lt 16 ]; }; then
             print_warning "CMake version $cmake_version is old (3.16+ recommended)"
         fi
     fi
@@ -637,7 +653,7 @@ check_permissions() {
         print_warning "No write access to $INSTALL_PREFIX"
         log "WARN" "No write access to: $INSTALL_PREFIX"
 
-        if [ $INTERACTIVE_MODE -eq 1 ]; then
+        if [ "$INTERACTIVE_MODE" -eq 1 ]; then
             echo ""
             echo "Options:"
             echo "1. Run with sudo: sudo $0"
@@ -692,7 +708,8 @@ check_submodules() {
     log "SUBMODULE" "Starting submodule initialization"
 
     # Get list of submodules
-    local submodule_count=$(git config --file .gitmodules --get-regexp path 2>/dev/null | wc -l)
+    local submodule_count
+    submodule_count=$(git config --file .gitmodules --get-regexp path 2>/dev/null | wc -l)
     if [ "$submodule_count" -eq 0 ]; then
         print_info "No submodules found in .gitmodules"
         log "SUBMODULE" "No submodules configured"
@@ -728,6 +745,7 @@ check_submodules() {
                 # Directory has content but no .git - this is problematic
                 print_error "Submodule directory exists but is not a git repository: $submodule_path"
                 print_error "Directory contains files:"
+                # shellcheck disable=SC2012
                 ls -la "$submodule_path" | head -10 | sed 's/^/  /'
                 echo ""
                 echo "Please manually remove or backup this directory:"
@@ -762,7 +780,8 @@ check_submodules() {
     print_progress "Updating git submodules (this may take a while)..."
     log "SUBMODULE" "Running git submodule update --init --recursive"
 
-    local update_start=$(date +%s)
+    local update_start
+    update_start=$(date +%s)
     if ! git submodule update --init --recursive 2>&1 | tee -a "$LOG_FILE"; then
         print_error "Failed to update git submodules"
         log "ERROR" "git submodule update --init --recursive failed"
@@ -865,13 +884,15 @@ configure_compiler() {
 
     # Get compiler versions
     if [ -n "$CC" ]; then
-        local cc_version=$($CC --version 2>/dev/null | head -n1 || echo "unknown")
+        local cc_version
+        cc_version=$($CC --version 2>/dev/null | head -n1 || echo "unknown")
         print_debug "C compiler version: $cc_version"
         log "COMPILER" "C compiler version: $cc_version"
     fi
 
     if [ -n "$CXX" ]; then
-        local cxx_version=$($CXX --version 2>/dev/null | head -n1 || echo "unknown")
+        local cxx_version
+        cxx_version=$($CXX --version 2>/dev/null | head -n1 || echo "unknown")
         print_debug "C++ compiler version: $cxx_version"
         log "COMPILER" "C++ compiler version: $cxx_version"
     fi
@@ -895,7 +916,7 @@ configure_compiler() {
 build_ada() {
     print_step "6/9" "Building Ada URL Parser"
 
-    if [ ${BUILD_STATE["ada_installed"]} -eq 1 ] && [ $FORCE_REBUILD -eq 0 ]; then
+    if [ "${BUILD_STATE["ada_installed"]}" -eq 1 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
         print_info "Ada already installed, skipping..."
         log "BUILD" "Ada already installed, skipping rebuild"
         print_step_complete "6/9"
@@ -904,7 +925,8 @@ build_ada() {
     fi
 
     local ada_dir="/tmp/ada_$$"
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     log "BUILD" "Starting Ada build"
     log "BUILD" "Ada build directory: $ada_dir"
@@ -990,6 +1012,7 @@ build_ada() {
 
         # List installed files
         print_debug "Installed Ada files:"
+        # shellcheck disable=SC2012
         ls -lh "$INSTALL_PREFIX"/lib/libada.* 2>/dev/null | while read -r line; do
             print_debug "  $line"
         done
@@ -1002,6 +1025,7 @@ build_ada() {
         echo "Diagnostics:"
         echo "  Expected location: $INSTALL_PREFIX/lib/libada.*"
         echo "  Contents of $INSTALL_PREFIX/lib:"
+        # shellcheck disable=SC2012
         ls -lA "$INSTALL_PREFIX/lib" 2>&1 | head -20 | sed 's/^/    /'
         echo ""
         log "ERROR" "Ada verification failed - no libraries found"
@@ -1024,7 +1048,7 @@ build_ada() {
 build_protobuf() {
     print_step "7/9" "Building Protocol Buffers"
 
-    if [ ${BUILD_STATE["protobuf_installed"]} -eq 1 ] && [ $FORCE_REBUILD -eq 0 ]; then
+    if [ "${BUILD_STATE["protobuf_installed"]}" -eq 1 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
         print_info "Protobuf already installed, skipping..."
         log "BUILD" "Protobuf already installed, skipping rebuild"
         print_step_complete "7/9"
@@ -1033,7 +1057,8 @@ build_protobuf() {
     fi
 
     local protobuf_dir="/tmp/protobuf_$$"
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     log "BUILD" "Starting Protobuf build"
     log "BUILD" "Protobuf build directory: $protobuf_dir"
@@ -1102,7 +1127,7 @@ build_protobuf() {
     log "BUILD" "Verifying Protobuf installation"
 
     # Show what was installed (debug mode)
-    if [ $VERBOSE_MODE -eq 1 ]; then
+    if [ "$VERBOSE_MODE" -eq 1 ]; then
         print_debug "Checking $INSTALL_PREFIX/lib for Protobuf libraries..."
         if ls -lh "$INSTALL_PREFIX"/lib/libprotobuf*.* 2>/dev/null; then
             print_debug "Files listed above"
@@ -1138,7 +1163,8 @@ build_protobuf() {
 
         # Check for protoc compiler
         if command -v protoc >/dev/null 2>&1; then
-            local protoc_version=$(protoc --version 2>/dev/null || echo "unknown")
+            local protoc_version
+            protoc_version=$(protoc --version 2>/dev/null || echo "unknown")
             print_debug "Protocol buffer compiler: $protoc_version"
             log "BUILD" "protoc version: $protoc_version"
         fi
@@ -1163,8 +1189,10 @@ build_protobuf() {
             echo "Diagnostics:"
             echo "  Expected location: $INSTALL_PREFIX/lib/libprotobuf.*"
             echo "  Permissions on $INSTALL_PREFIX/lib:"
+            # shellcheck disable=SC2012
             ls -ld "$INSTALL_PREFIX/lib" 2>&1 | sed 's/^/    /'
             echo "  Contents of $INSTALL_PREFIX/lib (first 20 files):"
+            # shellcheck disable=SC2012
             ls -lA "$INSTALL_PREFIX/lib" 2>&1 | head -20 | sed 's/^/    /'
             echo ""
             echo "Possible solutions:"
@@ -1193,7 +1221,7 @@ build_protobuf() {
 configure_cryptogram() {
     print_step "8/9" "Configuring CRYPTOGRAM"
 
-    if [ ${BUILD_STATE["cryptogram_configured"]} -eq 1 ] && [ $FORCE_REBUILD -eq 0 ]; then
+    if [ "${BUILD_STATE["cryptogram_configured"]}" -eq 1 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
         print_info "CRYPTOGRAM already configured, skipping..."
         log "BUILD" "CRYPTOGRAM already configured, skipping"
         print_step_complete "8/9"
@@ -1201,7 +1229,8 @@ configure_cryptogram() {
         return 0
     fi
 
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     log "BUILD" "Starting CRYPTOGRAM configuration"
     log "BUILD" "Build directory: $BUILD_DIR"
@@ -1214,7 +1243,7 @@ configure_cryptogram() {
 
     cd "$BUILD_DIR" || fail "Cannot change to build directory"
 
-    if [ $FORCE_REBUILD -eq 1 ]; then
+    if [ "$FORCE_REBUILD" -eq 1 ]; then
         print_progress "Cleaning previous build (forced rebuild)..."
         run_cmd "rm -rf CMakeCache.txt CMakeFiles"
         log "BUILD" "Cleaned previous CMake cache"
@@ -1256,7 +1285,7 @@ configure_cryptogram() {
 build_cryptogram() {
     print_step "9/9" "Building CRYPTOGRAM Desktop"
 
-    if [ ${BUILD_STATE["cryptogram_built"]} -eq 1 ] && [ $FORCE_REBUILD -eq 0 ]; then
+    if [ "${BUILD_STATE["cryptogram_built"]}" -eq 1 ] && [ "$FORCE_REBUILD" -eq 0 ]; then
         print_info "CRYPTOGRAM already built, skipping..."
         log "BUILD" "CRYPTOGRAM already built, skipping"
         print_step_complete "9/9"
@@ -1270,7 +1299,8 @@ build_cryptogram() {
     fi
 
     cd "$BUILD_DIR" || fail "Cannot change to build directory"
-    local start_time=$(date +%s)
+    local start_time
+    start_time=$(date +%s)
 
     log "BUILD" "Starting CRYPTOGRAM compilation"
 
@@ -1313,9 +1343,10 @@ build_cryptogram() {
     fi
 
     if [ -n "$exec_path" ] && [ -x "$exec_path" ]; then
-        local size=$(stat -c%s "$exec_path" 2>/dev/null || stat -f%z "$exec_path" 2>/dev/null || echo 0)
-        print_info "Executable found: $exec_path ($(format_size $size))"
-        log "BUILD" "Executable verified: $exec_path ($(format_size $size))"
+        local size
+        size=$(stat -c%s "$exec_path" 2>/dev/null || stat -f%z "$exec_path" 2>/dev/null || echo 0)
+        print_info "Executable found: $exec_path ($(format_size "$size"))"
+        log "BUILD" "Executable verified: $exec_path ($(format_size "$size"))"
         echo "CRYPTOGRAM_EXEC=$exec_path" >> "$SUMMARY_FILE"
     else
         print_error "CRYPTOGRAM executable not found"
@@ -1360,7 +1391,7 @@ generate_summary() {
         echo "Component Build Times:"
         for component in ada protobuf configure cryptogram; do
             if [ -n "${COMPONENT_TIMES[$component]:-}" ]; then
-                printf "  %-20s: %s\n" "$component" "$(format_time ${COMPONENT_TIMES[$component]})"
+                printf "  %-20s: %s\n" "$component" "$(format_time "${COMPONENT_TIMES[$component]}")"
             fi
         done
         echo "  ────────────────────────────────────────────"
@@ -1450,7 +1481,7 @@ main() {
     initialize
 
     # Clear screen for interactive mode
-    [ $INTERACTIVE_MODE -eq 1 ] && [ -t 1 ] && clear || true
+    [ "$INTERACTIVE_MODE" -eq 1 ] && [ -t 1 ] && clear || true
 
     # Header
     print_header "TSM + CRYPTOGRAM Build Script v$SCRIPT_VERSION"
@@ -1460,9 +1491,9 @@ main() {
     echo "  Build: $BUILD_DIR"
     echo "  Prefix: $INSTALL_PREFIX"
     echo "  Jobs: $PARALLEL_JOBS"
-    [ $DRY_RUN -eq 1 ] && echo "  Mode: DRY RUN"
-    [ $RESUME_BUILD -eq 1 ] && echo "  Mode: RESUME"
-    [ $FORCE_REBUILD -eq 1 ] && echo "  Mode: FORCE REBUILD"
+    [ "$DRY_RUN" -eq 1 ] && echo "  Mode: DRY RUN"
+    [ "$RESUME_BUILD" -eq 1 ] && echo "  Mode: RESUME"
+    [ "$FORCE_REBUILD" -eq 1 ] && echo "  Mode: FORCE REBUILD"
     echo ""
 
     # Try to load previous state
@@ -1472,7 +1503,7 @@ main() {
     fi
 
     # Interactive confirmation
-    if [ $INTERACTIVE_MODE -eq 1 ] && [ -t 0 ]; then
+    if [ "$INTERACTIVE_MODE" -eq 1 ] && [ -t 0 ]; then
         read -rp "Press ENTER to start build or Ctrl+C to cancel..."
         log "INFO" "User confirmed build start"
     else
