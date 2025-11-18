@@ -3,7 +3,7 @@
 ################################################################################
 # TSM + CRYPTOGRAM - Complete Automated Build Script (VERBOSE)
 # Builds everything: ada, protobuf, CMake config, and CRYPTOGRAM desktop
-# FULL LOGGING + REAL-TIME OUTPUT
+# FULL LOGGING + REAL-TIME OUTPUT + CORRECT ERROR PROPAGATION
 ################################################################################
 
 set -Eeuo pipefail
@@ -84,9 +84,10 @@ fail() {
 
 # Trap ANY error and fail properly
 trap 'fail "An unexpected error occurred (line $LINENO)"' ERR
+trap 'fail "Build interrupted (signal received)"' INT TERM
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Initialize log file and set up output redirection
+# Initialize log file (all heavy commands go through logging wrappers below)
 # ──────────────────────────────────────────────────────────────────────────────
 mkdir -p "$(dirname "$LOG_FILE")"
 : > "$LOG_FILE"  # Create empty log file
@@ -123,7 +124,9 @@ run_cmd_verbose() {
 # START
 ################################################################################
 
-clear
+if [ -t 1 ]; then
+    clear || true
+fi
 print_header "TSM + CRYPTOGRAM Complete Build (VERBOSE MODE)"
 
 echo "Start time : $(get_time)"
@@ -205,11 +208,9 @@ fi
     echo ""
 } | tee -a "$LOG_FILE"
 
-# CPU cores
 NUM_JOBS="$(nproc 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
 print_info "Detected CPU cores: $NUM_JOBS"
 
-# CRYPTOGRAM root existence
 if [ ! -d "$CRYPTOGRAM_ROOT" ]; then
     fail "CRYPTOGRAM directory not found at $CRYPTOGRAM_ROOT"
 fi
@@ -233,19 +234,27 @@ if [ ! -w /usr/local ]; then
     echo "3. Install to a user directory instead (ADVANCED):"
     echo "   Edit this script and change '/usr/local' to '\$HOME/.local'"
     echo ""
-    read -rp "Continue anyway? (y/N): " -n 1 CONTINUE
-    echo ""
-    if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
-        echo "Aborting. Please fix permissions and try again."
-        exit 1
+    if [ -t 0 ]; then
+        read -rp "Continue anyway? (y/N): " -n 1 CONTINUE
+        echo ""
+        if [ "$CONTINUE" != "y" ] && [ "$CONTINUE" != "Y" ]; then
+            echo "Aborting. Please fix permissions and try again."
+            exit 1
+        fi
+        print_warning "Continuing with potentially limited permissions..."
+    else
+        fail "/usr/local not writable and no interactive TTY available for confirmation. Aborting."
     fi
-    print_warning "Continuing with potentially limited permissions..."
 else
     print_info "/usr/local is writable - proceeding with installation"
 fi
 echo ""
 
-read -rp "Press ENTER to start the full build, or Ctrl+C to cancel..."
+if [ -t 0 ]; then
+    read -rp "Press ENTER to start the full build, or Ctrl+C to cancel..."
+else
+    print_warning "Non-interactive shell detected; starting full build without confirmation..."
+fi
 
 TOTAL_START="$(date +%s)"
 
@@ -295,7 +304,7 @@ print_info "Ada installed to /usr/local"
 echo ""
 print_progress "Verifying Ada installation..."
 
-if [ -f /usr/local/lib/libada.a ] || ls /usr/local/lib/libada.* >/dev/null 2>&1; then
+if ls /usr/local/lib/libada.* >/dev/null 2>&1; then
     print_info "✓ Ada library file found in /usr/local/lib"
 else
     fail "Ada library file NOT found in /usr/local/lib"
@@ -484,7 +493,9 @@ print_step "5" "Compiling CRYPTOGRAM Desktop Application"
 print_progress "System build information:"
 {
     echo "  CPU cores used: $NUM_JOBS"
-    echo "  Total memory  : $(free -h | awk '/Mem/ {print $2}')"
+    if command -v free >/dev/null 2>&1; then
+        echo "  Total memory  : $(free -h | awk '/Mem/ {print $2}')"
+    fi
     echo ""
 } | tee -a "$LOG_FILE"
 
