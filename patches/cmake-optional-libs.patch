@@ -1,0 +1,38 @@
+diff --git a/external/tde2e/CMakeLists.txt b/external/tde2e/CMakeLists.txt
+index b9f0dd5..ad933de 100644
+--- a/external/tde2e/CMakeLists.txt
++++ b/external/tde2e/CMakeLists.txt
+@@ -7,9 +7,11 @@
+ add_library(external_tde2e INTERFACE IMPORTED GLOBAL)
+ add_library(desktop-app::external_tde2e ALIAS external_tde2e)
+ 
+-if (DESKTOP_APP_USE_PACKAGED OR LINUX)
+-    find_package(tde2e REQUIRED)
+-    target_link_libraries(external_tde2e INTERFACE tde2e::tde2e)
++if (DESKTOP_APP_USE_PACKAGED)
++    find_package(tde2e QUIET)
++    if (tde2e_FOUND)
++        target_link_libraries(external_tde2e INTERFACE tde2e::tde2e)
++    endif()
+     return()
+ endif()
+ 
+diff --git a/external/webrtc/CMakeLists.txt b/external/webrtc/CMakeLists.txt
+index c4a0530..841591e 100644
+--- a/external/webrtc/CMakeLists.txt
++++ b/external/webrtc/CMakeLists.txt
+@@ -7,9 +7,11 @@
+ add_library(external_webrtc INTERFACE IMPORTED GLOBAL)
+ add_library(desktop-app::external_webrtc ALIAS external_webrtc)
+ 
+-if (DESKTOP_APP_USE_PACKAGED OR LINUX)
+-    find_package(tg_owt REQUIRED)
+-    target_link_libraries(external_webrtc INTERFACE tg_owt::tg_owt)
++if (DESKTOP_APP_USE_PACKAGED)
++    find_package(tg_owt QUIET)
++    if (tg_owt_FOUND)
++        target_link_libraries(external_webrtc INTERFACE tg_owt::tg_owt)
++    endif()
+     return()
+ endif()
+ 

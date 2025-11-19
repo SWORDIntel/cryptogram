@@ -7,54 +7,22 @@ git clone --recursive https://github.com/SWORDOps/CRYPTOGRAM.git
 cd CRYPTOGRAM
 git checkout claude/build-ada-protobuf-01Tpe3rvKAkdWnRVGPd3uLET
 
-# Apply required local modifications (see below)
-# Then run the build
+# Apply required local modifications
+./apply-build-patches.sh
+
+# Build
 ./build_all.sh
 ```
 
 ## Required Local Modifications
 
-The following modifications must be applied locally after cloning:
+After cloning, run `./apply-build-patches.sh` to apply build patches:
 
-### 1. cmake/external/tde2e/CMakeLists.txt - Make tde2e optional
+- Makes `tde2e` and `tg_owt` libraries optional (cmake submodule)
+- Adds CMakeLists.txt for lib_tsm integration
 
-Change lines 10-14 to:
-```cmake
-if (DESKTOP_APP_USE_PACKAGED)
-    find_package(tde2e QUIET)
-    if (tde2e_FOUND)
-        target_link_libraries(external_tde2e INTERFACE tde2e::tde2e)
-    endif()
-    return()
-endif()
-```
-
-### 2. cmake/external/webrtc/CMakeLists.txt - Make tg_owt optional
-
-Change lines 10-14 to:
-```cmake
-if (DESKTOP_APP_USE_PACKAGED)
-    find_package(tg_owt QUIET)
-    if (tg_owt_FOUND)
-        target_link_libraries(external_webrtc INTERFACE tg_owt::tg_owt)
-    endif()
-    return()
-endif()
-```
-
-### 3. Telegram/lib_tsm/CMakeLists.txt - Create this file
-
-```cmake
-# TSM (Telegram Security Module) - Python-based module
-add_library(lib_tsm INTERFACE)
-add_library(tdesktop::lib_tsm ALIAS lib_tsm)
-add_library(desktop-app::lib_tsm ALIAS lib_tsm)
-
-target_include_directories(lib_tsm
-INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}
-)
-```
+**Note:** Git will show uncommitted changes in submodules. This is intentional.
+See `patches/README.md` for details.
 
 ## Building tg_owt Library (Required)
 
@@ -92,3 +60,18 @@ apt-cache search libxcb | grep -- '-dev' | awk '{print $1}' | xargs sudo apt-get
 ```
 
 Build time: 20-40 minutes. Binary will be in `build_release/bin/`
+
+## Troubleshooting
+
+**Submodule fetch errors:** The patches are local-only modifications. Just run `./apply-build-patches.sh` after cloning.
+
+**CMake configuration fails:**
+```bash
+rm -rf build_release/CMakeCache.txt build_release/CMakeFiles
+./build_all.sh --resume
+```
+
+**Fresh build:**
+```bash
+./build_all.sh --force
+```
