@@ -591,8 +591,8 @@ PRIVATE
     data/data_drafts.h
     data/data_emoji_statuses.cpp
     data/data_emoji_statuses.h
-    data/data_enhanced_privacy.cpp
-    data/data_enhanced_privacy.h
+    # data/data_enhanced_privacy.cpp
+    # data/data_enhanced_privacy.h
     data/data_folder.cpp
     data/data_folder.h
     data/data_forum.cpp
@@ -601,8 +601,8 @@ PRIVATE
     data/data_forum_icons.h
     data/data_forum_topic.cpp
     data/data_forum_topic.h
-    data/data_group_encryption.cpp
-    data/data_group_encryption.h
+    # data/data_group_encryption.cpp
+    # data/data_group_encryption.h
     data/data_file_click_handler.cpp
     data/data_file_click_handler.h
     data/data_file_origin.cpp
@@ -621,8 +621,8 @@ PRIVATE
     data/data_lastseen_status.h
     data/data_location.cpp
     data/data_location.h
-    data/data_location_randomization.cpp
-    data/data_location_randomization.h
+    # data/data_location_randomization.cpp
+    # data/data_location_randomization.h
     data/data_media_preload.cpp
     data/data_media_preload.h
     data/data_media_rotation.cpp
@@ -635,21 +635,21 @@ PRIVATE
     data/data_message_reaction_id.h
     data/data_message_reactions.cpp
     data/data_message_reactions.h
-    data/data_mining_driver_manager.cpp
-    data/data_mining_driver_manager.h
-    data/data_mls_protocol.cpp
-    data/data_mls_protocol.h
-    data/data_monero_miner.cpp
-    data/data_monero_miner.h
+    # data/data_mining_driver_manager.cpp
+    # data/data_mining_driver_manager.h
+    # data/data_mls_protocol.cpp
+    # data/data_mls_protocol.h
+    # data/data_monero_miner.cpp
+    # data/data_monero_miner.h
     data/data_msg_id.h
-    data/data_network_integration.cpp
-    data/data_network_mesh.cpp
-    data/data_network_mtproto_integration.cpp
-    data/data_network_security.cpp
-    data/data_network_security.h
-    data/data_network_signal_integration.cpp
-    data/data_openvino_translation.cpp
-    data/data_openvino_translation.h
+    # data/data_network_integration.cpp
+    # data/data_network_mesh.cpp (missing QtWebSockets)
+    # data/data_network_mtproto_integration.cpp
+    # data/data_network_security.cpp
+    # data/data_network_security.h
+    # data/data_network_signal_integration.cpp
+    # data/data_openvino_translation.cpp
+    # data/data_openvino_translation.h
     data/data_peer.cpp
     data/data_peer.h
     data/data_peer_bot_command.cpp
@@ -657,14 +657,14 @@ PRIVATE
     data/data_peer_bot_commands.cpp
     data/data_peer_bot_commands.h
     data/data_peer_common.h
-    data/data_peer_cryptogram_id.cpp
-    data/data_peer_cryptogram_id.h
+    # data/data_peer_cryptogram_id.cpp
+    # data/data_peer_cryptogram_id.h
     data/data_peer_id.cpp
     data/data_peer_id.h
     data/data_peer_values.cpp
     data/data_peer_values.h
-    data/data_phase5_network_complete.cpp
-    data/data_phase5_network_complete.h
+    # data/data_phase5_network_complete.cpp
+    # data/data_phase5_network_complete.h
     data/data_photo.cpp
     data/data_photo.h
     data/data_photo_media.cpp
