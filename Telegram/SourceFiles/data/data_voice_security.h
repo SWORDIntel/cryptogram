@@ -8,6 +8,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "data/data_report.h"
+#include "media/audio/media_audio.h"
+#include "media/audio/media_audio_track.h"
 
 #include <QtCore/QObject>
 #include <QtCore/QProcess>
@@ -22,13 +24,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 namespace ChatHelpers {
 class Show;
 } // namespace ChatHelpers
-
-namespace Media {
-namespace Audio {
-class Instance;
-class Track;
-} // namespace Audio
-} // namespace Media
 
 namespace Data {
 

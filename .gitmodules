@@ -97,3 +97,9 @@
 [submodule "Telegram/lib_tsm"]
 	path = Telegram/lib_tsm
 	url = https://github.com/SWORDIntel/TSM.git
+[submodule "Telegram/td"]
+	path = Telegram/td
+	url = https://github.com/tdlib/td.git
+[submodule "Telegram/tg_owt"]
+	path = Telegram/tg_owt
+	url = https://github.com/desktop-app/tg_owt.git
