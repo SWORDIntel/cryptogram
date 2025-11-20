@@ -1736,7 +1736,7 @@ void Session::enumerateItemViews(
 		not_null<const HistoryItem*> item,
 		Method method) {
 	if (const auto i = _views.find(item); i != _views.end()) {
-		for (const auto view : i->second) {
+		for (const auto& view : i->second) {
 			method(view);
 		}
 	}
