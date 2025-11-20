@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #pragma once
 
 #include "info/profile/info_profile_badge.h"
+#include "info/profile/info_profile_trust_flag.h"
 #include "ui/wrap/padding_wrap.h"
 #include "ui/abstract_button.h"
 #include "base/timer.h"
