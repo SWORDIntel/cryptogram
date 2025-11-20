@@ -280,3 +280,11 @@ PUBLIC
 PRIVATE
     ${tgcalls_loc}
 )
+
+# Include WebRTC headers for tgcalls compilation
+target_include_directories(lib_tgcalls SYSTEM
+PRIVATE
+    ${libs_loc}/tg_owt/src
+    ${libs_loc}/tg_owt/src/third_party/abseil-cpp
+    ${libs_loc}/tg_owt/src/third_party/libyuv/include
+)
