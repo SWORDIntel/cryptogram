@@ -264,16 +264,6 @@ public:
     void integrateWithTSM(std::shared_ptr<TSMInterface> tsm);
     base::expected<bytes::vector, NetworkSecurityResult> generateNetworkKeys();
 
-signals:
-    void networkSecurityInitialized(NetworkSecurityTier tier);
-    void obfuscationMethodChanged(ObfuscationMethod method);
-    void bridgeConnectionStatusChanged(const QString &bridgeId, bool connected);
-    void meshNetworkStatusChanged(bool connected, int nodeCount);
-    void vpnConnectionStatusChanged(bool connected, const QString &server);
-    void torConnectionStatusChanged(bool connected, const QString &circuit);
-    void threatDetected(const TrafficAnalysisResult &threat);
-    void performanceMetricsUpdated(const NetworkPerformanceMetrics &metrics);
-    void networkSecurityError(NetworkSecurityResult error, const QString &description);
 
 private:
     // Traffic obfuscation implementations
@@ -321,14 +311,9 @@ private:
 
     // Helper methods
     NetworkSecurityResult validateConfiguration(const NetworkSecurityConfig &config);
-    void setupHardwareTierOptimizations();
-    void initializeNetworkComponents();
-    void configureUniversalFallbacks();
-    void setupPerformanceMonitoring();
 
     // Universal compatibility helpers
     bool isHardwareFeatureAvailable(const QString &feature) const;
-    void adaptFeatureToTier(const QString &feature, NetworkSecurityTier tier);
     NetworkSecurityResult fallbackToSoftwareImplementation(const QString &feature);
 };
 
@@ -372,10 +357,6 @@ public:
     void optimizeForCurrentHardware();
     NetworkPerformanceMetrics getUniversalMetrics() const;
 
-signals:
-    void universalSecurityReady(NetworkSecurityTier tier, QStringList features);
-    void tierAdaptationCompleted(NetworkSecurityTier fromTier, NetworkSecurityTier toTier);
-    void universalThreatMitigated(const QString &threat, const QString &mitigation);
 
 private:
     std::unique_ptr<NetworkSecurity> _networkSecurity;
@@ -383,9 +364,6 @@ private:
     QStringList _availableFeatures;
     not_null<Session*> _session;
 
-    void detectAndConfigureTier();
-    void setupUniversalFallbacks();
-    void validateUniversalCompatibility();
 };
 
 } // namespace Data

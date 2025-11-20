@@ -289,17 +289,6 @@ public:
     void upgradeAllDataToQuantumSecurity();
     bool isQuantumThreatModeActive() const;
 
-signals:
-    void dataStored(const QString &dataId, SecureStorageTier tier);
-    void dataRetrieved(const QString &dataId, SecureStorageTier tier);
-    void dataDeleted(const QString &dataId);
-    void tierUpgraded(SecureStorageTier oldTier, SecureStorageTier newTier);
-    void hardwareStatusChanged(bool available);
-    void emergencyModeActivated();
-    void secureWipeInitiated(const QString &reason);
-    void quantumThreatDetected();
-    void nsaSecurityViolation(const QString &violation);
-    void auditLogEntry(const StorageAuditEntry &entry);
 
 private:
     // Core implementation
@@ -344,9 +333,6 @@ private:
     bool validateQuantumSecurity();
 
     // Emergency procedures
-    void performSecureWipe();
-    void destroyEncryptionKeys();
-    void obfuscateStorageMetadata();
 
     // State management
     bool _initialized = false;

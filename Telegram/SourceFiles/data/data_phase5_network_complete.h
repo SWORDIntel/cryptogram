@@ -231,30 +231,15 @@ public:
      */
     QString getHardwareCompatibilityReport() const;
 
-signals:
     // Initialization and status
-    void networkSecurityReady(NetworkSecurityTier tier, QStringList features);
-    void securityTierChanged(NetworkSecurityTier oldTier, NetworkSecurityTier newTier);
 
     // Security events
-    void threatDetected(const TrafficAnalysisResult &threat);
-    void threatMitigated(const QString &threatType, const QString &mitigation);
-    void secureConnectionEstablished(const QString &method);
-    void secureConnectionLost(const QString &method);
 
     // Network status
-    void vpnStatusChanged(bool connected, const QString &server);
-    void torStatusChanged(bool connected, const QString &circuit);
-    void meshNetworkStatusChanged(bool connected, int nodeCount);
-    void bridgeStatusChanged(const QString &bridgeId, bool connected);
 
     // Performance and monitoring
-    void performanceMetricsUpdated(const NetworkPerformanceMetrics &metrics);
-    void configurationChanged(const NetworkSecurityConfig &newConfig);
 
     // Errors and warnings
-    void networkSecurityError(NetworkSecurityResult error, const QString &description);
-    void networkSecurityWarning(const QString &warning);
 
 private:
     // Core components
@@ -276,9 +261,6 @@ private:
     bool _initialized = false;
 
     // Helper methods
-    void _setupNetworkSecurityIntegration();
-    void _connectSignals();
-    void _performInitialConfiguration();
     QString _formatSecurityStatus() const;
     QString _formatHardwareReport() const;
     bool _validateConfiguration() const;

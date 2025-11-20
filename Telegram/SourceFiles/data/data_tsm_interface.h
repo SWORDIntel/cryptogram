@@ -164,10 +164,6 @@ public:
     virtual base::expected<bytes::vector, TSMResult> generateSecureRandom(
         size_t length) = 0;
 
-signals:
-    void hardwareStatusChanged(TSMPlatform platform, bool available);
-    void keyOperationCompleted(const QString &keyId, TSMResult result);
-    void errorOccurred(TSMResult error, const QString &description);
 
 protected:
     // Helper methods for implementations
@@ -235,10 +231,6 @@ public:
     bool isHardwareBackedSecurity() const;
     QStringList getHardwareBackedKeys() const;
 
-signals:
-    void tsmInitialized(TSMPlatform platform);
-    void keyMigrationCompleted(int migratedKeys);
-    void hardwareSecurityStatusChanged(bool enabled);
 
 private:
     std::unique_ptr<TSMInterface> _tsm;
@@ -250,7 +242,6 @@ private:
     // Helper methods
     QString createSignalKeyId(TSMKeyType keyType) const;
     TSMResult validateTSMCapabilities() const;
-    void setupKeyRotationSchedule();
 };
 
 } // namespace Data

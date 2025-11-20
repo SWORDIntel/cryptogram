@@ -250,12 +250,6 @@ public:
     QuantumPerformanceMetrics getPerformanceMetrics() const;
     void resetPerformanceMetrics();
 
-signals:
-    void quantumThreatLevelChanged(QuantumThreatLevel level);
-    void quantumKeyGenerated(const QString &keyId, QuantumAlgorithm algorithm);
-    void quantumOperationCompleted(const QString &operation, double timeMs);
-    void migrationStatusChanged(QuantumMigrationStatus status);
-    void quantumAlgorithmUpdated(QuantumAlgorithm oldAlg, QuantumAlgorithm newAlg);
 
 private:
     // Core implementation

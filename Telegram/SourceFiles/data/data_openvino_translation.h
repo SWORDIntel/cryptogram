@@ -204,12 +204,6 @@ public:
 	quint64 getCacheSize() const;
 	void optimizeCache();
 
-signals:
-	void translationCompleted(const TranslationResult &result);
-	void modelDownloadProgress(TranslationModel model, quint64 downloaded, quint64 total);
-	void modelDownloadCompleted(TranslationModel model, bool success);
-	void hardwareCapabilitiesChanged();
-	void errorOccurred(const QString &error);
 
 private:
 	class OpenVINOTranslationPrivate;
@@ -234,12 +228,8 @@ private:
 
 	// Cache operations
 	QString getCachedTranslation(const QString &text, TranslationModel model);
-	void addToCache(const QString &text, const QString &translation, TranslationModel model);
 
 	// Performance optimization
-	void optimizeForDevice(OpenVINODevice device);
-	void warmupModel(TranslationModel model);
-	void benchmarkDevices();
 
 	// State
 	bool _initialized = false;

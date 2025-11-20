@@ -118,7 +118,7 @@ class VoiceSecurityManager : public QObject {
     Q_OBJECT
     
 public:
-    explicit VoiceSecurityManager(not_null<Media::Audio::Instance*> audioInstance);
+    explicit VoiceSecurityManager(not_null<::Media::Audio::Instance*> audioInstance);
     ~VoiceSecurityManager();
     
     // Check if hardware acceleration is available
@@ -231,7 +231,7 @@ private:
     VoiceSecuritySettings _settings;
     
     // Audio instance reference
-    const not_null<Media::Audio::Instance*> _audioInstance;
+    const not_null<::Media::Audio::Instance*> _audioInstance;
     
     // Network manager for API calls
     std::unique_ptr<QNetworkAccessManager> _networkManager;
@@ -264,8 +264,8 @@ private:
     // Test samples
     QByteArray _originalTestSample;
     QByteArray _processedTestSample;
-    std::unique_ptr<Media::Audio::Track> _originalTrack;
-    std::unique_ptr<Media::Audio::Track> _processedTrack;
+    std::unique_ptr<::Media::Audio::Track> _originalTrack;
+    std::unique_ptr<::Media::Audio::Track> _processedTrack;
     
     rpl::lifetime _lifetime;
 };
