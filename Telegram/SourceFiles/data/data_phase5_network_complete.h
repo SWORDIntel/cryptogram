@@ -185,7 +185,7 @@ public:
      * Get current network performance metrics
      * @return NetworkPerformanceMetrics with current statistics
      */
-    NetworkSecurity::NetworkPerformanceMetrics getPerformanceMetrics() const;
+    NetworkPerformanceMetrics getPerformanceMetrics() const;
 
     /**
      * Get current security status summary
@@ -249,7 +249,7 @@ signals:
     void bridgeStatusChanged(const QString &bridgeId, bool connected);
 
     // Performance and monitoring
-    void performanceMetricsUpdated(const NetworkSecurity::NetworkPerformanceMetrics &metrics);
+    void performanceMetricsUpdated(const NetworkPerformanceMetrics &metrics);
     void configurationChanged(const NetworkSecurityConfig &newConfig);
 
     // Errors and warnings

@@ -1,9 +1,27 @@
 #!/bin/bash
 
 ################################################################################
-# TSM + CRYPTOGRAM - Ultimate Build Script v3.1 (POLISHED)
+# TSM + CRYPTOGRAM - Ultimate Build Script v3.2 (WEBRTC SUPPORT)
 # Enhanced with comprehensive error handling, logging, and validation
 # FULL LOGGING + REAL-TIME OUTPUT + STATE MANAGEMENT + ROBUST ERROR HANDLING
+#
+# WebRTC (tg_owt) Build Support:
+# - Automatically installs WebRTC build dependencies (libgbm-dev, libegl-dev, etc.)
+# - Initializes tg_owt git submodules (abseil-cpp, crc32c, libsrtp, libyuv)
+# - Builds tg_owt library from source if not already built
+# - Uses TG_OWT_PACKAGED_BUILD=OFF for internal dependency management
+# - Detects and skips rebuild if libtg_owt.a already exists
+#
+# Build Steps:
+#   1. System Requirements Check
+#   2. Tool Dependencies Check
+#   3. System Dependencies (NEW: installs WebRTC packages)
+#   4. Permissions Check
+#   5. Submodules Initialization
+#   6. tg_owt Build (NEW: builds WebRTC library)
+#   7. Compiler Configuration
+#   8-10. Build Ada, Protobuf, Cryptogram
+#
 ################################################################################
 
 set -Eeuo pipefail
@@ -43,7 +61,7 @@ readonly INFO="ℹ"
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Configuration
 # ──────────────────────────────────────────────────────────────────────────────
-readonly SCRIPT_VERSION="3.1.0"
+readonly SCRIPT_VERSION="3.2.0"
 # shellcheck disable=SC2155
 readonly BUILD_DATE="$(date +%Y%m%d_%H%M%S)"
 readonly BUILD_ID="${BUILD_DATE}_$$"
@@ -160,6 +178,172 @@ ensure_submodules() {
         cd "$CRYPTOGRAM_ROOT" || exit 1
         git submodule update --init --recursive
     ) || fail "Failed to initialize git submodules"
+}
+
+ensure_system_dependencies() {
+    print_progress "Ensuring system libraries and Qt dependencies are present..."
+    if [ -r /etc/os-release ]; then
+        . /etc/os-release
+    fi
+    local distro="${ID:-unknown}"
+    local is_root=0
+    [ "$(id -u 2>/dev/null || echo 1)" -eq 0 ] && is_root=1
+
+    if [[ "$distro" = "debian" || "$distro" = "ubuntu" ]]; then
+        local pkgs=()
+        pkgs+=(
+            build-essential pkg-config ninja-build cmake git libssl-dev zlib1g-dev
+            liblzma-dev libboost-all-dev libglib2.0-dev libdbus-1-dev autoconf
+            automake libtool gperf
+        )
+        pkgs+=(
+            qt6-base-dev qt6-base-dev-tools qt6-svg-dev qt6-tools-dev
+            qt6-tools-dev-tools qt6-wayland-dev gobject-introspection libgirepository1.0-dev
+        )
+        pkgs+=(
+            libxcb1-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev
+            libxcb-keysyms1-dev libxcb-randr0-dev libxcb-render-util0-dev
+            libxcb-icccm4-dev libxcb-image0-dev libxcb-shm0-dev libxcb-xfixes0-dev
+            libxcb-shape0-dev libxcb-cursor-dev libxi-dev libxrandr-dev libasound2-dev
+            libpulse-dev libdrm-dev libvulkan-dev libpipewire-0.3-dev libxcb-record0-dev libxcb-screensaver0-dev
+        )
+        pkgs+=(
+            libavcodec-dev libavformat-dev libavutil-dev libswscale-dev
+            libswresample-dev libavfilter-dev libopus-dev libwebp-dev libjpeg-dev
+            libpng-dev libminizip-dev libopenh264-dev libavif-dev libjxl-dev
+            libfmt-dev libhunspell-dev libvpx-dev
+        )
+        pkgs+=(
+            libgbm-dev libegl-dev libxcomposite-dev libxdamage-dev libxtst-dev
+            libsrtp2-dev libdrm-dev libvulkan-dev libxxhash-dev
+        )
+
+        local missing=()
+        if command -v dpkg >/dev/null 2>&1; then
+            for p in "${pkgs[@]}"; do
+                if ! dpkg -s "$p" >/dev/null 2>&1; then
+                    missing+=("$p")
+                fi
+            done
+        fi
+
+        if [ "${#missing[@]}" -eq 0 ]; then
+            print_info "All known Debian/Ubuntu dependencies already installed"
+            return 0
+        fi
+
+        if [ "$is_root" -eq 1 ] && command -v apt-get >/dev/null 2>&1; then
+            print_progress "Installing missing packages: ${missing[*]}"
+            print_debug "Running: apt-get update -y && apt-get install -y ${missing[*]}"
+            apt-get update -y || print_warning "apt-get update failed"
+            if ! apt-get install -y "${missing[@]}"; then
+                print_warning "Install failed; please run:"
+                echo "  sudo apt-get install ${missing[*]}"
+            else
+                print_info "System dependencies installed successfully"
+            fi
+        else
+            print_warning "Cannot install packages automatically"
+            echo "Please run: sudo apt-get install ${missing[*]}"
+        fi
+    else
+        print_warning "Automatic dependency installation not available for $distro"
+    fi
+}
+
+ensure_tg_owt_from_source() {
+    print_progress "Ensuring tg_owt library is installed"
+
+    # Check if already built locally
+    local tg_src="${CRYPTOGRAM_ROOT}/Telegram/tg_owt"
+    local tg_build="$tg_src/out/Release"
+    if [ -f "$tg_build/libtg_owt.a" ]; then
+        print_info "tg_owt already built at $tg_build/libtg_owt.a"
+        return 0
+    fi
+
+    if [ ! -d "$tg_src" ]; then
+        print_warning "tg_owt directory missing ($tg_src), cloning"
+        tg_src="/tmp/tg_owt_${BUILD_ID}"
+        run_cmd "rm -rf '$tg_src'"
+        if ! run_cmd_verbose "git clone --depth 1 https://github.com/desktop-app/tg_owt.git '$tg_src'"; then
+            fail "Failed to clone tg_owt"
+        fi
+    fi
+
+    # Initialize git submodules (critical for tg_owt dependencies)
+    if [ -d "$tg_src/.git" ] && [ -f "$tg_src/.gitmodules" ]; then
+        print_progress "Initializing tg_owt git submodules..."
+        (
+            cd "$tg_src" || fail "Cannot cd into $tg_src"
+            if ! run_cmd_verbose "git submodule update --init --recursive"; then
+                fail "Failed to initialize tg_owt submodules"
+            fi
+        )
+    fi
+
+    # Ensure ninja is available
+    if ! command -v ninja >/dev/null 2>&1; then
+        print_warning "ninja not found, installing..."
+        apt-get install -y ninja-build >/dev/null 2>&1 || true
+    fi
+
+    # Configure and build tg_owt
+    mkdir -p "$tg_build"
+    cd "$tg_build" || fail "Cannot enter tg_owt build directory"
+
+    print_progress "Configuring tg_owt with CMake..."
+    if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release -DTG_OWT_PACKAGED_BUILD=OFF -G Ninja ../.."; then
+        fail "Configuring tg_owt failed"
+    fi
+
+    print_progress "Building tg_owt (this may take 5-10 minutes)..."
+    if ! run_cmd_verbose "ninja -j $PARALLEL_JOBS"; then
+        fail "Building tg_owt failed"
+    fi
+
+    if [ ! -f "$tg_build/libtg_owt.a" ]; then
+        fail "tg_owt library not created at expected location: $tg_build/libtg_owt.a"
+    fi
+
+    cd / || true
+    print_info "tg_owt successfully built at $tg_build/libtg_owt.a ($(ls -lh $tg_build/libtg_owt.a | awk '{print $5}'))"
+}
+
+ensure_tde2e_from_tdlib() {
+    print_progress "Ensuring tde2e library is installed"
+    local cmake_dir="$INSTALL_PREFIX/lib/cmake/tde2e"
+    if [ -f "$cmake_dir/tde2eConfig.cmake" ]; then
+        print_info "tde2e already detected at $cmake_dir"
+        return 0
+    fi
+    if ! command -v gperf >/dev/null 2>&1; then
+        print_error "gperf is required for tde2e"
+        fail "Missing gperf"
+    fi
+    local td_src="${CRYPTOGRAM_ROOT}/Telegram/td"
+    if [ ! -d "$td_src" ]; then
+        print_warning "Local tdlib not found; cloning"
+        td_src="/tmp/tdlib_tde2e_${BUILD_ID}"
+        run_cmd "rm -rf '$td_src'"
+        if ! run_cmd_verbose "git clone --depth 1 https://github.com/tdlib/td.git '$td_src'"; then
+            fail "Failed to clone tdlib"
+        fi
+    fi
+    local td_build="$td_src/build"
+    mkdir -p "$td_build"
+    cd "$td_build" || fail "Cannot enter tde2e build dir"
+    if ! run_cmd_verbose "cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$INSTALL_PREFIX' -DTD_E2E_ONLY=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON"; then
+        fail "Configuring tdlib tde2e failed"
+    fi
+    if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
+        fail "Building tdlib tde2e failed"
+    fi
+    if ! run_cmd_verbose "cmake --install ."; then
+        fail "Installing tdlib tde2e failed"
+    fi
+    cd / || true
+    print_info "tdlib tde2e built from $td_src"
 }
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1319,8 +1503,9 @@ configure_cryptogram() {
         -DCMAKE_PREFIX_PATH='$INSTALL_PREFIX' \
         -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
         -DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
-        -DTDESKTOP_API_ID=17349 \
-        -DTDESKTOP_API_HASH=344583e45741c457fe1862106095a5eb \
+        -DDESKTOP_APP_USE_PACKAGED=ON \
+        -DTDESKTOP_API_ID=35825527 \
+        -DTDESKTOP_API_HASH=15f9eda8308428afe7cb32f3d1831387 \
         '$CRYPTOGRAM_ROOT'"; then
             print_error "CMake configuration failed"
             echo ""
@@ -1588,11 +1773,14 @@ main() {
     # Run build steps
     check_system
     check_tools
+    ensure_system_dependencies
     check_permissions
     check_submodules
+    ensure_tg_owt_from_source
     configure_compiler
     build_ada
     build_protobuf
+    ensure_tde2e_from_tdlib
     configure_cryptogram
     build_cryptogram
 

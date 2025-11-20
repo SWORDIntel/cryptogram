@@ -15,6 +15,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "base/expected.h"
 
 #include <QtCore/QObject>
+#include <map>
 #include <QtCore/QString>
 #include <QtCore/QDateTime>
 #include <memory>

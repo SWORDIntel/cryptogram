@@ -143,7 +143,6 @@ public:
 
     // Quantum security integration
     void setQuantumGuard(std::shared_ptr<QuantumGuard> quantumGuard);
-    void setNSASecurity(std::shared_ptr<NSASecurity> nsaSecurity);
 
     // Storage tier management
     bool upgradeTo(SecureStorageTier newTier);
@@ -362,7 +361,6 @@ private:
 
     std::shared_ptr<TSMInterface> _tsmInterface;
     std::shared_ptr<QuantumGuard> _quantumGuard;
-    std::shared_ptr<NSASecurity> _nsaSecurity;
 
     // Storage containers
     std::map<QString, EncryptedDataContainer> _dataContainers;

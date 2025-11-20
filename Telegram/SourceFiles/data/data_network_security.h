@@ -27,6 +27,17 @@ namespace Data {
 class Session;
 class SignalProtocol;
 
+// Network performance metrics (used by multiple classes)
+struct NetworkPerformanceMetrics {
+    float averageLatency = 0.0f;        // milliseconds
+    float bandwidth = 0.0f;             // Mbps
+    float packetLoss = 0.0f;            // percentage (0.0-1.0)
+    int activeConnections = 0;
+    int obfuscatedPackets = 0;
+    int threatsDetected = 0;
+    QDateTime lastUpdate;
+};
+
 // Network security operation results
 enum class NetworkSecurityResult {
     Success,
@@ -242,15 +253,6 @@ public:
     NetworkSecurityResult updateProxyConfiguration(const MTP::ProxyData &proxy);
 
     // Performance monitoring
-    struct NetworkPerformanceMetrics {
-        float averageLatency = 0.0f;        // milliseconds
-        float bandwidth = 0.0f;             // Mbps
-        float packetLoss = 0.0f;            // percentage (0.0-1.0)
-        int activeConnections = 0;
-        int obfuscatedPackets = 0;
-        int threatsDetected = 0;
-        QDateTime lastUpdate;
-    };
     NetworkPerformanceMetrics getPerformanceMetrics() const;
 
     // Integration with Signal Protocol

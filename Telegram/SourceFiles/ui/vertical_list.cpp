@@ -54,6 +54,7 @@ not_null<Ui::FlatLabel*> AddDividerText(
 		container,
 		std::move(label),
 		margins,
+		st::defaultDividerBar,
 		parts));
 	return result;
 }

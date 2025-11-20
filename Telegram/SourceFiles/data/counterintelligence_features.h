@@ -11,6 +11,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_user.h"
 #include "mtproto/mtproto_auth_key.h"
+#include "rpl/producer.h"
+#include "rpl/event_stream.h"
 
 #include <QtCore/QDateTime>
 #include <QtCore/QMap>
@@ -233,6 +235,23 @@ struct MessageSuspicionInfo {
         // Mark for attention if suspicion level is high
         requiresAttention = overallSuspicionLevel >= 8;
     }
+};
+
+// Structure to track conversation metrics for social engineering analysis
+struct ConversationMetrics {
+    UserId userId;
+    QDateTime conversationStart;
+    QDateTime conversationEnd;
+    int messageCount = 0;
+    int averageMessageLength = 0;
+    float sentimentScore = 0.0f;
+    int suspiciousTermCount = 0;
+    QVector<int> responseTimesMs;
+    float averageResponseTimeMs = 0.0f;
+    bool showsUrgencyPatterns = false;
+    bool showsFlatteryPatterns = false;
+    bool showsAuthorizationBypassAttempts = false;
+    int manipulationIndicators = 0;
 };
 
 // Main class for counterintelligence features
