@@ -3361,7 +3361,7 @@ void AddWithdrawalWidget(
 		container,
 		std::move(about),
 		st::defaultBoxDividerLabelPadding,
-		RectPart::Top | RectPart::Bottom));
+		));
 
 	Ui::AddSkip(container);
 }

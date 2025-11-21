@@ -1573,7 +1573,7 @@ object_ptr<Ui::RpWidget> BirthdayPrivacyController::setupAboveWidget(
 				st::boxDividerLabel),
 			st::defaultBoxDividerLabelPadding,
 			st::defaultDividerBar,
-			RectPart::Top | RectPart::Bottom));
+			));
 	result->toggleOn(session->changes().peerFlagsValue(
 		user,
 		Data::PeerUpdate::Flag::Birthday

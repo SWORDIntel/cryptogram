@@ -149,7 +149,7 @@ InviteLinkSubscriptionToggle FillCreateInviteLinkSubscriptionToggle(
 		container,
 		std::move(about),
 		st::defaultBoxDividerLabelPadding,
-		RectPart::Top | RectPart::Bottom));
+		));
 	return { toggle, input };
 }
 

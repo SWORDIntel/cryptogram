@@ -174,11 +174,7 @@ void Greeting::setupContent(
 	content->add(
 		object_ptr<Ui::SlideWrap<Ui::BoxContentDivider>>(
 			content,
-			object_ptr<Ui::BoxContentDivider>(
-				content,
-				st::boxDividerHeight,
-				st::boxDividerBg,
-				RectPart::Top))
+			object_ptr<Ui::BoxContentDivider>(content))
 	)->setDuration(0)->toggleOn(enabled->toggledValue() | rpl::map(!_1));
 	content->add(
 		object_ptr<Ui::SlideWrap<Ui::BoxContentDivider>>(

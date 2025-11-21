@@ -609,7 +609,7 @@ void InnerWidget::fill() {
 			std::move(label),
 			st::defaultBoxDividerLabelPadding,
 			st::defaultDividerBar,
-			RectPart::Top | RectPart::Bottom));
+			));
 	};
 	if (canViewCurrencyEarn) {
 		addAboutWithLearn(bot

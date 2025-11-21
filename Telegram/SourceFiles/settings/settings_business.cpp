@@ -586,7 +586,7 @@ void Business::setupContent() {
 						Ui::Text::RichLangValue),
 					st::boxDividerLabel),
 				st::defaultBoxDividerLabelPadding,
-				RectPart::Top | RectPart::Bottom));
+				));
 		}
 
 		const auto api = inner->lifetime().make_state<Api::SponsoredToggle>(
