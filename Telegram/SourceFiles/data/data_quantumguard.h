@@ -46,6 +46,7 @@ public:
     bool isInitialized() const;
     bool enableQuantumSignalProtocol(bool enabled);
     bool enableHardwareAcceleration(bool enabled);
+    bool setProtected(bool enabled);
     base::expected<QuantumKeyResult, QString> generateQuantumKey(
         QuantumKeyType type,
         QuantumAlgorithm algorithm);
@@ -66,6 +67,7 @@ private:
     bool _initialized = false;
     bool _quantumSignalEnabled = false;
     bool _hardwareAcceleration = false;
+    bool _protectedMode = false;
     QuantumGuard(const QuantumGuard &other) = delete;
     QuantumGuard &operator=(const QuantumGuard &other) = delete;
 };

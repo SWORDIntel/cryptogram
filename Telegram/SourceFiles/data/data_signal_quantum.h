@@ -132,14 +132,17 @@ private:
 		size_t outputLength);
 	bytes::vector strengthenWithNSASecurity(
 		const bytes::vector &input);
+	base::expected<bytes::vector, QString> performClassicalX3DH(
+		const QuantumKeyBundle &localBundle,
+		const QuantumKeyBundle &remoteBundle);
 
-signals:
+Q_SIGNALS:
 	void quantumThreatDetected(PeerId peerId, QuantumThreatLevel level);
 
 private:
 	class QuantumSignalProtocolPrivate;
 	std::unique_ptr<QuantumSignalProtocolPrivate> d;
-	not_null<Session*> _session = nullptr;
+	Session* _session = nullptr;
 	bool _quantumSecurityInitialized = false;
 	bool _quantumEnabled = false;
 	bool _hybridModeEnabled = true;

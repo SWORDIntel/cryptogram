@@ -44,12 +44,6 @@ struct KeyEntry {
     bytes::vector rawKey;
 };
 
-bytes::vector randomBytes(int size) {
-    bytes::vector result(size);
-    RAND_bytes(result.data(), size);
-    return result;
-}
-
 inline const unsigned char *asConstUChar(const bytes::const_span &span) {
     return reinterpret_cast<const unsigned char *>(span.data());
 }
@@ -64,6 +58,12 @@ inline const unsigned char *asConstUChar(const bytes::vector &value) {
 
 inline unsigned char *asUChar(bytes::vector &value) {
     return asUChar(bytes::make_span(value));
+}
+
+bytes::vector randomBytes(int size) {
+    bytes::vector result(size);
+    RAND_bytes(asUChar(result), size);
+    return result;
 }
 
 QString makeKeyId() {
@@ -169,7 +169,7 @@ bool aesGcmDecrypt(
         return false;
     }
     int len = 0;
-    if (EVP_DecryptFinal_ex(ctx, plaintext.data() + outLen, &len) != 1) {
+    if (EVP_DecryptFinal_ex(ctx, asUChar(plaintext) + outLen, &len) != 1) {
         EVP_CIPHER_CTX_free(ctx);
         return false;
     }
@@ -384,6 +384,15 @@ public:
             return derived;
         }
         return bytes::vector(derived.begin(), derived.begin() + outputLength);
+    }
+
+    base::expected<bytes::vector, TSMResult> generateSecureRandom(
+            size_t length) override {
+        bytes::vector result(length);
+        if (length && RAND_bytes(asUChar(result), length) != 1) {
+            return base::make_unexpected(TSMResult::HardwareNotAvailable);
+        }
+        return result;
     }
 
 private:

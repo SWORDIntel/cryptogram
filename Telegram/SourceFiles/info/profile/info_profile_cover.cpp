@@ -927,6 +927,9 @@ void Cover::initViewers(rpl::producer<QString> title) {
 
 		if (const auto user = _peer->asUser()) {
 			if (!user->isSelf() && !user->isBot()) {
+				// Trust manager functionality disabled - API peerTrustManager() not available
+				_trustFlag = nullptr;
+				/*
 				auto trustManager = Core::App().peerTrustManager();
 				if (trustManager && trustManager->hasPeerTrust(_peer->id)) {
 					const auto trustInfo = trustManager->getPeerTrust(_peer->id);
@@ -944,6 +947,7 @@ void Cover::initViewers(rpl::producer<QString> title) {
 				} else {
 					_trustFlag = nullptr;
 				}
+				*/
 			}
 		}
 	}, lifetime());

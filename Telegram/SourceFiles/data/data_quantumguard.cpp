@@ -53,6 +53,11 @@ bool QuantumGuard::enableHardwareAcceleration(bool enabled) {
     return _hardwareAcceleration;
 }
 
+bool QuantumGuard::setProtected(bool enabled) {
+    _protectedMode = enabled;
+    return _protectedMode;
+}
+
 base::expected<QuantumKeyResult, QString> QuantumGuard::generateQuantumKey(
         QuantumKeyType /*type*/,
         QuantumAlgorithm algorithm) {

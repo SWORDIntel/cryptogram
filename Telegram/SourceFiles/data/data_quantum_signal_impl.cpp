@@ -10,6 +10,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "data/data_nsa_security.h"
 #include "data/data_quantum_storage.h"
 #include "data/data_tsm_factory.h"
+#include "data/data_tsm_quantum.h"
 
 #include <cstddef>
 #include <openssl/evp.h>
@@ -18,6 +19,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include <openssl/kdf.h>
 #include <openssl/sha.h>
 
+#include <QtCore/QByteArray>
 #include <QtCore/QDataStream>
 #include <QtCore/QIODevice>
 #include <QtCore/QTimer>
@@ -33,6 +35,17 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "data/data_session.h"
 
 namespace Data {
+
+// Forward declarations for helper functions
+bytes::vector quantumKDF(
+	const bytes::const_span &inputKeyMaterial,
+	const QString &info,
+	int outputLength);
+
+bytes::vector quantumHMAC(
+	const bytes::const_span &key,
+	const bytes::const_span &data);
+
 namespace {
 
 // Quantum-resistant constants
@@ -73,7 +86,7 @@ QString quantumStoragePath(not_null<Session*> session) {
 
 namespace {
 	struct QuantumSession {
-		const auto kZero = bytes::type(0);
+		static constexpr bytes::type kZero{0};
 		bytes::vector quantumRootKey = bytes::vector(32, kZero);
 		bytes::vector quantumSendingChainKey = bytes::vector(32, kZero);
 		bytes::vector quantumReceivingChainKey = bytes::vector(32, kZero);
@@ -220,15 +233,6 @@ namespace {
 	}
 
 } // namespace
-
-bytes::vector quantumKDF(
-	const bytes::const_span &inputKeyMaterial,
-	const QString &info,
-	int outputLength);
-
-bytes::vector quantumHMAC(
-	const bytes::const_span &key,
-	const bytes::const_span &data);
 
 class QuantumSignalProtocol::QuantumSignalProtocolPrivate {
 public:
@@ -453,9 +457,12 @@ QuantumSignalProtocol::QuantumKeyBundle QuantumSignalProtocol::generateQuantumKe
 
     // Sign the bundle with quantum signature
     auto bundleData = serializeKeyBundle(bundle);
+    QByteArray bundleQByteArray(
+        reinterpret_cast<const char*>(bundleData.data()),
+        static_cast<int>(bundleData.size()));
     auto quantumSignResult = d->quantumGuard->quantumSign(
         quantumIdentityResult->keyId,
-        bundleData);
+        bundleQByteArray);
 
     if (quantumSignResult) {
         bundle.quantumSignature = quantumSignResult->signature;
@@ -484,7 +491,10 @@ base::expected<bytes::vector, QString> QuantumSignalProtocol::performQuantumX3DH
 
     // Check for device attestation attempts
     if (_antiDeviceAttestationEnabled &&
-        detectDeviceAttestationAttempt(remoteBundle.quantumIdentityKey)) {
+        detectDeviceAttestationAttempt(
+            bytes::make_span(
+                reinterpret_cast<const bytes::type*>(remoteBundle.quantumIdentityKey.constData()),
+                remoteBundle.quantumIdentityKey.size()))) {
 
         d->nsaSecurity->reportSecurityEvent(
             SecurityEventType::APT_Indicator,
@@ -696,8 +706,10 @@ base::expected<bytes::vector, QString> QuantumSignalProtocol::performQuantumKEM(
     auto makeBlob = [](const QuantumKeyBundle &bundle) {
         bytes::vector blob;
         const auto append = [&blob](const QByteArray &chunk) {
-        const auto ptr = reinterpret_cast<const std::byte *>(chunk.constData());
-            blob.insert(blob.end(), ptr, ptr + chunk.size());
+            const auto span = bytes::make_span(
+                reinterpret_cast<const bytes::type *>(chunk.constData()),
+                chunk.size());
+            blob.insert(blob.end(), span.begin(), span.end());
         };
         append(bundle.quantumIdentityKey);
         append(bundle.quantumSignedPreKey);
@@ -718,6 +730,47 @@ base::expected<bytes::vector, QString> QuantumSignalProtocol::performQuantumKEM(
     if (material.empty()) {
         return base::make_unexpected("Quantum KEM derivation failed");
     }
+    return material;
+}
+
+base::expected<bytes::vector, QString> QuantumSignalProtocol::performClassicalX3DH(
+    const QuantumKeyBundle &localBundle,
+    const QuantumKeyBundle &remoteBundle) {
+
+    // Combine classical identity and pre-keys into blobs
+    auto makeBlob = [](const QuantumKeyBundle &bundle) {
+        bytes::vector blob;
+        const auto append = [&blob](const QByteArray &chunk) {
+            if (!chunk.isEmpty()) {
+                const auto span = bytes::make_span(
+                    reinterpret_cast<const bytes::type *>(chunk.constData()),
+                    chunk.size());
+                blob.insert(blob.end(), span.begin(), span.end());
+            }
+        };
+        append(bundle.classicalIdentityKey);
+        append(bundle.classicalSignedPreKey);
+        append(bundle.classicalOneTimePreKey);
+        return blob;
+    };
+
+    auto localBlob = makeBlob(localBundle);
+    auto remoteBlob = makeBlob(remoteBundle);
+
+    // Combine both blobs
+    bytes::vector material;
+    material.reserve(localBlob.size() + remoteBlob.size());
+    material.insert(material.end(), localBlob.begin(), localBlob.end());
+    material.insert(material.end(), remoteBlob.begin(), remoteBlob.end());
+
+    // Derive classical shared secret (32 bytes for classical component)
+    const auto classicalSecretSize = kHybridSharedSecretSize / 2;
+    material = quantumKDF(material, "SpyGram-Classical-X3DH", classicalSecretSize);
+
+    if (material.empty()) {
+        return base::make_unexpected("Classical X3DH derivation failed");
+    }
+
     return material;
 }
 

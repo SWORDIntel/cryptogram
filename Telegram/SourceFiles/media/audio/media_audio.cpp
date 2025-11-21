@@ -8,6 +8,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "media/audio/media_audio.h"
 
 #include "media/audio/media_audio_capture.h"
+#include "media/audio/media_audio_capture_common.h"
 #include "media/audio/media_audio_ffmpeg_loader.h"
 #include "media/audio/media_child_ffmpeg_loader.h"
 #include "media/audio/media_audio_loaders.h"

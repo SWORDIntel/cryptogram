@@ -290,6 +290,11 @@ public:
     void upgradeAllDataToQuantumSecurity();
     bool isQuantumThreatModeActive() const;
 
+Q_SIGNALS:
+    void tierUpgraded(SecureStorageTier requestedTier, SecureStorageTier actualTier);
+    void dataStored(const QString &dataId, SecureStorageTier tier);
+    void dataRetrieved(const QString &dataId, SecureStorageTier tier);
+
 
 private:
     // Core implementation

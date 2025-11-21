@@ -1,0 +1,454 @@
+[  0%] Built target external_qt_static_plugins_kimageformats_autogen_timestamp_deps
+[  0%] Built target lib_base_XdpOpenURI_dbus_timestamp
+[  0%] Built target external_cld3_bundled_sentence.proto
+[  0%] Built target external_cld3_bundled_task_spec.proto
+[  0%] Built target external_qt_static_plugins_nimf_autogen_timestamp_deps
+[  0%] Built target external_qt_static_plugins_fcitx5_dbusaddons_autogen_timestamp_deps
+[  0%] Built target lib_base_XdpInhibit_dbus_timestamp
+[  0%] Built target lib_base_Snapcraft_dbus_timestamp
+[  0%] Built target lib_base_XdpRequest_dbus_timestamp
+[  0%] Built target lib_base_MutterIdleMonitor_dbus_timestamp
+[  0%] Built target external_cld3_bundled_feature_extractor.proto
+[  0%] Built target lib_base_XdgDBus_dbus_timestamp
+[  0%] Built target lib_base_XdgFileManager1_dbus_timestamp
+[  0%] Built target lib_base_XdpSettings_dbus_timestamp
+[  1%] Built target lib_base_SigxcpuFeedback_dbus_timestamp
+[  1%] Built target lib_base_Mpris_dbus_timestamp
+[  1%] Built target Telegram_appstream_changelog
+[  1%] Built target td_scheme_scheme
+[  1%] Built target lib_webview_Webview_dbus_timestamp
+[  1%] Built target Telegram_XdpBackground_dbus_timestamp
+[  2%] Built target Telegram_XdgNotifications_dbus_timestamp
+[  2%] Built target protobuf-c
+[  6%] Built target curve25519
+[  6%] Built target external_qt_static_plugins_nimf_init
+[  6%] Built target external_qt_static_plugins_kimageformats_init
+[  6%] Built target codegen_common
+[  6%] Built target external_qr_code_generator_bundled
+[  6%] Built target external_qt_static_plugins_fcitx5_init
+[  6%] Built target external_qt_static_plugins_hime_init
+[  8%] Built target external_rlottie_bundled
+[  8%] Built target lib_crl
+[  8%] Built target external_qt_static_plugins_fcitx5_dbusaddons_autogen
+[  9%] Built target external_kcoreaddons_bundled
+[ 10%] Built target signal-protocol-c
+[ 10%] Built target external_qt_static_plugins_kimageformats_autogen
+[ 17%] Built target tag
+[ 19%] Built target lib_tgcalls
+[ 19%] Built target external_qt_static_plugins_kimageformats
+[ 20%] Built target lib_prisma
+[ 20%] Built target external_qt_static_plugins_nimf_autogen
+[ 20%] Built target external_qt_static_plugins_fcitx5_dbusaddons
+[ 20%] Built target tag_c
+[ 21%] Built target cppgir
+[ 21%] Built target external_qt_static_plugins_nimf
+[ 21%] Built target external_qt_static_plugins_fcitx5_autogen_timestamp_deps
+[ 22%] Built target external_cld3_bundled
+[ 22%] Built target external_glib_cppgir
+[ 22%] Built target external_qt_static_plugins_fcitx5_autogen
+[ 22%] Built target lib_base_Snapcraft_dbus
+[ 22%] Built target lib_base_XdgDBus_dbus
+[ 22%] Built target lib_base_XdpRequest_dbus
+[ 22%] Built target lib_base_Mpris_dbus
+[ 23%] Built target lib_base_XdpInhibit_dbus
+[ 23%] Built target lib_base_SigxcpuFeedback_dbus
+[ 23%] Built target lib_base_XdgFileManager1_dbus
+[ 23%] Built target lib_base_MutterIdleMonitor_dbus
+[ 23%] Built target Telegram_XdpBackground_dbus
+[ 23%] Built target lib_webview_Webview_dbus
+[ 23%] Built target Telegram_XdgNotifications_dbus
+[ 23%] Built target lib_base_XdpSettings_dbus
+[ 23%] Built target lib_base_XdpOpenURI_dbus
+[ 23%] Built target lib_base_Snapcraft_gir
+[ 23%] Built target lib_base_XdpInhibit_gir
+[ 23%] Built target lib_webview_Webview_gir
+[ 23%] Built target lib_base_XdpRequest_gir
+[ 23%] Built target lib_base_XdgFileManager1_gir
+[ 23%] Built target lib_base_SigxcpuFeedback_gir
+[ 23%] Built target lib_base_Mpris_gir
+[ 23%] Built target Telegram_XdpBackground_gir
+[ 23%] Built target lib_base_XdpSettings_gir
+[ 24%] Built target external_qt_static_plugins_fcitx5
+[ 24%] Built target lib_base_XdgDBus_gir
+[ 24%] Built target lib_base_XdpOpenURI_gir
+[ 24%] Built target lib_base_MutterIdleMonitor_gir
+[ 24%] Built target Telegram_XdgNotifications_gir
+[ 24%] Built target lib_base_Snapcraft_cppgir
+[ 24%] Built target lib_base_XdpRequest_cppgir
+[ 24%] Built target lib_base_XdpInhibit_cppgir
+[ 24%] Built target lib_base_SigxcpuFeedback_cppgir
+[ 24%] Built target lib_base_Mpris_cppgir
+[ 24%] Built target lib_webview_Webview_cppgir
+[ 24%] Built target lib_base_XdgFileManager1_cppgir
+[ 24%] Built target Telegram_XdpBackground_cppgir
+[ 24%] Built target lib_base_MutterIdleMonitor_cppgir
+[ 24%] Built target lib_base_XdpSettings_cppgir
+[ 24%] Built target lib_base_XdgDBus_cppgir
+[ 24%] Built target lib_base_XdpOpenURI_cppgir
+[ 24%] Built target Telegram_XdgNotifications_cppgir
+[ 27%] Built target lib_base
+[ 27%] Built target external_qt_static_plugins_hime_im_client
+[ 27%] Built target lib_tl
+[ 27%] Built target codegen_lang
+[ 27%] Built target codegen_style
+[ 28%] Built target lib_stripe
+[ 28%] Built target td_tde2e
+[ 28%] Built target lib_qr
+[ 29%] Built target lib_base_crash_report_writer
+[ 29%] Built target external_qt_static_plugins_hime_autogen_timestamp_deps
+[ 30%] Built target lib_storage
+[ 30%] Built target td_scheme
+[ 30%] Built target lib_ui_styles
+[ 30%] Built target td_lang_lang
+[ 30%] Built target lib_ui_palette
+[ 30%] Built target td_ui_styles
+[ 30%] Built target external_qt_static_plugins_hime_autogen
+[ 30%] Built target td_export
+[ 31%] Built target td_mtproto
+[ 32%] Built target external_qt_static_plugins_hime
+[ 32%] Built target external_qt_static_plugins
+[ 33%] Built target codegen_emoji
+[ 33%] Built target lib_ui_emoji
+[ 33%] Built target lib_ui_autogen_timestamp_deps
+[ 33%] Built target lib_ui_autogen
+[ 41%] Built target lib_ui
+[ 42%] Built target lib_ffmpeg
+[ 43%] Built target td_lang
+[ 44%] Built target lib_webview
+[ 44%] Built target lib_spellcheck
+[ 44%] Built target lib_lottie
+[ 44%] Built target lib_webrtc
+[ 56%] Built target td_ui
+[ 56%] Built target td_iv
+[ 56%] Built target Telegram_autogen_timestamp_deps
+[ 56%] Automatic MOC for target Telegram
+[ 56%] Built target Telegram_autogen
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_protocol.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_quantum_signal_impl.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_search_from_controllers.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/export/view/export_view_panel_controller.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_row.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/admin_log/history_admin_log_section.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_widget.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/editor/scene/scene_item_sticker.cpp.o
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_hkdf.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/admin_log/history_admin_log_inner.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/view/controls/history_view_compose_media_edit_manager.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_search_posts.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/view/controls/history_view_compose_controls.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_quick_action.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_search_tags.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/view/controls/history_view_draft_options.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/admin_log/history_admin_log_item.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/history/view/controls/history_view_compose_search.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/export/export_manager.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/dialogs/dialogs_top_bar_suggestion.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:8:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_quantum.h:145:39: error: use of deleted function ‘gsl::not_null<T>::not_null(std::nullptr_t) [with T = Data::Session*; std::nullptr_t = std::nullptr_t]’
+  145 |         not_null<Session*> _session = nullptr;
+      |                                       ^~~~~~~
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/ThirdParty/GSL/include/gsl/gsl:24,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/stdafx.h:108,
+                 from /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx:5,
+                 from <command-line>:
+/home/john/Documents/CRYPTOGRAM/Telegram/ThirdParty/GSL/include/gsl/pointers:136:5: note: declared here
+  136 |     not_null(std::nullptr_t) = delete;
+      |     ^~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_quantum.h:145:39: note: use ‘-fdiagnostics-all-candidates’ to display considered candidates
+  145 |         not_null<Session*> _session = nullptr;
+      |                                       ^~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:77:23: error: non-static data member declared with placeholder ‘const auto’
+   77 |                 const auto kZero = bytes::type(0);
+      |                       ^~~~
+In file included from /usr/include/c++/15/bits/stl_iterator.h:78,
+                 from /usr/include/c++/15/bits/stl_algobase.h:67,
+                 from /usr/include/c++/15/bits/specfun.h:43,
+                 from /usr/include/c++/15/cmath:3913,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/stdafx.h:13,
+                 from /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx:5,
+                 from <command-line>:
+/usr/include/c++/15/bits/stl_construct.h: In instantiation of ‘constexpr void std::_Construct(_Tp*, _Args&& ...) [with _Tp = byte; _Args = {unsigned char&}]’:
+/usr/include/c++/15/bits/stl_uninitialized.h:145:17:   required from ‘constexpr _ForwardIterator std::__do_uninit_copy(_InputIterator, _Sentinel, _ForwardIterator) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*]’
+  145 |         std::_Construct(std::__addressof(*__result), *__first);
+      |         ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_uninitialized.h:618:30:   required from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _Sentinel, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*; _Tp = byte]’
+  618 |         return std::__do_uninit_copy(std::move(__first), __last, __result);
+      |                ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:1989:37:   required from ‘constexpr void std::vector<_Tp, _Alloc>::_M_range_initialize_n(_Iterator, _Sentinel, size_type) [with _Iterator = unsigned char*; _Sentinel = unsigned char*; _Tp = std::byte; _Alloc = std::allocator<std::byte>; size_type = long unsigned int]’
+ 1989 |               = std::__uninitialized_copy_a(_GLIBCXX_MOVE(__first), __last,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1990 |                                             __start, _M_get_Tp_allocator());
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:746:29:   required from ‘constexpr std::vector<_Tp, _Alloc>::vector(_InputIterator, _InputIterator, const allocator_type&) [with _InputIterator = unsigned char*; <template-parameter-2-2> = void; _Tp = std::byte; _Alloc = std::allocator<std::byte>; allocator_type = std::allocator<std::byte>]’
+  746 |               _M_range_initialize_n(__first, __last, __n);
+      |               ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_hkdf.cpp:79:55:   required from here
+   79 |     bytes::vector output(outputPtr, outputPtr + result);
+      |                                                       ^
+/usr/include/c++/15/bits/stl_construct.h:129:28: error: no matching function for call to ‘construct_at(std::byte*&, unsigned char&)’
+  129 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_construct.h:129:28: note: there is 1 candidate
+/usr/include/c++/15/bits/stl_construct.h:96:5: note: candidate 1: ‘template<class _Tp, class ... _Args>  requires !(is_unbounded_array_v<_Tp>) && requires{::new(void*(0)) _Tp;} constexpr _Tp* std::construct_at(_Tp*, _Args&& ...)’
+   96 |     construct_at(_Tp* __location, _Args&&... __args)
+      |     ^~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_construct.h:96:5: note: template argument deduction/substitution failed:
+/usr/include/c++/15/bits/stl_construct.h:96:5: note: constraints not satisfied
+/usr/include/c++/15/bits/stl_construct.h: In substitution of ‘template<class _Tp, class ... _Args>  requires !(is_unbounded_array_v<_Tp>) && requires{::new(void*(0)) _Tp;} constexpr _Tp* std::construct_at(_Tp*, _Args&& ...) [with _Tp = std::byte; _Args = {unsigned char&}]’:
+/usr/include/c++/15/bits/stl_construct.h:129:21:   required from ‘constexpr void std::_Construct(_Tp*, _Args&& ...) [with _Tp = byte; _Args = {unsigned char&}]’
+  129 |           std::construct_at(__p, std::forward<_Args>(__args)...);
+      |           ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_uninitialized.h:145:17:   required from ‘constexpr _ForwardIterator std::__do_uninit_copy(_InputIterator, _Sentinel, _ForwardIterator) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*]’
+  145 |         std::_Construct(std::__addressof(*__result), *__first);
+      |         ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_uninitialized.h:618:30:   required from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _Sentinel, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*; _Tp = byte]’
+  618 |         return std::__do_uninit_copy(std::move(__first), __last, __result);
+      |                ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:1989:37:   required from ‘constexpr void std::vector<_Tp, _Alloc>::_M_range_initialize_n(_Iterator, _Sentinel, size_type) [with _Iterator = unsigned char*; _Sentinel = unsigned char*; _Tp = std::byte; _Alloc = std::allocator<std::byte>; size_type = long unsigned int]’
+ 1989 |               = std::__uninitialized_copy_a(_GLIBCXX_MOVE(__first), __last,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1990 |                                             __start, _M_get_Tp_allocator());
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:746:29:   required from ‘constexpr std::vector<_Tp, _Alloc>::vector(_InputIterator, _InputIterator, const allocator_type&) [with _InputIterator = unsigned char*; <template-parameter-2-2> = void; _Tp = std::byte; _Alloc = std::allocator<std::byte>; allocator_type = std::allocator<std::byte>]’
+  746 |               _M_range_initialize_n(__first, __last, __n);
+      |               ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_hkdf.cpp:79:55:   required from here
+   79 |     bytes::vector output(outputPtr, outputPtr + result);
+      |                                                       ^
+/usr/include/c++/15/bits/stl_construct.h:96:5:   required by the constraints of ‘template<class _Tp, class ... _Args>  requires !(is_unbounded_array_v<_Tp>) && requires{::new(void*(0)) _Tp;} constexpr _Tp* std::construct_at(_Tp*, _Args&& ...)’
+/usr/include/c++/15/bits/stl_construct.h:94:10:   in requirements  [with _Tp = std::byte; _Args = {unsigned char&}]
+/usr/include/c++/15/bits/stl_construct.h:94:21: note: the required expression ‘::new(void*(0)) _Tp’ is invalid
+   94 |       && requires { ::new((void*)0) _Tp(std::declval<_Args>()...); }
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_construct.h: In instantiation of ‘constexpr void std::_Construct(_Tp*, _Args&& ...) [with _Tp = byte; _Args = {unsigned char&}]’:
+/usr/include/c++/15/bits/stl_uninitialized.h:145:17:   required from ‘constexpr _ForwardIterator std::__do_uninit_copy(_InputIterator, _Sentinel, _ForwardIterator) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*]’
+  145 |         std::_Construct(std::__addressof(*__result), *__first);
+      |         ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_uninitialized.h:618:30:   required from ‘constexpr _ForwardIterator std::__uninitialized_copy_a(_InputIterator, _Sentinel, _ForwardIterator, allocator<_Tp>&) [with _InputIterator = unsigned char*; _Sentinel = unsigned char*; _ForwardIterator = byte*; _Tp = byte]’
+  618 |         return std::__do_uninit_copy(std::move(__first), __last, __result);
+      |                ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:1989:37:   required from ‘constexpr void std::vector<_Tp, _Alloc>::_M_range_initialize_n(_Iterator, _Sentinel, size_type) [with _Iterator = unsigned char*; _Sentinel = unsigned char*; _Tp = std::byte; _Alloc = std::allocator<std::byte>; size_type = long unsigned int]’
+ 1989 |               = std::__uninitialized_copy_a(_GLIBCXX_MOVE(__first), __last,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ 1990 |                                             __start, _M_get_Tp_allocator());
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/15/bits/stl_vector.h:746:29:   required from ‘constexpr std::vector<_Tp, _Alloc>::vector(_InputIterator, _InputIterator, const allocator_type&) [with _InputIterator = unsigned char*; <template-parameter-2-2> = void; _Tp = std::byte; _Alloc = std::allocator<std::byte>; allocator_type = std::allocator<std::byte>]’
+  746 |               _M_range_initialize_n(__first, __last, __n);
+      |               ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_hkdf.cpp:79:55:   required from here
+   79 |     bytes::vector output(outputPtr, outputPtr + result);
+      |                                                       ^
+cc1plus: note: set ‘-fconcepts-diagnostics-depth=’ to at least 2 for more detail
+/usr/include/c++/15/bits/stl_construct.h:133:7: error: cannot convert ‘unsigned char’ to ‘std::byte’ in initialization
+  133 |       ::new(static_cast<void*>(__p)) _Tp(std::forward<_Args>(__args)...);
+      |       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp: In function ‘Data::{anonymous}::QuantumRatchetResult Data::{anonymous}::performQuantumDoubleRatchet(const QuantumSession&, const bytes::const_span&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:132:37: error: ‘quantumKDF’ was not declared in this scope
+  132 |                 result.newRootKey = quantumKDF(
+      |                                     ^~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp: At global scope:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:320:21: error: ‘QuantumTSMInterface’ was not declared in this scope; did you mean ‘TSMInterface’?
+  320 |     std::shared_ptr<QuantumTSMInterface> quantumTSM;
+      |                     ^~~~~~~~~~~~~~~~~~~
+      |                     TSMInterface
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:320:40: error: template argument 1 is invalid
+  320 |     std::shared_ptr<QuantumTSMInterface> quantumTSM;
+      |                                        ^
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:320:10: error: ‘<expression error>’ in namespace ‘std’ does not name a type
+  320 |     std::shared_ptr<QuantumTSMInterface> quantumTSM;
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp: In member function ‘Data::QuantumSignalProtocol::QuantumKeyBundle Data::QuantumSignalProtocol::generateQuantumKeyBundle()’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:459:9: error: cannot convert ‘std::vector<std::byte>’ to ‘const QByteArray&’
+  459 |         bundleData);
+      |         ^~~~~~~~~~
+      |         |
+      |         std::vector<std::byte>
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:9:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantumguard.h:57:27: note: initializing argument 2 of ‘tl::expected<Data::QuantumSignatureResult, QString> Data::QuantumGuard::quantumSign(const QString&, const QByteArray&)’
+   57 |         const QByteArray &data);
+      |         ~~~~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp: In member function ‘tl::expected<std::vector<std::byte>, QString> Data::QuantumSignalProtocol::performQuantumX3DH(const QuantumKeyBundle&, const QuantumKeyBundle&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:488:53: error: cannot convert ‘const QByteArray’ to ‘const bytes::const_span&’ {aka ‘const gsl::span<const std::byte>&’}
+  488 |         detectDeviceAttestationAttempt(remoteBundle.quantumIdentityKey)) {
+      |                                        ~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+      |                                                     |
+      |                                                     const QByteArray
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_quantum.h:119:70: note: initializing argument 1 of ‘bool Data::QuantumSignalProtocol::detectDeviceAttestationAttempt(const bytes::const_span&)’
+  119 |         bool detectDeviceAttestationAttempt(const bytes::const_span &messageData);
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:4925: Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_hkdf.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:26:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/history/history.h:63:42: error: invalid covariant return type for ‘virtual gsl::not_null<History*> History::owningHistory()’
+   63 |         [[nodiscard]] not_null<History*> owningHistory() override {
+      |                                          ^~~~~~~~~~~~~
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/history/history.h:13:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_thread.h:63:50: note: overridden function is ‘virtual gsl::not_null<Data::History*> Data::Thread::owningHistory()’
+   63 |         [[nodiscard]] virtual not_null<History*> owningHistory() = 0;
+      |                                                  ^~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In function ‘bytes::vector Data::{anonymous}::x25519Generate()’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:161:55: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+  161 |     EVP_PKEY_get_raw_private_key(pkey, privateKey.data(), &len);
+      |                                        ~~~~~~~~~~~~~~~^~
+      |                                                       |
+      |                                                       std::byte*
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:12:
+/usr/include/openssl/evp.h:1915:71: note: initializing argument 2 of ‘int EVP_PKEY_get_raw_private_key(const EVP_PKEY*, unsigned char*, size_t*)’
+ 1915 | int EVP_PKEY_get_raw_private_key(const EVP_PKEY *pkey, unsigned char *priv,
+      |                                                        ~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In function ‘bytes::vector Data::{anonymous}::x25519PublicFromPrivate(const bytes::const_span&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:184:50: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+  184 |     EVP_PKEY_get_raw_public_key(pkey, result.data(), &len);
+      |                                       ~~~~~~~~~~~^~
+      |                                                  |
+      |                                                  std::byte*
+/usr/include/openssl/evp.h:1917:70: note: initializing argument 2 of ‘int EVP_PKEY_get_raw_public_key(const EVP_PKEY*, unsigned char*, size_t*)’
+ 1917 | int EVP_PKEY_get_raw_public_key(const EVP_PKEY *pkey, unsigned char *pub,
+      |                                                       ~~~~~~~~~~~~~~~^~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In function ‘bytes::vector Data::{anonymous}::x25519(const bytes::const_span&, const bytes::const_span&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:247:41: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+  247 |     if (EVP_PKEY_derive(ctx, result.data(), &sharedSecretLen) <= 0) {
+      |                              ~~~~~~~~~~~^~
+      |                                         |
+      |                                         std::byte*
+/usr/include/openssl/evp.h:2039:55: note: initializing argument 2 of ‘int EVP_PKEY_derive(EVP_PKEY_CTX*, unsigned char*, size_t*)’
+ 2039 | int EVP_PKEY_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen);
+      |                                        ~~~~~~~~~~~~~~~^~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In constructor ‘Data::SignalProtocol::SignalProtocol(gsl::not_null<Data::Session*>)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:265:55: error: ‘class Data::Session’ has no member named ‘uniqueId’
+  265 |                              QString::number(session->uniqueId());
+      |                                                       ^~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘bytes::vector Data::SignalProtocol::deriveKey(const bytes::const_span&, const QString&, int)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:657:42: error: ‘EVP_PKEY_HKDF_MODE_EXPAND_ONLY’ was not declared in this scope; did you mean ‘EVP_PKEY_HKDEF_MODE_EXPAND_ONLY’?
+  657 |     if (EVP_PKEY_CTX_set_hkdf_mode(pctx, EVP_PKEY_HKDF_MODE_EXPAND_ONLY) <= 0) {
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                          EVP_PKEY_HKDEF_MODE_EXPAND_ONLY
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:671:57: error: invalid conversion from ‘char*’ to ‘const unsigned char*’ [-fpermissive]
+  671 |     if (EVP_PKEY_CTX_add1_hkdf_info(pctx, infoBytes.data(), infoBytes.size()) <= 0) {
+      |                                           ~~~~~~~~~~~~~~^~
+      |                                                         |
+      |                                                         char*
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:17:
+/usr/include/openssl/kdf.h:114:54: note: initializing argument 2 of ‘int EVP_PKEY_CTX_add1_hkdf_info(EVP_PKEY_CTX*, const unsigned char*, int)’
+  114 |                                 const unsigned char *info, int infolen);
+      |                                 ~~~~~~~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘HistoryItem* Data::SignalProtocol::loadEncryptedHistoryLocal(gsl::not_null<PeerData*>, MsgId)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:843:19: error: invalid use of incomplete type ‘class Data::History’
+  843 |     return history->addNewLocalMessage(
+      |                   ^~
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:8:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.h:24:7: note: forward declaration of ‘class Data::History’
+   24 | class History;
+      |       ^~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘bytes::vector Data::SignalProtocol::signWithIdentityKey(const bytes::const_span&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1655:33: error: cannot convert ‘std::byte*’ to ‘const unsigned char*’
+ 1655 |         _identityKeyPrivate.data(),
+      |         ~~~~~~~~~~~~~~~~~~~~~~~~^~
+      |                                 |
+      |                                 std::byte*
+/usr/include/openssl/evp.h:1907:61: note: initializing argument 3 of ‘EVP_PKEY* EVP_PKEY_new_raw_private_key(int, ENGINE*, const unsigned char*, size_t)’
+ 1907 |                                        const unsigned char *priv,
+      |                                        ~~~~~~~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1676:45: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+ 1676 |     if (EVP_DigestSign(mdctx, signature.data(), &siglen, data.data(), data.size()) != 1) {
+      |                               ~~~~~~~~~~~~~~^~
+      |                                             |
+      |                                             std::byte*
+/usr/include/openssl/evp.h:859:59: note: initializing argument 2 of ‘int EVP_DigestSign(EVP_MD_CTX*, unsigned char*, size_t*, const unsigned char*, size_t)’
+  859 | __owur int EVP_DigestSign(EVP_MD_CTX *ctx, unsigned char *sigret,
+      |                                            ~~~~~~~~~~~~~~~^~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘bool Data::SignalProtocol::verifyEd25519Signature(const bytes::const_span&, const bytes::const_span&, const bytes::const_span&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1721:23: error: cannot convert ‘gsl::span<const std::byte>::pointer’ {aka ‘const std::byte*’} to ‘const unsigned char*’
+ 1721 |         publicKey.data(),
+      |         ~~~~~~~~~~~~~~^~
+      |                       |
+      |                       gsl::span<const std::byte>::pointer {aka const std::byte*}
+/usr/include/openssl/evp.h:1913:60: note: initializing argument 3 of ‘EVP_PKEY* EVP_PKEY_new_raw_public_key(int, ENGINE*, const unsigned char*, size_t)’
+ 1913 |                                       const unsigned char *pub,
+      |                                       ~~~~~~~~~~~~~~~~~~~~~^~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1741:23: error: cannot convert ‘gsl::span<const std::byte>::pointer’ {aka ‘const std::byte*’} to ‘const unsigned char*’
+ 1741 |         signature.data(),
+      |         ~~~~~~~~~~~~~~^~
+      |                       |
+      |                       gsl::span<const std::byte>::pointer {aka const std::byte*}
+/usr/include/openssl/evp.h:869:67: note: initializing argument 2 of ‘int EVP_DigestVerify(EVP_MD_CTX*, const unsigned char*, size_t, const unsigned char*, size_t)’
+  869 | __owur int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
+      |                                              ~~~~~~~~~~~~~~~~~~~~~^~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘QByteArray Data::SignalProtocol::encryptWithPBKDF2(const bytes::const_span&, const QString&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1813:18: error: cannot convert ‘gsl::span<const std::byte>::pointer’ {aka ‘const std::byte*’} to ‘const unsigned char*’
+ 1813 |         data.data(),
+      |         ~~~~~~~~~^~
+      |                  |
+      |                  gsl::span<const std::byte>::pointer {aka const std::byte*}
+/usr/include/openssl/evp.h:793:66: note: initializing argument 4 of ‘int EVP_EncryptUpdate(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int)’
+  793 |                                  int *outl, const unsigned char *in, int inl);
+      |                                             ~~~~~~~~~~~~~~~~~~~~~^~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘bytes::vector Data::SignalProtocol::decryptWithPBKDF2(const QByteArray&, const QString&)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1902:23: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+ 1902 |         plaintext.data(),
+      |         ~~~~~~~~~~~~~~^~
+      |                       |
+      |                       std::byte*
+/usr/include/openssl/evp.h:809:66: note: initializing argument 2 of ‘int EVP_DecryptUpdate(EVP_CIPHER_CTX*, unsigned char*, int*, const unsigned char*, int)’
+  809 | __owur int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out,
+      |                                                   ~~~~~~~~~~~~~~~^~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1912:51: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+ 1912 |     if (EVP_DecryptFinal_ex(ctx, plaintext.data() + outLen, &finalLen) != 1) {
+      |                                  ~~~~~~~~~~~~~~~~~^~~~~~~~
+      |                                                   |
+      |                                                   std::byte*
+/usr/include/openssl/evp.h:813:68: note: initializing argument 2 of ‘int EVP_DecryptFinal_ex(EVP_CIPHER_CTX*, unsigned char*, int*)’
+  813 | __owur int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *outm,
+      |                                                     ~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘std::pair<std::vector<std::byte>, std::vector<std::byte> > Data::SignalProtocol::generateEd25519KeyPair()’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1949:59: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+ 1949 |     if (EVP_PKEY_get_raw_private_key(pkey, privateKey.data(), &privKeyLen) != 1) {
+      |                                            ~~~~~~~~~~~~~~~^~
+      |                                                           |
+      |                                                           std::byte*
+/usr/include/openssl/evp.h:1915:71: note: initializing argument 2 of ‘int EVP_PKEY_get_raw_private_key(const EVP_PKEY*, unsigned char*, size_t*)’
+ 1915 | int EVP_PKEY_get_raw_private_key(const EVP_PKEY *pkey, unsigned char *priv,
+      |                                                        ~~~~~~~~~~~~~~~^~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:1959:57: error: cannot convert ‘std::byte*’ to ‘unsigned char*’
+ 1959 |     if (EVP_PKEY_get_raw_public_key(pkey, publicKey.data(), &pubKeyLen) != 1) {
+      |                                           ~~~~~~~~~~~~~~^~
+      |                                                         |
+      |                                                         std::byte*
+/usr/include/openssl/evp.h:1917:70: note: initializing argument 2 of ‘int EVP_PKEY_get_raw_public_key(const EVP_PKEY*, unsigned char*, size_t*)’
+ 1917 | int EVP_PKEY_get_raw_public_key(const EVP_PKEY *pkey, unsigned char *pub,
+      |                                                       ~~~~~~~~~~~~~~~^~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: At global scope:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:2032:27: error: redefinition of ‘Data::SignalProtocol::KeyBundle Data::SignalProtocol::generateLocalKeyBundle()’
+ 2032 | SignalProtocol::KeyBundle SignalProtocol::generateLocalKeyBundle() {
+      |                           ^~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:376:27: note: ‘Data::SignalProtocol::KeyBundle Data::SignalProtocol::generateLocalKeyBundle()’ previously defined here
+  376 | SignalProtocol::KeyBundle SignalProtocol::generateLocalKeyBundle() {
+      |                           ^~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp: At global scope:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_quantum_signal_impl.cpp:64:9: warning: ‘QString Data::{anonymous}::quantumStoragePath(gsl::not_null<Data::Session*>)’ defined but not used [-Wunused-function]
+   64 | QString quantumStoragePath(not_null<Session*> session) {
+      |         ^~~~~~~~~~~~~~~~~~
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:4701: Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_quantum_signal_impl.cpp.o] Error 1
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:4909: Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_protocol.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:3197: Telegram/CMakeFiles/Telegram.dir/all] Error 2
+gmake: *** [Makefile:136: all] Error 2

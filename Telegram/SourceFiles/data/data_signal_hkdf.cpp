@@ -7,8 +7,10 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 */
 #include "data/data_signal_hkdf.h"
 
-#include <signal_protocol.h>
-#include <hkdf.h>
+#include <cstdint>
+
+#include "../../ThirdParty/libsignal/src/signal_protocol.h"
+#include "../../ThirdParty/libsignal/src/hkdf.h"
 
 #include <QtCore/QByteArray>
 #include <QtCore/QMutex>
@@ -30,6 +32,10 @@ signal_context *ensureSignalContext() {
         }
     }
     return gSignalContext;
+}
+
+inline const uint8_t *asUInt8(const bytes::const_span &span) {
+    return reinterpret_cast<const uint8_t *>(span.data());
 }
 
 } // namespace
@@ -59,7 +65,7 @@ bytes::vector deriveSignalHKDF(
     auto result = hkdf_derive_secrets(
         kdf,
         &outputPtr,
-        inputKeyMaterial.data(), inputKeyMaterial.size(),
+        asUInt8(inputKeyMaterial), inputKeyMaterial.size(),
         nullptr, 0,
         reinterpret_cast<const uint8_t*>(infoBytes.constData()), infoBytes.size(),
         outputLength);
@@ -70,7 +76,11 @@ bytes::vector deriveSignalHKDF(
         qWarning() << "Signal HKDF: derive failed";
         return {};
     }
-    bytes::vector output(outputPtr, outputPtr + result);
+    bytes::vector output;
+    output.reserve(result);
+    for (int i = 0; i < result; ++i) {
+        output.push_back(bytes::type(outputPtr[i]));
+    }
     free(outputPtr);
     return output;
 }

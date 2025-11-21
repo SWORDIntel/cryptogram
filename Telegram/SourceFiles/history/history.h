@@ -60,9 +60,9 @@ public:
 	History(not_null<Data::Session*> owner, PeerId peerId);
 	~History();
 
-	[[nodiscard]] not_null<History*> owningHistory() override {
-		return this;
-	}
+	// Pure virtual implementation to satisfy base class contract
+	[[nodiscard]] not_null<::History*> owningHistory() override;
+
 	[[nodiscard]] Data::Thread *threadFor(
 		MsgId topicRootId,
 		PeerId monoforumPeerId);

@@ -266,7 +266,7 @@ public:
     virtual void enableQuantumHardwareAcceleration(bool enabled) = 0;
     virtual bool isQuantumHardwareAccelerationEnabled() const = 0;
 
-signals:
+Q_SIGNALS:
     void quantumCapabilitiesChanged(const QuantumTSMCapabilities &capabilities);
     void quantumKeyGenerated(const QString &keyId, QuantumAlgorithm algorithm);
     void quantumMigrationCompleted(const QString &keyId, QuantumTSMResult result);

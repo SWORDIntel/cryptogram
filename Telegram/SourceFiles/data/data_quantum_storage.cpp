@@ -18,6 +18,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "base/unixtime.h"
 #include "core/application.h"
 
+#include <QtCore/QByteArray>
 #include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QJsonDocument>
@@ -77,6 +78,35 @@ QString getDataContainerPath() {
         dir.mkdir(kDataContainerDir);
     }
     return basePath + "/" + kDataContainerDir;
+}
+
+inline bytes::const_span makeSpan(const QByteArray &data) {
+    return { reinterpret_cast<const bytes::type *>(data.constData()), data.size() };
+}
+
+SecureStorageTier detectTierFromHardware() {
+    bool hasTPM = false;
+    bool hasNPU = false;
+    bool hasGNA = false;
+
+    if (QFile::exists("/dev/tpm0") || QFile::exists("/dev/tpmrm0")) {
+        hasTPM = true;
+    }
+    if (QFile::exists("/dev/accel/accel0")) {
+        hasNPU = true;
+    }
+    if (QFile::exists("/sys/class/intel_gaussian")) {
+        hasGNA = true;
+    }
+
+    if (hasGNA && hasNPU && hasTPM) {
+        return SecureStorageTier::Tier0_Quantum;
+    } else if (hasNPU && hasTPM) {
+        return SecureStorageTier::Tier1_Premium;
+    } else if (hasTPM) {
+        return SecureStorageTier::Tier2_Enhanced;
+    }
+    return SecureStorageTier::Tier3_Standard;
 }
 
 } // namespace
@@ -199,35 +229,7 @@ public:
     }
 
     SecureStorageTier detectOptimalTier() {
-        // Hardware capability detection
-        bool hasTPM = false;
-        bool hasNPU = false;
-        bool hasGNA = false;
-
-        // Detect TPM 2.0
-        if (QFile::exists("/dev/tpm0") || QFile::exists("/dev/tpmrm0")) {
-            hasTPM = true;
-        }
-
-        // Detect NPU (Intel implementation)
-        if (QFile::exists("/dev/accel/accel0")) {
-            hasNPU = true;
-        }
-
-        // Detect GNA (Gaussian Neural Accelerator)
-        if (QFile::exists("/sys/class/intel_gaussian")) {
-            hasGNA = true;
-        }
-
-        if (hasGNA && hasNPU && hasTPM) {
-            return SecureStorageTier::Tier0_Quantum;
-        } else if (hasNPU && hasTPM) {
-            return SecureStorageTier::Tier1_Premium;
-        } else if (hasTPM) {
-            return SecureStorageTier::Tier2_Enhanced;
-        } else {
-            return SecureStorageTier::Tier3_Standard;
-        }
+        return detectTierFromHardware();
     }
 
     QString basePath;
@@ -293,7 +295,7 @@ bool QuantumSecureStorage::initialize(SecureStorageTier targetTier) {
     _defaultPolicy.maxAccessCount = -1;
 
     _initialized = true;
-    emit tierUpgraded(SecureStorageTier::Tier4_Universal, _currentTier);
+    Q_EMIT tierUpgraded(SecureStorageTier::Tier4_Universal, _currentTier);
 
     return true;
 }
@@ -409,7 +411,7 @@ base::expected<QString, SecureStorageResult> QuantumSecureStorage::storeData(
         if (!policy.policyId.isEmpty()) {
             d->accessPolicies[dataId] = policy;
         }
-        emit dataStored(dataId, _currentTier);
+        Q_EMIT dataStored(dataId, _currentTier);
         return dataId;
     }
 
@@ -493,7 +495,7 @@ base::expected<bytes::vector, SecureStorageResult> QuantumSecureStorage::retriev
     }
 
     if (result) {
-        emit dataRetrieved(dataId, container.storageTier);
+        Q_EMIT dataRetrieved(dataId, container.storageTier);
     }
 
     return result;
@@ -518,15 +520,18 @@ SecureStorageResult QuantumSecureStorage::storeDataTier0(
         return SecureStorageResult::HardwareUnavailable;
     }
 
+    const auto &key = *keyResult;
+    const auto keySpan = makeSpan(key.publicKey);
+
     // Seal key with TPM 2.0
-    auto sealResult = _tsmInterface->sealData(keyResult->publicKey);
+    auto sealResult = _tsmInterface->sealData(keySpan);
     if (sealResult != TSMResult::Success) {
         return SecureStorageResult::HardwareUnavailable;
     }
 
     // Encrypt data with quantum algorithm
     auto encryptResult = _quantumGuard->quantumEncrypt(
-        keyResult->keyId,
+        key.keyId,
         data);
 
     if (!encryptResult) {
@@ -536,17 +541,18 @@ SecureStorageResult QuantumSecureStorage::storeDataTier0(
     // Store encrypted data to file
     QString filePath = d->containerPath + "/" + dataId + ".tier0";
     QFile file(filePath);
+    const auto &encryption = *encryptResult;
     if (file.open(QIODevice::WriteOnly)) {
         // Write quantum-encrypted container
         QJsonObject obj;
-        obj["keyId"] = keyResult->keyId;
-        obj["algorithm"] = static_cast<int>(encryptResult->algorithm);
+        obj["keyId"] = key.keyId;
+        obj["algorithm"] = static_cast<int>(encryption.algorithm);
         obj["ciphertext"] = QString::fromLatin1(
-            QByteArray(reinterpret_cast<const char*>(encryptResult->ciphertext.data()),
-                      encryptResult->ciphertext.size()).toBase64());
+            QByteArray(reinterpret_cast<const char*>(encryption.ciphertext.data()),
+                      encryption.ciphertext.size()).toBase64());
         obj["encapsulatedSecret"] = QString::fromLatin1(
-            QByteArray(reinterpret_cast<const char*>(encryptResult->encapsulatedSecret.data()),
-                      encryptResult->encapsulatedSecret.size()).toBase64());
+            QByteArray(reinterpret_cast<const char*>(encryption.encapsulatedSecret.data()),
+                      encryption.encapsulatedSecret.size()).toBase64());
 
         file.write(QJsonDocument(obj).toJson());
         return SecureStorageResult::Success;
@@ -567,7 +573,7 @@ SecureStorageResult QuantumSecureStorage::storeDataTier1(
 
     // Generate hardware-backed key
     auto keyResult = _tsmInterface->generateKey(TSMKeyType::AES256);
-    if (keyResult != TSMResult::Success) {
+    if (!keyResult) {
         return SecureStorageResult::HardwareUnavailable;
     }
 
@@ -719,8 +725,7 @@ std::unique_ptr<QuantumSecureStorage> QuantumSecureStorageFactory::createOptimiz
 }
 
 SecureStorageTier QuantumSecureStorageFactory::detectOptimalTier() {
-    QuantumSecureStorage::QuantumSecureStoragePrivate helper;
-    return helper.detectOptimalTier();
+    return detectTierFromHardware();
 }
 
 std::shared_ptr<QuantumGuard> QuantumGuardFactory::createOptimized() {

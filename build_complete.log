@@ -1,0 +1,214 @@
+[  0%] Built target lib_base_XdpOpenURI_dbus_timestamp
+[  0%] Built target external_qt_static_plugins_nimf_init
+[  0%] Built target external_qt_static_plugins_kimageformats_autogen_timestamp_deps
+[  0%] Built target external_cld3_bundled_feature_extractor.proto
+[  0%] Built target lib_base_XdgDBus_dbus_timestamp
+[  0%] Built target external_qt_static_plugins_fcitx5_init
+[  0%] Built target external_cld3_bundled_sentence.proto
+[  0%] Built target external_cld3_bundled_task_spec.proto
+[  0%] Built target lib_base_Snapcraft_dbus_timestamp
+[  0%] Built target lib_base_XdgFileManager1_dbus_timestamp
+[  0%] Built target lib_crl
+[  1%] Built target external_kcoreaddons_bundled
+[  1%] Built target lib_base_XdpSettings_dbus_timestamp
+[  1%] Built target external_qt_static_plugins_fcitx5_dbusaddons_autogen_timestamp_deps
+[  1%] Built target external_qt_static_plugins_kimageformats_init
+[  1%] Built target lib_base_MutterIdleMonitor_dbus_timestamp
+[  1%] Built target lib_base_XdpInhibit_dbus_timestamp
+[  1%] Built target lib_base_XdpRequest_dbus_timestamp
+[  1%] Built target external_qt_static_plugins_nimf_autogen_timestamp_deps
+[  2%] Built target cppgir
+[  3%] Built target lib_base_SigxcpuFeedback_dbus_timestamp
+[  3%] Built target lib_base_Mpris_dbus_timestamp
+[  3%] Built target external_qt_static_plugins_hime_init
+[  3%] Built target external_qr_code_generator_bundled
+[  3%] Built target protobuf-c
+[  3%] Built target lib_webview_Webview_dbus_timestamp
+[  3%] Built target td_scheme_scheme
+[  7%] Built target curve25519
+[ 10%] Built target external_rlottie_bundled
+[ 10%] Built target Telegram_XdgNotifications_dbus_timestamp
+[ 10%] Built target Telegram_XdpBackground_dbus_timestamp
+[ 11%] Built target Telegram_appstream_changelog
+[ 11%] Built target lib_prisma
+[ 11%] Built target codegen_common
+[ 11%] Built target external_glib_cppgir
+[ 11%] Built target external_qt_static_plugins_fcitx5_dbusaddons_autogen
+[ 11%] Built target external_qt_static_plugins_kimageformats_autogen
+[ 13%] Built target lib_tgcalls
+[ 13%] Built target external_qt_static_plugins_nimf_autogen
+[ 20%] Built target tag
+[ 21%] Built target signal-protocol-c
+[ 21%] Built target lib_base_SigxcpuFeedback_dbus
+[ 21%] Built target lib_base_XdpSettings_dbus
+[ 21%] Built target lib_base_XdgFileManager1_dbus
+[ 21%] Built target lib_base_XdpRequest_dbus
+[ 22%] Built target lib_base_XdpInhibit_dbus
+[ 22%] Built target external_qt_static_plugins_fcitx5_dbusaddons
+[ 22%] Built target lib_base_Snapcraft_dbus
+[ 22%] Built target Telegram_XdgNotifications_dbus
+[ 22%] Built target lib_base_XdgDBus_dbus
+[ 22%] Built target lib_base_XdpOpenURI_dbus
+[ 22%] Built target Telegram_XdpBackground_dbus
+[ 23%] Built target external_cld3_bundled
+[ 22%] Built target lib_webview_Webview_dbus
+[ 23%] Built target lib_base_Mpris_dbus
+[ 23%] Built target lib_base_MutterIdleMonitor_dbus
+[ 23%] Built target external_qt_static_plugins_nimf
+[ 23%] Built target lib_base_XdpRequest_gir
+[ 23%] Built target external_qt_static_plugins_kimageformats
+[ 23%] Built target lib_base_Snapcraft_gir
+[ 23%] Built target lib_base_XdgFileManager1_gir
+[ 23%] Built target lib_base_XdpSettings_gir
+[ 23%] Built target lib_base_XdgDBus_gir
+[ 23%] Built target lib_base_XdpOpenURI_gir
+[ 23%] Built target lib_base_Mpris_gir
+[ 23%] Built target external_qt_static_plugins_fcitx5_autogen_timestamp_deps
+[ 23%] Built target lib_base_SigxcpuFeedback_gir
+[ 23%] Built target lib_base_MutterIdleMonitor_gir
+[ 23%] Built target Telegram_XdgNotifications_gir
+[ 23%] Built target Telegram_XdpBackground_gir
+[ 23%] Built target lib_base_XdpInhibit_gir
+[ 23%] Built target lib_webview_Webview_gir
+[ 23%] Built target tag_c
+[ 23%] Built target lib_base_XdgFileManager1_cppgir
+[ 23%] Built target lib_base_XdpOpenURI_cppgir
+[ 23%] Built target lib_base_XdpRequest_cppgir
+[ 23%] Built target lib_base_Snapcraft_cppgir
+[ 23%] Built target lib_base_XdpSettings_cppgir
+[ 23%] Built target lib_base_Mpris_cppgir
+[ 23%] Built target lib_base_XdgDBus_cppgir
+[ 23%] Built target lib_base_SigxcpuFeedback_cppgir
+[ 23%] Built target lib_base_XdpInhibit_cppgir
+[ 23%] Built target external_qt_static_plugins_fcitx5_autogen
+[ 23%] Built target Telegram_XdpBackground_cppgir
+[ 23%] Built target Telegram_XdgNotifications_cppgir
+[ 23%] Built target lib_base_MutterIdleMonitor_cppgir
+[ 23%] Built target lib_webview_Webview_cppgir
+[ 24%] Built target external_qt_static_plugins_fcitx5
+[ 27%] Built target lib_base
+[ 27%] Built target lib_tl
+[ 28%] Built target lib_stripe
+[ 28%] Built target external_qt_static_plugins_hime_im_client
+[ 28%] Built target lib_qr
+[ 28%] Built target td_tde2e
+[ 29%] Built target lib_base_crash_report_writer
+[ 30%] Built target lib_storage
+[ 30%] Built target codegen_lang
+[ 30%] Built target codegen_style
+[ 30%] Built target external_qt_static_plugins_hime_autogen_timestamp_deps
+[ 30%] Built target td_scheme
+[ 30%] Built target td_ui_styles
+[ 30%] Built target lib_ui_palette
+[ 30%] Built target lib_ui_styles
+[ 30%] Built target td_lang_lang
+[ 30%] Built target external_qt_static_plugins_hime_autogen
+[ 31%] Built target td_mtproto
+[ 31%] Built target td_export
+[ 32%] Built target external_qt_static_plugins_hime
+[ 32%] Built target external_qt_static_plugins
+[ 33%] Built target codegen_emoji
+[ 33%] Built target lib_ui_emoji
+[ 33%] Built target lib_ui_autogen_timestamp_deps
+[ 33%] Built target lib_ui_autogen
+[ 41%] Built target lib_ui
+[ 42%] Built target lib_ffmpeg
+[ 43%] Built target lib_webview
+[ 44%] Built target td_lang
+[ 44%] Built target lib_lottie
+[ 44%] Built target lib_spellcheck
+[ 44%] Built target lib_webrtc
+[ 56%] Built target td_ui
+[ 56%] Built target td_iv
+[ 56%] Built target Telegram_autogen_timestamp_deps
+[ 56%] Automatic MOC for target Telegram
+[ 56%] Built target Telegram_autogen
+[ 57%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/info/channel_statistics/boosts/create_giveaway_box.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/info/profile/info_profile_cover.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_protocol.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_signup.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_password_check.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_bot_result.cpp.o
+[ 58%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_bot_confirm_prepared.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_results_widget.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_bot_send_data.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_step.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_email.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_start.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_phone.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/info/channel_statistics/earn/info_channel_earn_list.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_qr.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_results_inner.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_code.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_bot_storage.cpp.o
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/intro/intro_widget.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/iv/iv_delegate_impl.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/wrap/wrap.h:10,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/wrap/padding_wrap.h:9,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/layers/box_content.h:12,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/layers/generic_box.h:9,
+                 from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/inline_bots/inline_bot_confirm_prepared.cpp:23:
+/home/john/Documents/CRYPTOGRAM/Telegram/lib_base/base/object_ptr.h: In instantiation of ‘object_ptr<T>::object_ptr(Parent&&, Args&& ...) [with Parent = const gsl::not_null<Ui::VerticalLayout*>&; Args = {object_ptr<Ui::FlatLabel>, const QMargins&, base::flags<RectPart>}; Object = Ui::DividerLabel]’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/inline_bots/inline_bot_confirm_prepared.cpp:198:37:   required from here
+  198 |                                 RectPart::Top | RectPart::Bottom)));
+      |                                                                 ^
+/home/john/Documents/CRYPTOGRAM/Telegram/lib_base/base/object_ptr.h:22:19: error: no matching function for call to ‘Ui::DividerLabel::DividerLabel(const gsl::not_null<Ui::VerticalLayout*>&, object_ptr<Ui::FlatLabel>, const QMargins&, base::flags<RectPart>)’
+   22 |         : _object(new Object(std::forward<Parent>(parent), std::forward<Args>(args)...)) {
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/lib_base/base/object_ptr.h:22:19: note: there is 1 candidate
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/layers/box_content.h:13:
+/home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/widgets/labels.h:292:9: note: candidate 1: ‘Ui::DividerLabel::DividerLabel(QWidget*, object_ptr<Ui::RpWidget>&&, const style::margins&, const style::DividerBar&, RectParts)’
+  292 |         DividerLabel(
+      |         ^~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/lib_ui/ui/widgets/labels.h:296:42: note: no known conversion for argument 4 from ‘base::flags<RectPart>’ to ‘const style::DividerBar&’
+  296 |                 const style::DividerBar &st = st::defaultDividerBar,
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:26:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/history/history.h:63:42: error: invalid covariant return type for ‘virtual gsl::not_null<History*> History::owningHistory()’
+   63 |         [[nodiscard]] not_null<History*> owningHistory() override {
+      |                                          ^~~~~~~~~~~~~
+In file included from /home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/history/history.h:13:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_thread.h:63:50: note: overridden function is ‘virtual gsl::not_null<Data::History*> Data::Thread::owningHistory()’
+   63 |         [[nodiscard]] virtual not_null<History*> owningHistory() = 0;
+      |                                                  ^~~~~~~~~~~~~
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp: In member function ‘HistoryItem* Data::SignalProtocol::loadEncryptedHistoryLocal(gsl::not_null<PeerData*>, MsgId)’:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/data/data_signal_protocol.cpp:825:10: warning: unused variable ‘date’ [-Wunused-variable]
+  825 |     auto date = obj["date"].toInt();
+      |          ^~~~
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/iv/iv_instance.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/info/profile/info_profile_cover.cpp: In lambda function:
+/home/john/Documents/CRYPTOGRAM/Telegram/SourceFiles/info/profile/info_profile_cover.cpp:930:65: error: ‘class Core::Application’ has no member named ‘peerTrustManager’; did you mean ‘exportManager’?
+  930 |                                 auto trustManager = Core::App().peerTrustManager();
+      |                                                                 ^~~~~~~~~~~~~~~~
+      |                                                                 exportManager
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/lang/lang_cloud_manager.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+[ 59%] Building CXX object Telegram/CMakeFiles/Telegram.dir/SourceFiles/lang/lang_instance.cpp.o
+cc1plus: warning: /home/john/Documents/CRYPTOGRAM/build_release/Telegram/CMakeFiles/Telegram.dir/cmake_pch.hxx.gch: created and used with differing settings of '-mhreset' [-Winvalid-pch]
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:4909: Telegram/CMakeFiles/Telegram.dir/SourceFiles/data/data_signal_protocol.cpp.o] Error 1
+gmake[2]: *** Waiting for unfinished jobs....
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:8669: Telegram/CMakeFiles/Telegram.dir/SourceFiles/inline_bots/inline_bot_confirm_prepared.cpp.o] Error 1
+gmake[2]: *** [Telegram/CMakeFiles/Telegram.dir/build.make:8077: Telegram/CMakeFiles/Telegram.dir/SourceFiles/info/profile/info_profile_cover.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:3197: Telegram/CMakeFiles/Telegram.dir/all] Error 2
+gmake: *** [Makefile:136: all] Error 2

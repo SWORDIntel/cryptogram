@@ -36,6 +36,8 @@ namespace st {
 extern const int &dialogsTextWidthMin;
 } // namespace st
 
+class History;
+
 namespace Data {
 
 class PeerNotifySettings;
@@ -60,10 +62,10 @@ public:
 	using Entry::Entry;
 	~Thread();
 
-	[[nodiscard]] virtual not_null<History*> owningHistory() = 0;
+	[[nodiscard]] virtual not_null<::History*> owningHistory() = 0;
 
 	[[nodiscard]] not_null<Thread*> migrateToOrMe() const;
-	[[nodiscard]] not_null<const History*> owningHistory() const {
+	[[nodiscard]] not_null<const ::History*> owningHistory() const {
 		return const_cast<Thread*>(this)->owningHistory();
 	}
 	[[nodiscard]] MsgId topicRootId() const;
