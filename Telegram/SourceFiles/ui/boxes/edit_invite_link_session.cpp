@@ -148,7 +148,7 @@ InviteLinkSubscriptionToggle FillCreateInviteLinkSubscriptionToggle(
 	container->add(object_ptr<Ui::DividerLabel>(
 		container,
 		std::move(about),
-		st::defaultBoxDividerLabelPadding,
+		st::defaultBoxDividerLabelPadding
 		));
 	return { toggle, input };
 }
