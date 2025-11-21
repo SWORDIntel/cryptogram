@@ -608,7 +608,7 @@ void InnerWidget::fill() {
 			container,
 			std::move(label),
 			st::defaultBoxDividerLabelPadding,
-			st::defaultDividerBar,
+			st::defaultDividerBar
 			));
 	};
 	if (canViewCurrencyEarn) {
