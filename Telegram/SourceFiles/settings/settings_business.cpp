@@ -585,7 +585,7 @@ void Business::setupContent() {
 						}),
 						Ui::Text::RichLangValue),
 					st::boxDividerLabel),
-				st::defaultBoxDividerLabelPadding,
+				st::defaultBoxDividerLabelPadding
 				));
 		}
 

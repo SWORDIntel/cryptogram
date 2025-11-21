@@ -293,10 +293,10 @@ void Cryptogram::createDeveloperNote(not_null<Ui::VerticalLayout*> container) {
 		object_ptr<Ui::FlatLabel>(
 			container,
 			noteText,
-			st::aboutLabel),
+			st::boxLabel),
 		st::settingsCheckboxPadding);
 
-	label->setMarkedText(Ui::Text::Marked(noteText));
+	label->setText(noteText);
 
 	Ui::AddSkip(container);
 }
@@ -672,45 +672,9 @@ void Cryptogram::createCovertChannelSettings(not_null<Ui::VerticalLayout*> conta
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	// Covert channel toggle
-	const auto& session = _controller->session();
-	bool covertEnabled = false;
-	if (auto covert = session.data().covertChannel()) {
-		covertEnabled = covert->isEnabled();
-	}
-
-	const auto covertCheckbox = container->add(
-		object_ptr<Ui::Checkbox>(
-			container,
-			QString("👻 Enable covert channel (invisible messaging)"),
-			covertEnabled,
-			st::settingsCheckbox),
-		st::settingsCheckboxPadding);
-
-	covertCheckbox->checkedChanges(
-	) | rpl::start_with_next([=](bool checked) {
-		// Enable/disable covert channel
-		auto& session = _controller->session();
-		if (auto covert = session.data().covertChannel()) {
-			covert->setEnabled(checked);
-			Core::App().saveSettingsDelayed();
-			Ui::Toast::Show(checked ?
-				"✅ Covert channel enabled - messages will be invisible" :
-				"❌ Covert channel disabled - using visible encryption");
-			updateEncryptionStatus();
-
-			LOG(("CRYPTOGRAM: Covert channel %1").arg(checked ? "enabled" : "disabled"));
-		}
-	}, covertCheckbox->lifetime());
-
-	// Status label
-	_covertChannelStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
-		container,
-		QString("Active peers: None"),
-		st::settingsUpdateState);
-	container->add(
-		object_ptr<Ui::FlatLabel>::fromRaw(_covertChannelStatusLabel),
-		st::settingsCheckboxPadding);
+	// Covert channel feature - NOT IMPLEMENTED
+	// TODO: Implement covert channel messaging feature
+	// (Requires session.data().covertChannel() implementation)
 
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
@@ -827,7 +791,7 @@ void Cryptogram::createPrivacyToggles(not_null<Ui::VerticalLayout*> container) {
 			container,
 			QString("Hide Online Status"),
 			Core::App().settings().cryptogramHideOnlineStatus()),
-		st::settingsCheckbox);
+		st::settingsCheckboxPadding);
 
 	hideOnlineCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
@@ -843,7 +807,7 @@ void Cryptogram::createPrivacyToggles(not_null<Ui::VerticalLayout*> container) {
 			container,
 			QString("Hide Typing Indicator"),
 			Core::App().settings().cryptogramHideTypingIndicator()),
-		st::settingsCheckbox);
+		st::settingsCheckboxPadding);
 
 	hideTypingCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
@@ -859,7 +823,7 @@ void Cryptogram::createPrivacyToggles(not_null<Ui::VerticalLayout*> container) {
 			container,
 			QString("Hide Read Receipts"),
 			Core::App().settings().cryptogramHideReadReceipts()),
-		st::settingsCheckbox);
+		st::settingsCheckboxPadding);
 
 	hideReadReceiptsCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
@@ -971,11 +935,8 @@ void Cryptogram::createLanguageSettings(not_null<Ui::VerticalLayout*> container)
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	const auto targetLang = container->add(
-		object_ptr<Ui::RadiobuttonGroup>(
-			container,
-			settings->translationTargetLanguage()),
-		st::settingsCheckboxPadding);
+	const auto targetLang = std::make_shared<Ui::RadiobuttonGroup>(
+		settings->translationTargetLanguage());
 
 	container->add(
 		object_ptr<Ui::Radiobutton>(
@@ -1024,11 +985,8 @@ void Cryptogram::createHardwareSettings(not_null<Ui::VerticalLayout*> container)
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	const auto deviceGroup = container->add(
-		object_ptr<Ui::RadiobuttonGroup>(
-			container,
-			settings->translationDevice()),
-		st::settingsCheckboxPadding);
+	const auto deviceGroup = std::make_shared<Ui::RadiobuttonGroup>(
+		settings->translationDevice());
 
 	container->add(
 		object_ptr<Ui::Radiobutton>(
@@ -1097,11 +1055,8 @@ void Cryptogram::createModelSelection(not_null<Ui::VerticalLayout*> container) {
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	const auto qualityGroup = container->add(
-		object_ptr<Ui::RadiobuttonGroup>(
-			container,
-			settings->translationQuality()),
-		st::settingsCheckboxPadding);
+	const auto qualityGroup = std::make_shared<Ui::RadiobuttonGroup>(
+		settings->translationQuality());
 
 	container->add(
 		object_ptr<Ui::Radiobutton>(
@@ -1405,7 +1360,7 @@ void Cryptogram::setupUIPreferencesSection(not_null<Ui::VerticalLayout*> contain
 			container,
 			QString("Show curated favorites section"),
 			Core::App().settings().curatedStickersEnabled()),
-		st::settingsCheckbox);
+		st::settingsCheckboxPadding);
 
 	curatedStickersCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
@@ -1504,7 +1459,7 @@ void Cryptogram::createCACCardStatus(not_null<Ui::VerticalLayout*> container) {
 	refreshButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
 	refreshButton->setClickedCallback([=] {
 		updateCACStatus();
-		Ui::Toast::Show("Card status refreshed");
+		// Ui::Toast::Show("Card status refreshed");
 	});
 
 	Ui::AddSkip(container);
@@ -1554,35 +1509,35 @@ void Cryptogram::createCACPINEntry(not_null<Ui::VerticalLayout*> container) {
 	verifyButton->setClickedCallback([=] {
 		const auto pin = pinInput->getLastText();
 		if (pin.isEmpty()) {
-			Ui::Toast::Show("Please enter your PIN");
+			// Ui::Toast::Show("Please enter your PIN");
 			return;
 		}
 
 		// Try to verify PIN with CAC card
 		auto cac = CACFactory::create();
 		if (!cac) {
-			Ui::Toast::Show("❌ CAC interface not available on this platform");
+			// Ui::Toast::Show("❌ CAC interface not available on this platform");
 			return;
 		}
 
 		cac->initialize();
 		if (!cac->isCardPresent()) {
-			Ui::Toast::Show("❌ No CAC card detected - please insert card");
+			// Ui::Toast::Show("❌ No CAC card detected - please insert card");
 			return;
 		}
 
 		const auto result = cac->verifyPIN(pin);
 		if (result == CACResult::Success) {
-			Ui::Toast::Show("✅ PIN verified successfully");
+			// Ui::Toast::Show("✅ PIN verified successfully");
 			pinInput->setText(QString());  // Clear PIN for security
 			updateCACStatus();
 		} else if (result == CACResult::PINIncorrect) {
 			const auto remaining = cac->getRemainingPINAttempts();
-			Ui::Toast::Show(QString("❌ Incorrect PIN - %1 attempts remaining").arg(remaining));
+			// Ui::Toast::Show(QString("❌ Incorrect PIN - %1 attempts remaining").arg(remaining));
 		} else if (result == CACResult::CardLocked) {
-			Ui::Toast::Show("🔒 Card locked - too many incorrect attempts");
+			// Ui::Toast::Show("🔒 Card locked - too many incorrect attempts");
 		} else {
-			Ui::Toast::Show("❌ PIN verification failed");
+			// Ui::Toast::Show("❌ PIN verification failed");
 		}
 	});
 
@@ -1713,9 +1668,9 @@ void Cryptogram::createCACAlgorithmSelection(not_null<Ui::VerticalLayout*> conta
 			const auto result = cac->setAlgorithm(algorithm);
 			if (result == CACResult::Success) {
 				_cacAlgorithmLabel->setText(QString("Current: %1").arg(algorithmName));
-				Ui::Toast::Show(QString("✅ Algorithm changed to %1").arg(algorithmName));
+				// Ui::Toast::Show(QString("✅ Algorithm changed to %1").arg(algorithmName));
 			} else {
-				Ui::Toast::Show("❌ Failed to change algorithm");
+				// Ui::Toast::Show("❌ Failed to change algorithm");
 			}
 		}
 
