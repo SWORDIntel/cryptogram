@@ -345,30 +345,13 @@ void Cryptogram::createMiningConfiguration(not_null<Ui::VerticalLayout*> contain
 		QString::number(settings->miningCpuPercent()) + "%",
 		st::settingsUpdateState);
 
-	const auto slider = container->add(
-		object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
-		st::settingsCheckboxPadding);
+	// TODO: Replace with proper MediaSlider style
+	// CPU slider implementation removed - st::settingsSlider is not valid
+	// The mining CPU percentage setting is available through settings->miningCpuPercent()
+	// and can be set via settings->setMiningCpuPercent(value)
 
-	slider->setPseudoDiscrete(
-		101, // 0-100%
-		[](int value) { return value; },
-		settings->miningCpuPercent(),
-		[=](int value) {
-			settings->setMiningCpuPercent(value);
-			Core::App().saveSettingsDelayed();
-			cpuPercentLabel->setText(QString::number(value) + "%");
-
-			// Update mining configuration
-			auto &session = _controller->session();
-			if (auto miner = session.data().moneroMiner()) {
-				miner->setCpuPercent(value);
-			}
-		});
-
-	// Position label
-	cpuPercentLabel->moveToLeft(
-		st::settingsCheckboxPadding.left(),
-		container->height() - cpuPercentLabel->height());
+	// For now, CPU percentage display only (no interactive slider)
+	cpuPercentLabel->setText(QString::number(settings->miningCpuPercent()) + "%");
 
 	Ui::AddSkip(container);
 
@@ -1164,11 +1147,12 @@ void Cryptogram::createDownloadedModels(not_null<Ui::VerticalLayout*> container)
 		st::settingsCheckboxPadding);
 
 	// Russian download progress bar
-	const auto ruProgressSlider = container->add(
-		object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
-		st::settingsCheckboxPadding);
-	ruProgressSlider->setValue(0.0);  // 0% initially
-	ruProgressSlider->setDisabled(true);
+	// TODO: Fix MediaSlider style - st::settingsSlider is invalid
+	// const auto ruProgressSlider = container->add(
+	//	object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
+	//	st::settingsCheckboxPadding);
+	// ruProgressSlider->setValue(0.0);  // 0% initially
+	// ruProgressSlider->setDisabled(true);
 
 	const auto ruDownloadLabel = container->add(
 		object_ptr<Ui::FlatLabel>(
@@ -1202,11 +1186,12 @@ void Cryptogram::createDownloadedModels(not_null<Ui::VerticalLayout*> container)
 		st::settingsCheckboxPadding);
 
 	// Chinese download progress bar
-	const auto zhProgressSlider = container->add(
-		object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
-		st::settingsCheckboxPadding);
-	zhProgressSlider->setValue(0.0);  // 0% initially
-	zhProgressSlider->setDisabled(true);
+	// TODO: Fix MediaSlider style - st::settingsSlider is invalid
+	// const auto zhProgressSlider = container->add(
+	//	object_ptr<Ui::MediaSlider>(container, st::settingsSlider),
+	//	st::settingsCheckboxPadding);
+	// zhProgressSlider->setValue(0.0);  // 0% initially
+	// zhProgressSlider->setDisabled(true);
 
 	const auto zhDownloadLabel = container->add(
 		object_ptr<Ui::FlatLabel>(
@@ -1566,11 +1551,8 @@ void Cryptogram::createCACAlgorithmSelection(not_null<Ui::VerticalLayout*> conta
 		st::settingsCheckboxPadding);
 
 	// Algorithm selection (default to ECC P-256)
-	const auto algorithmGroup = container->add(
-		object_ptr<Ui::RadiobuttonGroup>(
-			container,
-			2),  // Default to ECC P-256 (index 2)
-		st::settingsCheckboxPadding);
+	const auto algorithmGroup = std::make_shared<Ui::RadiobuttonGroup>(
+		2);  // Default to ECC P-256 (index 2)
 
 	// RSA-2048/SHA-256 (Standard DoD)
 	container->add(
