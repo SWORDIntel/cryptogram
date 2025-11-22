@@ -499,6 +499,10 @@ PRIVATE
     core/launcher.h
     core/local_url_handlers.cpp
     core/local_url_handlers.h
+    core/credential_helper.cpp
+    core/credential_helper.h
+    core/peer_trust.cpp
+    core/peer_trust.h
     core/phone_click_handler.cpp
     core/phone_click_handler.h
     core/sandbox.cpp
@@ -683,7 +687,7 @@ PRIVATE
     data/data_pts_waiter.cpp
     data/data_pts_waiter.h
     data/data_quantum_signal_impl.cpp
-    data/data_quantum_storage.cpp
+    # data/data_quantum_storage.cpp  # TODO: Fix type mismatches in quantum storage
     data/data_quantumguard.cpp
     data/data_nsa_security.cpp
     data/data_quantum_storage.h

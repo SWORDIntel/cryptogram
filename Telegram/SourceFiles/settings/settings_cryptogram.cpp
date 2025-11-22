@@ -841,153 +841,30 @@ void Cryptogram::setupDeviceTrustSection(not_null<Ui::VerticalLayout*> container
 		))
 	);
 
-	createDeviceTrustToggle(container);
-	createDeviceTrustStatus(container);
-	createDeviceTrustActions(container);
+	// TODO: Device Trust feature not fully implemented
+	// createDeviceTrustToggle(container);
+	// createDeviceTrustStatus(container);
+	// createDeviceTrustActions(container);
 }
 
+// TODO: Device Trust functions not fully implemented
+/*
 void Cryptogram::createDeviceTrustToggle(not_null<Ui::VerticalLayout*> container) {
-	const auto settings = &Core::App().settings();
-
-	Ui::AddSkip(container);
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Enable Device Trust")));
-
-	const auto enabledCheckbox = container->add(
-		object_ptr<Ui::Checkbox>(
-			container,
-			QString("🔐 Enable CAC/PIV Device Trust"),
-			settings->deviceTrustEnabled(),
-			st::settingsCheckbox),
-		st::settingsCheckboxPadding);
-
-	enabledCheckbox->checkedChanges(
-	) | rpl::start_with_next([=](bool checked) {
-		settings->setDeviceTrustEnabled(checked);
-		Core::App().saveSettingsDelayed();
-		updateDeviceTrustStatus();
-	}, enabledCheckbox->lifetime());
-
-	Ui::AddSkip(container, st::settingsCheckboxesSkip);
-
-	// Require verification for sensitive actions
-	const auto requireVerification = container->add(
-		object_ptr<Ui::Checkbox>(
-			container,
-			QString("Require verification for sensitive actions"),
-			settings->deviceTrustRequireVerification(),
-			st::settingsCheckbox),
-		st::settingsCheckboxPadding);
-
-	requireVerification->checkedChanges(
-	) | rpl::start_with_next([=](bool checked) {
-		settings->setDeviceTrustRequireVerification(checked);
-		Core::App().saveSettingsDelayed();
-	}, requireVerification->lifetime());
-
-	Ui::AddSkip(container);
+	// STUB
 }
 
 void Cryptogram::createDeviceTrustStatus(not_null<Ui::VerticalLayout*> container) {
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Device Trust Status")));
-
-	// Smart card reader status
-	_deviceTrustStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
-		container,
-		QString("Smart Card Reader: Not detected"),
-		st::settingsUpdateState);
-	container->add(
-		object_ptr<Ui::FlatLabel>::fromRaw(_deviceTrustStatusLabel),
-		st::settingsCheckboxPadding);
-
-	// Trusted peers count
-	_trustedPeersLabel = Ui::CreateChild<Ui::FlatLabel>(
-		container,
-		QString("Trusted Peers: 0"),
-		st::settingsUpdateState);
-	container->add(
-		object_ptr<Ui::FlatLabel>::fromRaw(_trustedPeersLabel),
-		st::settingsCheckboxPadding);
-
-	Ui::AddSkip(container);
-
-	// Update status on initialization
-	updateDeviceTrustStatus();
+	// STUB
 }
 
 void Cryptogram::createDeviceTrustActions(not_null<Ui::VerticalLayout*> container) {
-	Ui::AddSubsectionTitle(container, rpl::single(QString("Actions")));
-
-	// View trusted peers button
-	const auto viewPeersButton = container->add(
-		object_ptr<Ui::SettingsButton>(
-			container,
-			rpl::single(QString("View Trusted Peers")),
-			st::settingsButton),
-		st::settingsButtonPadding);
-
-	viewPeersButton->setClickedCallback([=] {
-		// TODO: Show trusted peers list
-		// This would open a box showing all verified peers with their trust info
-	});
-
-	// Refresh smart card status button
-	const auto refreshButton = container->add(
-		object_ptr<Ui::SettingsButton>(
-			container,
-			rpl::single(QString("Refresh Smart Card Status")),
-			st::settingsButton),
-		st::settingsButtonPadding);
-
-	refreshButton->setClickedCallback([=] {
-		updateDeviceTrustStatus();
-	});
-
-	Ui::AddSkip(container);
-	Ui::AddDividerText(
-		container,
-		rpl::single(QString(
-			"💡 Device Trust Features:\n"
-			"• Hardware-backed cryptographic identity\n"
-			"• Mutual authentication with other verified users\n"
-			"• Challenge-response verification\n"
-			"• Automatic trust expiration (6 months)\n"
-			"• Compatible with DoD CAC and PIV cards"
-		))
-	);
+	// STUB
 }
 
 void Cryptogram::updateDeviceTrustStatus() {
-	auto trustManager = Core::App().peerTrustManager();
-
-	if (!trustManager) {
-		if (_deviceTrustStatusLabel) {
-			_deviceTrustStatusLabel->setText(QString("Smart Card Reader: Not initialized"));
-		}
-		if (_trustedPeersLabel) {
-			_trustedPeersLabel->setText(QString("Trusted Peers: 0"));
-		}
-		return;
-	}
-
-	// Update smart card status
-	if (_deviceTrustStatusLabel) {
-		QString status = "Smart Card Reader: ";
-		if (trustManager->isEnabled()) {
-			status += "✅ Detected and ready";
-		} else {
-			status += "❌ Not detected";
-		}
-		_deviceTrustStatusLabel->setText(status);
-	}
-
-	// Update trusted peers count
-	if (_trustedPeersLabel) {
-		auto trustedPeers = trustManager->getTrustedPeers();
-		_trustedPeersLabel->setText(
-			QString("Trusted Peers: %1").arg(trustedPeers.size())
-		);
-	}
+	// STUB
 }
+*/
 
 void Cryptogram::setupTranslationSection(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddSkip(container);

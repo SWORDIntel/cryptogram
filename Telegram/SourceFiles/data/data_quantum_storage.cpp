@@ -807,8 +807,15 @@ base::expected<bytes::vector, SecureStorageResult> QuantumSecureStorage::retriev
     auto ciphertextBytes = QByteArray::fromBase64(ciphertextB64);
     auto encapsulatedBytes = QByteArray::fromBase64(encapsulatedSecretB64);
 
-    ciphertext.assign(ciphertextBytes.begin(), ciphertextBytes.end());
-    encapsulatedSecret.assign(encapsulatedBytes.begin(), encapsulatedBytes.end());
+    // Convert QByteArray to bytes::vector properly
+    ciphertext.reserve(ciphertextBytes.size());
+    for (int i = 0; i < ciphertextBytes.size(); ++i) {
+        ciphertext.push_back(static_cast<bytes::type>(static_cast<unsigned char>(ciphertextBytes[i])));
+    }
+    encapsulatedSecret.reserve(encapsulatedBytes.size());
+    for (int i = 0; i < encapsulatedBytes.size(); ++i) {
+        encapsulatedSecret.push_back(static_cast<bytes::type>(static_cast<unsigned char>(encapsulatedBytes[i])));
+    }
 
     // Decrypt with quantum algorithm
     auto decryptResult = _quantumGuard->quantumDecrypt(keyId, ciphertext, encapsulatedSecret);

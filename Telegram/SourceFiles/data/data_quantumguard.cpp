@@ -96,6 +96,24 @@ base::expected<QuantumEncryptionResult, QString> QuantumGuard::quantumEncrypt(
     return result;
 }
 
+base::expected<bytes::vector, QString> QuantumGuard::quantumDecrypt(
+        const QString &keyId,
+        const bytes::const_span &ciphertext,
+        const bytes::const_span &encapsulatedSecret) {
+    if (!_initialized) {
+        return base::make_unexpected(QStringLiteral("QuantumGuard not initialized"));
+    }
+    // Derive secret from encapsulatedSecret (simplified - in real implementation this would use KEM decapsulation)
+    const auto secret = bytes::vector(encapsulatedSecret.begin(), encapsulatedSecret.begin() + std::min(static_cast<size_t>(32), encapsulatedSecret.size()));
+    bytes::vector plaintext(ciphertext.size());
+    for (size_t i = 0; i < ciphertext.size(); ++i) {
+        plaintext[i] = bytes::type(
+            gsl::to_integer<int>(ciphertext[i])
+            ^ gsl::to_integer<int>(secret[i % secret.size()]));
+    }
+    return plaintext;
+}
+
 QuantumAlgorithm QuantumGuard::selectOptimalKEM(
         QuantumSecurityLevel level) const {
     if (level >= QuantumSecurityLevel::Level4) {

@@ -58,6 +58,10 @@ public:
     base::expected<QuantumEncryptionResult, QString> quantumEncrypt(
         const QString &keyId,
         const bytes::const_span &plaintext);
+    base::expected<bytes::vector, QString> quantumDecrypt(
+        const QString &keyId,
+        const bytes::const_span &ciphertext,
+        const bytes::const_span &encapsulatedSecret);
 
 private:
     bytes::vector randomBytes(int size);
