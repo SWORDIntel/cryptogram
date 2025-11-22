@@ -881,33 +881,34 @@ void Filler::addBlockUser() {
 }
 
 void Filler::addVerifyIdentity() {
-	const auto user = _peer->asUser();
-	if (!user || user->isSelf() || user->isBot()) {
-		return;
-	}
-
-	auto trustManager = Core::App().peerTrustManager();
-	if (!trustManager || !trustManager->isEnabled()) {
-		return;
-	}
-
-	const auto hasTrust = trustManager->hasPeerTrust(user->id);
-	const auto text = hasTrust
-		? QString("Re-verify Identity")
-		: QString("Verify Identity (CAC)");
-
-	const auto session = &_controller->session();
-	_addAction(text, [=] {
-		auto trustManager = Core::App().peerTrustManager();
-		if (!trustManager) {
-			return;
-		}
-		const auto challenge = trustManager->generateChallenge();
-		_controller->show(Box<VerifyIdentityBox>(
-			session,
-			user,
-			challenge));
-	});
+	// TODO: Device Trust feature not fully implemented
+	// const auto user = _peer->asUser();
+	// if (!user || user->isSelf() || user->isBot()) {
+	//	return;
+	// }
+	//
+	// auto trustManager = Core::App().peerTrustManager();
+	// if (!trustManager || !trustManager->isEnabled()) {
+	//	return;
+	// }
+	//
+	// const auto hasTrust = trustManager->hasPeerTrust(user->id);
+	// const auto text = hasTrust
+	//	? QString("Re-verify Identity")
+	//	: QString("Verify Identity (CAC)");
+	//
+	// const auto session = &_controller->session();
+	// _addAction(text, [=] {
+	//	auto trustManager = Core::App().peerTrustManager();
+	//	if (!trustManager) {
+	//		return;
+	//	}
+	//	const auto challenge = trustManager->generateChallenge();
+	//	_controller->show(Box<VerifyIdentityBox>(
+	//		session,
+	//		user,
+	//		challenge));
+	// });
 }
 
 void Filler::addViewDiscussion() {

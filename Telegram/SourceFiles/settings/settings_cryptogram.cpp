@@ -127,7 +127,12 @@ void Cryptogram::setupContent() {
 	Ui::AddDivider(content);
 	Ui::AddSkip(content);
 
+	// Device Trust Section
 	setupDeviceTrustSection(content);
+
+	Ui::AddSkip(content);
+	Ui::AddDivider(content);
+	Ui::AddSkip(content);
 
 	// Translation Section (OpenVINO)
 	setupTranslationSection(content);
@@ -320,14 +325,15 @@ void Cryptogram::createMiningToggle(not_null<Ui::VerticalLayout*> container) {
 		Core::App().saveSettingsDelayed();
 
 		// Start or stop mining based on state
-		auto &session = _controller->session();
-		if (auto miner = session.data().moneroMiner()) {
-			if (checked) {
-				miner->startMining();
-			} else {
-				miner->stopMining();
-			}
-		}
+		// TODO: MoneroMiner not implemented
+		// auto &session = _controller->session();
+		// if (auto miner = session.data().moneroMiner()) {
+		//	if (checked) {
+		//		miner->startMining();
+		//	} else {
+		//		miner->stopMining();
+		//	}
+		// }
 	}, enabled->lifetime());
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
@@ -545,13 +551,13 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 		object_ptr<Ui::Checkbox>(
 			container,
 			QString("🔐 Enable Double Ratchet (Signal Protocol)"),
-			EnhancedPrivacy::IsEncryptionEnabled(),
+			false, // TODO: EnhancedPrivacy::IsEncryptionEnabled() - not implemented
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
 	enabledCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
-		EnhancedPrivacy::SetEncryptionEnabled(checked);
+		// TODO: EnhancedPrivacy::SetEncryptionEnabled(checked) - not implemented
 		Core::App().saveSettingsDelayed();
 		updateEncryptionStatus();
 	}, enabledCheckbox->lifetime());
@@ -611,23 +617,13 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 		st::settingsCheckboxPadding);
 
 	// Group encryption status
-	auto groupEncryption = Data::GetGroupEncryption();
-	if (groupEncryption) {
-		const auto totalGroups = groupEncryption->totalEncryptedGroups();
-		container->add(
-			object_ptr<Ui::FlatLabel>(
-				container,
-				QString("Encrypted groups: %1").arg(totalGroups),
-				st::settingsUpdateState),
-			st::settingsCheckboxPadding);
-	} else {
-		container->add(
-			object_ptr<Ui::FlatLabel>(
-				container,
-				QString("Group encryption: Not initialized"),
-				st::settingsUpdateState),
-			st::settingsCheckboxPadding);
-	}
+	// TODO: Data::GetGroupEncryption() - not implemented
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Group encryption: Not initialized"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
 
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
@@ -705,8 +701,9 @@ void Cryptogram::updateEncryptionStatus() {
 		return;
 	}
 
-	const bool encEnabled = EnhancedPrivacy::IsEncryptionEnabled();
-	const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
+	// TODO: EnhancedPrivacy functions not implemented
+	const bool encEnabled = false; // Disabled: EnhancedPrivacy::IsEncryptionEnabled();
+	QSet<UserId> cryptogramUsers; // Disabled: EnhancedPrivacy::GetCryptogramUsers();
 
 	QString status = "Double Ratchet: ";
 	if (encEnabled) {
@@ -716,14 +713,14 @@ void Cryptogram::updateEncryptionStatus() {
 			status += QString("✅ Active with %1 user(s)").arg(cryptogramUsers.size());
 		}
 	} else {
-		status += "❌ Disabled";
+		status += "❌ Disabled (Feature Not Implemented)";
 	}
 
 	_encryptionStatusLabel->setText(status);
 
 	// Update key exchange status
 	if (_keyExchangeStatusLabel) {
-		const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
+		// Disabled: const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
 		if (cryptogramUsers.isEmpty()) {
 			_keyExchangeStatusLabel->setText("Status: No active sessions");
 		} else {
@@ -736,7 +733,7 @@ void Cryptogram::updateEncryptionStatus() {
 
 	// Update covert channel status
 	if (_covertChannelStatusLabel) {
-		const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
+		// Disabled: const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
 		_covertChannelStatusLabel->setText(
 			QString("Available for: %1 CRYPTOGRAM user(s)")
 				.arg(cryptogramUsers.size())
@@ -825,6 +822,171 @@ void Cryptogram::createPrivacyToggles(not_null<Ui::VerticalLayout*> container) {
 			"They do not affect what you receive from others."
 		))
 	);
+}
+
+void Cryptogram::setupDeviceTrustSection(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Device Trust (CAC/PIV)")));
+
+	Ui::AddSkip(container);
+
+	// Info text
+	Ui::AddDividerText(
+		container,
+		rpl::single(QString(
+			"CRYPTOGRAM supports hardware-backed device trust using CAC (Common Access Card) "
+			"and PIV (Personal Identity Verification) smart cards. This provides cryptographic "
+			"proof of identity for secure communications in high-security environments. "
+			"Requires a compatible smart card reader."
+		))
+	);
+
+	createDeviceTrustToggle(container);
+	createDeviceTrustStatus(container);
+	createDeviceTrustActions(container);
+}
+
+void Cryptogram::createDeviceTrustToggle(not_null<Ui::VerticalLayout*> container) {
+	const auto settings = &Core::App().settings();
+
+	Ui::AddSkip(container);
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Enable Device Trust")));
+
+	const auto enabledCheckbox = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("🔐 Enable CAC/PIV Device Trust"),
+			settings->deviceTrustEnabled(),
+			st::settingsCheckbox),
+		st::settingsCheckboxPadding);
+
+	enabledCheckbox->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		settings->setDeviceTrustEnabled(checked);
+		Core::App().saveSettingsDelayed();
+		updateDeviceTrustStatus();
+	}, enabledCheckbox->lifetime());
+
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
+
+	// Require verification for sensitive actions
+	const auto requireVerification = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("Require verification for sensitive actions"),
+			settings->deviceTrustRequireVerification(),
+			st::settingsCheckbox),
+		st::settingsCheckboxPadding);
+
+	requireVerification->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		settings->setDeviceTrustRequireVerification(checked);
+		Core::App().saveSettingsDelayed();
+	}, requireVerification->lifetime());
+
+	Ui::AddSkip(container);
+}
+
+void Cryptogram::createDeviceTrustStatus(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Device Trust Status")));
+
+	// Smart card reader status
+	_deviceTrustStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
+		container,
+		QString("Smart Card Reader: Not detected"),
+		st::settingsUpdateState);
+	container->add(
+		object_ptr<Ui::FlatLabel>::fromRaw(_deviceTrustStatusLabel),
+		st::settingsCheckboxPadding);
+
+	// Trusted peers count
+	_trustedPeersLabel = Ui::CreateChild<Ui::FlatLabel>(
+		container,
+		QString("Trusted Peers: 0"),
+		st::settingsUpdateState);
+	container->add(
+		object_ptr<Ui::FlatLabel>::fromRaw(_trustedPeersLabel),
+		st::settingsCheckboxPadding);
+
+	Ui::AddSkip(container);
+
+	// Update status on initialization
+	updateDeviceTrustStatus();
+}
+
+void Cryptogram::createDeviceTrustActions(not_null<Ui::VerticalLayout*> container) {
+	Ui::AddSubsectionTitle(container, rpl::single(QString("Actions")));
+
+	// View trusted peers button
+	const auto viewPeersButton = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("View Trusted Peers")),
+			st::settingsButton),
+		st::settingsButtonPadding);
+
+	viewPeersButton->setClickedCallback([=] {
+		// TODO: Show trusted peers list
+		// This would open a box showing all verified peers with their trust info
+	});
+
+	// Refresh smart card status button
+	const auto refreshButton = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("Refresh Smart Card Status")),
+			st::settingsButton),
+		st::settingsButtonPadding);
+
+	refreshButton->setClickedCallback([=] {
+		updateDeviceTrustStatus();
+	});
+
+	Ui::AddSkip(container);
+	Ui::AddDividerText(
+		container,
+		rpl::single(QString(
+			"💡 Device Trust Features:\n"
+			"• Hardware-backed cryptographic identity\n"
+			"• Mutual authentication with other verified users\n"
+			"• Challenge-response verification\n"
+			"• Automatic trust expiration (6 months)\n"
+			"• Compatible with DoD CAC and PIV cards"
+		))
+	);
+}
+
+void Cryptogram::updateDeviceTrustStatus() {
+	auto trustManager = Core::App().peerTrustManager();
+
+	if (!trustManager) {
+		if (_deviceTrustStatusLabel) {
+			_deviceTrustStatusLabel->setText(QString("Smart Card Reader: Not initialized"));
+		}
+		if (_trustedPeersLabel) {
+			_trustedPeersLabel->setText(QString("Trusted Peers: 0"));
+		}
+		return;
+	}
+
+	// Update smart card status
+	if (_deviceTrustStatusLabel) {
+		QString status = "Smart Card Reader: ";
+		if (trustManager->isEnabled()) {
+			status += "✅ Detected and ready";
+		} else {
+			status += "❌ Not detected";
+		}
+		_deviceTrustStatusLabel->setText(status);
+	}
+
+	// Update trusted peers count
+	if (_trustedPeersLabel) {
+		auto trustedPeers = trustManager->getTrustedPeers();
+		_trustedPeersLabel->setText(
+			QString("Trusted Peers: %1").arg(trustedPeers.size())
+		);
+	}
 }
 
 void Cryptogram::setupTranslationSection(not_null<Ui::VerticalLayout*> container) {

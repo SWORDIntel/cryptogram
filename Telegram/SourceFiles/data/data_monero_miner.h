@@ -7,7 +7,7 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 */
 #pragma once
 
-#include "base/timer.h"
+#include "../../lib_base/base/timer.h"
 #include "base/weak_ptr.h"
 
 #include <QtCore/QObject>

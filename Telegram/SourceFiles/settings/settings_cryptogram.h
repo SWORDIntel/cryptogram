@@ -108,6 +108,10 @@ private:
     void updateTranslationStatus();
     void updateEncryptionStatus();
     void updateCACStatus();
+    void updateDeviceTrustStatus();
+    void createDeviceTrustToggle(not_null<Ui::VerticalLayout*> container);
+    void createDeviceTrustStatus(not_null<Ui::VerticalLayout*> container);
+    void createDeviceTrustActions(not_null<Ui::VerticalLayout*> container);
     void saveSettings();
 
     not_null<Window::SessionController*> _controller;
@@ -134,6 +138,10 @@ private:
     QPointer<Ui::FlatLabel> _translationDeviceLabel;
     QPointer<Ui::FlatLabel> _translationModelsLabel;
     QPointer<Ui::FlatLabel> _translationStatsLabel;
+
+    // Device Trust labels
+    QPointer<Ui::FlatLabel> _deviceTrustStatusLabel;
+    QPointer<Ui::FlatLabel> _trustedPeersLabel;
 };
 
 // Note: NetworkAnonymity and DevelopmentSupport are now integrated into

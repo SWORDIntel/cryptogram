@@ -140,7 +140,7 @@ void DownloadManagerMtproto::loadDocument(
 	not_null<Data::DocumentData*> document,
 	const Data::FileOrigin &origin,
 	bool) {
-	document->save(origin, QString(), Ui::ImageLocation::LoadFromCloudOrLocal, false);
+	document->save(origin, QString(), LoadFromCloudOrLocal, false);
 }
 
 void DownloadManagerMtproto::enqueue(not_null<Task*> task, int priority) {

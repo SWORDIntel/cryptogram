@@ -5,7 +5,7 @@ the most advanced secure messaging application.
 For license and copyright information please follow this link:
 https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 */
-#include "data/data_monero_miner.h"
+#include "data_monero_miner.h"
 
 #include "data/data_session.h"
 #include "main/main_session.h"
@@ -16,6 +16,10 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 #include <QtCore/QJsonDocument>
 #include <QtCore/QJsonObject>
 #include <QtCore/QJsonArray>
+#include <QtCore/QMutex>
+#include <QtCore/QRegularExpression>
+#include <QtCore/QTimer>
+#include <QtCore/QFileInfo>
 #include <QtCore/QFile>
 #include <QtCore/QDir>
 #include <QtCore/QStandardPaths>

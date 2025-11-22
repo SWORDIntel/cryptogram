@@ -561,8 +561,8 @@ PRIVATE
     data/data_auto_join.h
     data/data_auto_download.cpp
     data/data_auto_download.h
-    data/data_birthday.cpp
-    data/data_birthday.h
+    # data/data_birthday.cpp  # TODO: Fix duplicate symbol error
+    # data/data_birthday.h
     data/data_boosts.h
     data/data_bot_app.cpp
     data/data_bot_app.h
@@ -713,8 +713,8 @@ PRIVATE
     data/data_sparse_ids.h
     data/data_star_gift.cpp
     data/data_star_gift.h
-    data/data_statistics_chart.cpp
-    data/data_statistics_chart.h
+    # data/data_statistics_chart.cpp  # TODO: Fix duplicate symbol error
+    # data/data_statistics_chart.h
     data/data_statistics.h
     data/data_stories.cpp
     data/data_stories.h
@@ -726,7 +726,7 @@ PRIVATE
     data/data_streaming.h
     data/data_thread.cpp
     data/data_thread.h
-    data/data_tsm_factory.cpp
+    # data/data_tsm_factory.cpp  # TODO: Fix duplicate symbol error
     data/data_tsm_interface.cpp
     data/data_todo_list.cpp
     data/data_todo_list.h

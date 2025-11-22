@@ -114,6 +114,7 @@ namespace Core {
 struct LocalUrlHandler;
 class Settings;
 class Tray;
+class PeerTrustManager;
 
 enum class LaunchState {
 	Running,
@@ -289,6 +290,11 @@ public:
 		return *_iv;
 	}
 
+	// Peer Trust.
+	PeerTrustManager *peerTrustManager() const {
+		return _peerTrustManager.get();
+	}
+
 	void logout(Main::Account *account = nullptr);
 	void logoutWithChecks(Main::Account *account);
 	void forceLogOut(
@@ -438,6 +444,7 @@ private:
 	base::weak_qptr<Ui::BoxContent> _badProxyDisableBox;
 
 	const std::unique_ptr<Tray> _tray;
+	std::unique_ptr<PeerTrustManager> _peerTrustManager;
 
 	std::unique_ptr<Media::Player::FloatController> _floatPlayers;
 	rpl::lifetime _floatPlayerDelegateLifetime;
