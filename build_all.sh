@@ -326,16 +326,24 @@ ensure_tde2e_from_tdlib() {
         return 0
     fi
     if ! command -v gperf >/dev/null 2>&1; then
-        print_error "gperf is required for tde2e"
-        fail "Missing gperf"
+        print_warning "gperf is required for tde2e but not found, skipping tde2e build"
+        log "WARN" "gperf not found, skipping tde2e"
+        return 0
     fi
     local td_src="${CRYPTOGRAM_ROOT}/Telegram/td"
+    # Skip tde2e if directory is empty or doesn't have CMakeLists.txt
+    if [ -d "$td_src" ] && [ ! -f "$td_src/CMakeLists.txt" ]; then
+        print_warning "tdlib directory exists but is empty or not initialized, skipping tde2e build"
+        log "WARN" "tdlib not initialized, skipping"
+        return 0
+    fi
     if [ ! -d "$td_src" ]; then
-        print_warning "Local tdlib not found; cloning"
+        print_warning "Local tdlib not found; attempting to clone"
         td_src="/tmp/tdlib_tde2e_${BUILD_ID}"
         run_cmd "rm -rf '$td_src'"
         if ! run_cmd_verbose "git clone --depth 1 https://github.com/tdlib/td.git '$td_src'"; then
-            fail "Failed to clone tdlib"
+            print_warning "Failed to clone tdlib, skipping tde2e"
+            return 0
         fi
     fi
     local td_build="$td_src/build"
