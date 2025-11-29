@@ -279,13 +279,19 @@ ensure_tg_owt_from_source() {
         fi
     fi
 
-    # Initialize git submodules (critical for tg_owt dependencies)
+    # Initialize git submodules (critical for tg_owt dependencies including CRC32C)
     if [ -d "$tg_src/.git" ] && [ -f "$tg_src/.gitmodules" ]; then
-        print_progress "Initializing tg_owt git submodules..."
+        print_progress "Initializing tg_owt git submodules (including CRC32C)..."
         (
             cd "$tg_src" || fail "Cannot cd into $tg_src"
             if ! run_cmd_verbose "git submodule update --init --recursive"; then
                 fail "Failed to initialize tg_owt submodules"
+            fi
+            # Verify CRC32C submodule is properly initialized
+            if [ -d "src/third_party/crc32c" ] && [ -f "src/third_party/crc32c/CMakeLists.txt" ]; then
+                print_info "✓ CRC32C submodule properly initialized"
+            else
+                print_warning "CRC32C submodule not found or incomplete, tg_owt build will compile from source"
             fi
         )
     fi
@@ -301,8 +307,15 @@ ensure_tg_owt_from_source() {
     cd "$tg_build" || fail "Cannot enter tg_owt build directory"
 
     print_progress "Configuring tg_owt with CMake..."
-    if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release -DTG_OWT_PACKAGED_BUILD=OFF -G Ninja ../.."; then
-        fail "Configuring tg_owt failed"
+    # Note: TG_OWT_PACKAGED_BUILD=OFF forces internal dependency compilation
+    # Including CRC32C which will be built from source as a git submodule
+    if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release -DTG_OWT_PACKAGED_BUILD=OFF -DENABLE_CRCUTIL=ON -G Ninja ../.."; then
+        print_warning "CMake configuration attempt 1 failed, retrying with alternative flags..."
+        rm -rf CMakeCache.txt CMakeFiles/
+        # Retry with explicit CRC32C handling
+        if ! run_cmd_verbose "cmake -DCMAKE_BUILD_TYPE=Release -DTG_OWT_PACKAGED_BUILD=OFF -G Ninja ../.."; then
+            fail "Configuring tg_owt failed even after retry"
+        fi
     fi
 
     print_progress "Building tg_owt (this may take 5-10 minutes)..."

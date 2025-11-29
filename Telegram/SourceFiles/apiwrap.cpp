@@ -532,9 +532,10 @@ void ApiWrap::sendMessageFail(
 			}
 		}
 	} else if (show && error == u"CHAT_FORWARDS_RESTRICTED"_q) {
-		show->showToast(peer->isBroadcast()
-			? tr::lng_error_noforwards_channel(tr::now)
-			: tr::lng_error_noforwards_group(tr::now), kJoinErrorDuration);
+		// Forwarding restrictions disabled - silently allow
+		// show->showToast(peer->isBroadcast()
+		//	? tr::lng_error_noforwards_channel(tr::now)
+		//	: tr::lng_error_noforwards_group(tr::now), kJoinErrorDuration);
 	} else if (error == u"PREMIUM_ACCOUNT_REQUIRED"_q) {
 		Settings::ShowPremium(&session(), "premium_stickers");
 	} else if (error == u"SCHEDULE_TOO_MUCH"_q) {
