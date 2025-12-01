@@ -1,26 +1,42 @@
 #!/bin/bash
 
 ################################################################################
-# TSM + CRYPTOGRAM - Ultimate Build Script v3.2 (WEBRTC SUPPORT)
+# TSM + CRYPTOGRAM - Ultimate Build Script v3.3 (AUTO-BOOTSTRAP ALL DEPS)
 # Enhanced with comprehensive error handling, logging, and validation
 # FULL LOGGING + REAL-TIME OUTPUT + STATE MANAGEMENT + ROBUST ERROR HANDLING
 #
-# WebRTC (tg_owt) Build Support:
-# - Automatically installs WebRTC build dependencies (libgbm-dev, libegl-dev, etc.)
-# - Initializes tg_owt git submodules (abseil-cpp, crc32c, libsrtp, libyuv)
-# - Builds tg_owt library from source if not already built
-# - Uses TG_OWT_PACKAGED_BUILD=OFF for internal dependency management
-# - Detects and skips rebuild if libtg_owt.a already exists
+# Auto-Bootstrap Support for ALL Dependencies:
+# - OpenAL (audio library for voice calls)
+# - LZ4 (compression library)
+# - xxHash (fast hashing library)
+# - minizip (ZIP file handling)
+# - rlottie (Lottie animation library)
+# - RNNoise (noise suppression for voice calls)
+# - tg_owt/WebRTC (video call support with CRC32C)
+# - tde2e (end-to-end encryption)
+# - Ada URL parser
+# - Protocol Buffers
+#
+# Each dependency:
+# - Checks if already installed via pkg-config
+# - Clones from official repository if missing
+# - Builds from source with optimizations
+# - Installs to configurable prefix
+# - Skips gracefully on failure (non-critical deps)
 #
 # Build Steps:
 #   1. System Requirements Check
 #   2. Tool Dependencies Check
-#   3. System Dependencies (NEW: installs WebRTC packages)
+#   3. System Dependencies Installation
 #   4. Permissions Check
 #   5. Submodules Initialization
-#   6. tg_owt Build (NEW: builds WebRTC library)
+#   6. Auto-Bootstrap Core Libraries (OpenAL, LZ4, xxHash, minizip, rlottie, RNNoise, tg_owt)
 #   7. Compiler Configuration
-#   8-10. Build Ada, Protobuf, Cryptogram
+#   8. Build Ada URL Parser
+#   9. Build Protocol Buffers
+#   10. Build tde2e
+#   11. Configure CRYPTOGRAM
+#   12. Build CRYPTOGRAM
 #
 ################################################################################
 
@@ -61,7 +77,7 @@ readonly INFO="ℹ"
 # ──────────────────────────────────────────────────────────────────────────────
 # Core Configuration
 # ──────────────────────────────────────────────────────────────────────────────
-readonly SCRIPT_VERSION="3.2.0"
+readonly SCRIPT_VERSION="3.3.0"
 # shellcheck disable=SC2155
 readonly BUILD_DATE="$(date +%Y%m%d_%H%M%S)"
 readonly BUILD_ID="${BUILD_DATE}_$$"
@@ -329,6 +345,300 @@ ensure_tg_owt_from_source() {
 
     cd / || true
     print_info "tg_owt successfully built at $tg_build/libtg_owt.a ($(ls -lh $tg_build/libtg_owt.a | awk '{print $5}'))"
+}
+
+ensure_openal_from_source() {
+    print_progress "Ensuring OpenAL library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists openal 2>/dev/null; then
+        local openal_version
+        openal_version=$(pkg-config --modversion openal 2>/dev/null || echo "unknown")
+        print_info "OpenAL already installed: $openal_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/libopenal.so" ] || [ -f "$INSTALL_PREFIX/lib/libopenal.a" ]; then
+        print_info "OpenAL library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local openal_src="/tmp/openal_${BUILD_ID}"
+    print_progress "Cloning OpenAL-Soft..."
+    run_cmd "rm -rf '$openal_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://github.com/kcat/openal-soft.git '$openal_src'"; then
+        print_warning "Failed to clone OpenAL, skipping OpenAL support"
+        return 0
+    fi
+
+    cd "$openal_src" || fail "Cannot enter OpenAL directory"
+    mkdir -p build && cd build || fail "Cannot create OpenAL build directory"
+
+    print_progress "Configuring OpenAL build..."
+    if ! run_cmd_verbose "cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$INSTALL_PREFIX' -DALSOFT_EXAMPLES=OFF"; then
+        fail "Configuring OpenAL failed"
+    fi
+
+    print_progress "Building OpenAL..."
+    if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
+        fail "Building OpenAL failed"
+    fi
+
+    print_progress "Installing OpenAL..."
+    if ! run_cmd_verbose "cmake --install ."; then
+        fail "Installing OpenAL failed"
+    fi
+
+    cd / || true
+    rm -rf "$openal_src" 2>/dev/null || true
+    print_info "OpenAL successfully built and installed"
+}
+
+ensure_lz4_from_source() {
+    print_progress "Ensuring LZ4 library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists liblz4 2>/dev/null; then
+        local lz4_version
+        lz4_version=$(pkg-config --modversion liblz4 2>/dev/null || echo "unknown")
+        print_info "LZ4 already installed: $lz4_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/liblz4.so" ] || [ -f "$INSTALL_PREFIX/lib/liblz4.a" ]; then
+        print_info "LZ4 library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local lz4_src="/tmp/lz4_${BUILD_ID}"
+    print_progress "Cloning LZ4..."
+    run_cmd "rm -rf '$lz4_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://github.com/lz4/lz4.git '$lz4_src'"; then
+        print_warning "Failed to clone LZ4, skipping LZ4 support"
+        return 0
+    fi
+
+    cd "$lz4_src" || fail "Cannot enter LZ4 directory"
+
+    print_progress "Building LZ4..."
+    if ! run_cmd_verbose "make -j$PARALLEL_JOBS PREFIX='$INSTALL_PREFIX'"; then
+        fail "Building LZ4 failed"
+    fi
+
+    print_progress "Installing LZ4..."
+    if ! run_cmd_verbose "make install PREFIX='$INSTALL_PREFIX'"; then
+        fail "Installing LZ4 failed"
+    fi
+
+    cd / || true
+    rm -rf "$lz4_src" 2>/dev/null || true
+    print_info "LZ4 successfully built and installed"
+}
+
+ensure_xxhash_from_source() {
+    print_progress "Ensuring xxHash library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists libxxhash 2>/dev/null; then
+        local xxhash_version
+        xxhash_version=$(pkg-config --modversion libxxhash 2>/dev/null || echo "unknown")
+        print_info "xxHash already installed: $xxhash_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/libxxhash.so" ] || [ -f "$INSTALL_PREFIX/lib/libxxhash.a" ]; then
+        print_info "xxHash library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local xxhash_src="/tmp/xxhash_${BUILD_ID}"
+    print_progress "Cloning xxHash..."
+    run_cmd "rm -rf '$xxhash_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://github.com/Cyan4973/xxHash.git '$xxhash_src'"; then
+        print_warning "Failed to clone xxHash, skipping xxHash support"
+        return 0
+    fi
+
+    cd "$xxhash_src" || fail "Cannot enter xxHash directory"
+
+    print_progress "Building xxHash..."
+    if ! run_cmd_verbose "make -j$PARALLEL_JOBS PREFIX='$INSTALL_PREFIX'"; then
+        fail "Building xxHash failed"
+    fi
+
+    print_progress "Installing xxHash..."
+    if ! run_cmd_verbose "make install PREFIX='$INSTALL_PREFIX'"; then
+        fail "Installing xxHash failed"
+    fi
+
+    cd / || true
+    rm -rf "$xxhash_src" 2>/dev/null || true
+    print_info "xxHash successfully built and installed"
+}
+
+ensure_minizip_from_source() {
+    print_progress "Ensuring minizip library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists minizip 2>/dev/null; then
+        local minizip_version
+        minizip_version=$(pkg-config --modversion minizip 2>/dev/null || echo "unknown")
+        print_info "minizip already installed: $minizip_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/libminizip.so" ] || [ -f "$INSTALL_PREFIX/lib/libminizip.a" ]; then
+        print_info "minizip library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local minizip_src="/tmp/minizip_${BUILD_ID}"
+    print_progress "Cloning minizip-ng..."
+    run_cmd "rm -rf '$minizip_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://github.com/zlib-ng/minizip-ng.git '$minizip_src'"; then
+        print_warning "Failed to clone minizip, skipping minizip support"
+        return 0
+    fi
+
+    cd "$minizip_src" || fail "Cannot enter minizip directory"
+    mkdir -p build && cd build || fail "Cannot create minizip build directory"
+
+    print_progress "Configuring minizip build..."
+    if ! run_cmd_verbose "cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$INSTALL_PREFIX' -DMZ_COMPAT=ON"; then
+        fail "Configuring minizip failed"
+    fi
+
+    print_progress "Building minizip..."
+    if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
+        fail "Building minizip failed"
+    fi
+
+    print_progress "Installing minizip..."
+    if ! run_cmd_verbose "cmake --install ."; then
+        fail "Installing minizip failed"
+    fi
+
+    cd / || true
+    rm -rf "$minizip_src" 2>/dev/null || true
+    print_info "minizip successfully built and installed"
+}
+
+ensure_rlottie_from_source() {
+    print_progress "Ensuring rlottie library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists rlottie 2>/dev/null; then
+        local rlottie_version
+        rlottie_version=$(pkg-config --modversion rlottie 2>/dev/null || echo "unknown")
+        print_info "rlottie already installed: $rlottie_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/librlottie.so" ] || [ -f "$INSTALL_PREFIX/lib/librlottie.a" ]; then
+        print_info "rlottie library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local rlottie_src="/tmp/rlottie_${BUILD_ID}"
+    print_progress "Cloning rlottie..."
+    run_cmd "rm -rf '$rlottie_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://github.com/Samsung/rlottie.git '$rlottie_src'"; then
+        print_warning "Failed to clone rlottie, skipping rlottie support"
+        return 0
+    fi
+
+    cd "$rlottie_src" || fail "Cannot enter rlottie directory"
+    mkdir -p build && cd build || fail "Cannot create rlottie build directory"
+
+    print_progress "Configuring rlottie build..."
+    if ! run_cmd_verbose "cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX='$INSTALL_PREFIX' -DBUILD_SHARED_LIBS=ON"; then
+        fail "Configuring rlottie failed"
+    fi
+
+    print_progress "Building rlottie..."
+    if ! run_cmd_verbose "cmake --build . --config Release --parallel $PARALLEL_JOBS"; then
+        fail "Building rlottie failed"
+    fi
+
+    print_progress "Installing rlottie..."
+    if ! run_cmd_verbose "cmake --install ."; then
+        fail "Installing rlottie failed"
+    fi
+
+    cd / || true
+    rm -rf "$rlottie_src" 2>/dev/null || true
+    print_info "rlottie successfully built and installed"
+}
+
+ensure_rnnoise_from_source() {
+    print_progress "Ensuring RNNoise library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists rnnoise 2>/dev/null; then
+        local rnnoise_version
+        rnnoise_version=$(pkg-config --modversion rnnoise 2>/dev/null || echo "unknown")
+        print_info "RNNoise already installed: $rnnoise_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/librnnoise.so" ] || [ -f "$INSTALL_PREFIX/lib/librnnoise.a" ]; then
+        print_info "RNNoise library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local rnnoise_src="/tmp/rnnoise_${BUILD_ID}"
+    print_progress "Cloning RNNoise from xiph.org..."
+    run_cmd "rm -rf '$rnnoise_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://gitlab.xiph.org/xiph/rnnoise.git '$rnnoise_src'"; then
+        print_warning "Failed to clone RNNoise, attempting GitHub mirror..."
+        if ! run_cmd_verbose "git clone --depth 1 https://github.com/xiph/rnnoise.git '$rnnoise_src'"; then
+            print_warning "Failed to clone RNNoise from GitHub, skipping RNNoise support"
+            return 0
+        fi
+    fi
+
+    cd "$rnnoise_src" || fail "Cannot enter RNNoise directory"
+
+    # RNNoise uses autotools, so we need to run autogen.sh
+    print_progress "Configuring RNNoise build..."
+    if [ -f "autogen.sh" ]; then
+        if ! run_cmd_verbose "./autogen.sh"; then
+            print_warning "autogen.sh failed, trying autoreconf..."
+            if ! run_cmd_verbose "autoreconf -fi"; then
+                fail "Failed to generate RNNoise configure script"
+            fi
+        fi
+    fi
+
+    if ! run_cmd_verbose "./configure --prefix='$INSTALL_PREFIX' --enable-shared --enable-static"; then
+        fail "Configuring RNNoise failed"
+    fi
+
+    print_progress "Building RNNoise..."
+    if ! run_cmd_verbose "make -j$PARALLEL_JOBS"; then
+        fail "Building RNNoise failed"
+    fi
+
+    print_progress "Installing RNNoise..."
+    if ! run_cmd_verbose "make install"; then
+        fail "Installing RNNoise failed"
+    fi
+
+    cd / || true
+    rm -rf "$rnnoise_src" 2>/dev/null || true
+    print_info "RNNoise successfully built and installed"
 }
 
 ensure_tde2e_from_tdlib() {
@@ -1527,6 +1837,11 @@ configure_cryptogram() {
     print_progress "Running CMake configuration..."
     log "BUILD" "Running CMake with Release configuration"
 
+    # Set PKG_CONFIG_PATH to help find installed libraries
+    export PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"
+    print_debug "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
+    log "BUILD" "PKG_CONFIG_PATH set to: $PKG_CONFIG_PATH"
+
     if [ "$DRY_RUN" -eq 1 ]; then
         print_info "[DRY RUN] Would run CMake configuration for CRYPTOGRAM"
     else
@@ -1696,7 +2011,9 @@ generate_summary() {
         echo "  Build Directory: $BUILD_DIR"
         echo "  Install Prefix: $INSTALL_PREFIX"
         echo "  Parallel Jobs: $PARALLEL_JOBS"
-        echo "  Compiler: ${CC##*/} / ${CXX##*/}"
+        if [ -n "${CC:-}" ] && [ -n "${CXX:-}" ]; then
+            echo "  Compiler: ${CC##*/} / ${CXX##*/}"
+        fi
         echo ""
         echo "System Information:"
         echo "  OS: $(uname -s) $(uname -r)"
@@ -1807,7 +2124,16 @@ main() {
     ensure_system_dependencies
     check_permissions
     check_submodules
+
+    # Build core libraries
+    ensure_openal_from_source
+    ensure_lz4_from_source
+    ensure_xxhash_from_source
+    ensure_minizip_from_source
+    ensure_rlottie_from_source
+    ensure_rnnoise_from_source
     ensure_tg_owt_from_source
+
     configure_compiler
     build_ada
     build_protobuf
