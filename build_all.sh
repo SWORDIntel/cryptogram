@@ -331,6 +331,67 @@ ensure_tg_owt_from_source() {
     print_info "tg_owt successfully built at $tg_build/libtg_owt.a ($(ls -lh $tg_build/libtg_owt.a | awk '{print $5}'))"
 }
 
+ensure_rnnoise_from_source() {
+    print_progress "Ensuring RNNoise library is installed"
+
+    # Check if already installed via pkg-config
+    if pkg-config --exists rnnoise 2>/dev/null; then
+        local rnnoise_version
+        rnnoise_version=$(pkg-config --modversion rnnoise 2>/dev/null || echo "unknown")
+        print_info "RNNoise already installed: $rnnoise_version"
+        return 0
+    fi
+
+    # Check if library already exists
+    if [ -f "$INSTALL_PREFIX/lib/librnnoise.so" ] || [ -f "$INSTALL_PREFIX/lib/librnnoise.a" ]; then
+        print_info "RNNoise library found at $INSTALL_PREFIX/lib"
+        return 0
+    fi
+
+    local rnnoise_src="/tmp/rnnoise_${BUILD_ID}"
+    print_progress "Cloning RNNoise from xiph.org..."
+    run_cmd "rm -rf '$rnnoise_src'"
+
+    if ! run_cmd_verbose "git clone --depth 1 https://gitlab.xiph.org/xiph/rnnoise.git '$rnnoise_src'"; then
+        print_warning "Failed to clone RNNoise, attempting GitHub mirror..."
+        if ! run_cmd_verbose "git clone --depth 1 https://github.com/xiph/rnnoise.git '$rnnoise_src'"; then
+            print_warning "Failed to clone RNNoise from GitHub, skipping RNNoise support"
+            return 0
+        fi
+    fi
+
+    cd "$rnnoise_src" || fail "Cannot enter RNNoise directory"
+
+    # RNNoise uses autotools, so we need to run autogen.sh
+    print_progress "Configuring RNNoise build..."
+    if [ -f "autogen.sh" ]; then
+        if ! run_cmd_verbose "./autogen.sh"; then
+            print_warning "autogen.sh failed, trying autoreconf..."
+            if ! run_cmd_verbose "autoreconf -fi"; then
+                fail "Failed to generate RNNoise configure script"
+            fi
+        fi
+    fi
+
+    if ! run_cmd_verbose "./configure --prefix='$INSTALL_PREFIX' --enable-shared --enable-static"; then
+        fail "Configuring RNNoise failed"
+    fi
+
+    print_progress "Building RNNoise..."
+    if ! run_cmd_verbose "make -j$PARALLEL_JOBS"; then
+        fail "Building RNNoise failed"
+    fi
+
+    print_progress "Installing RNNoise..."
+    if ! run_cmd_verbose "make install"; then
+        fail "Installing RNNoise failed"
+    fi
+
+    cd / || true
+    rm -rf "$rnnoise_src" 2>/dev/null || true
+    print_info "RNNoise successfully built and installed"
+}
+
 ensure_tde2e_from_tdlib() {
     print_progress "Ensuring tde2e library is installed"
     local cmake_dir="$INSTALL_PREFIX/lib/cmake/tde2e"
@@ -1527,6 +1588,11 @@ configure_cryptogram() {
     print_progress "Running CMake configuration..."
     log "BUILD" "Running CMake with Release configuration"
 
+    # Set PKG_CONFIG_PATH to help find installed libraries
+    export PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"
+    print_debug "PKG_CONFIG_PATH: $PKG_CONFIG_PATH"
+    log "BUILD" "PKG_CONFIG_PATH set to: $PKG_CONFIG_PATH"
+
     if [ "$DRY_RUN" -eq 1 ]; then
         print_info "[DRY RUN] Would run CMake configuration for CRYPTOGRAM"
     else
@@ -1808,6 +1874,7 @@ main() {
     check_permissions
     check_submodules
     ensure_tg_owt_from_source
+    ensure_rnnoise_from_source
     configure_compiler
     build_ada
     build_protobuf
