@@ -1,0 +1,713 @@
+version: '3.8'
+
+# CRYPTOGRAM SS7 Lab – Multi-PLMN Telco Universe
+#
+# Usage:
+#   Base lab (minimal):        docker compose --profile base up -d
+#   + Roaming:                 docker compose --profile roam up -d
+#   + Threat actors:           docker compose --profile threat up -d
+#   Full complexity:           docker compose --profile full up -d
+#
+# Profiles:
+#   base   - 5 nodes:  1 Home STP/HLR + IPX STP + Attacker + Console
+#   roam   - +4 nodes: Visited PLMN stack (STP, HLR, MSC, SMSC)
+#   threat - +3 nodes: Extra attackers + rogue operator
+#   full   - +5 nodes: Redundant STPs, GMSC, IPX firewall, all features
+#
+# Networks:
+#   net_home   - Home PLMN internal
+#   net_visit  - Visited PLMN internal
+#   net_ipx    - IPX/Hub interconnect
+#   net_threat - Threat lab cluster
+#   net_mgmt   - Management overlay
+
+services:
+  # ============================================================================
+  # HOME PLMN – Primary operator network
+  # ============================================================================
+
+  # --- Home STP (Primary) ---
+  stp_home_1:
+    image: ghcr.io/swordops/ss7-stp:latest
+    build:
+      context: ./nodes/stp
+      dockerfile: Dockerfile
+    container_name: ss7_stp_home_1
+    hostname: stp-home-1
+    profiles: ["base", "roam", "threat", "full"]
+    networks:
+      - net_home
+      - net_ipx
+    environment:
+      - NODE_NAME=stp_home_1
+      - PC=0.1.1
+      - SSN=8
+      - SCTP_PEERS=stp_ipx_1:2905,stp_ipx_2:2905
+      - GT_ROUTES=/config/routes_home.cfg
+      - FIREWALL_RULES=/config/firewall_home.cfg
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/stp_home_1.log
+    volumes:
+      - ./config/stp:/config:ro
+      - ./logs:/logs
+      - ./pcaps:/pcaps
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW          # For SCTP sockets
+      - NET_ADMIN        # For routing
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Home STP (Secondary/Redundant) ---
+  stp_home_2:
+    image: ghcr.io/swordops/ss7-stp:latest
+    build:
+      context: ./nodes/stp
+      dockerfile: Dockerfile
+    container_name: ss7_stp_home_2
+    hostname: stp-home-2
+    profiles: ["full"]
+    networks:
+      - net_home
+      - net_ipx
+    environment:
+      - NODE_NAME=stp_home_2
+      - PC=0.1.2
+      - SSN=8
+      - SCTP_PEERS=stp_ipx_1:2905,stp_ipx_2:2905
+      - GT_ROUTES=/config/routes_home.cfg
+      - FIREWALL_RULES=/config/firewall_home_relaxed.cfg  # Intentionally different
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/stp_home_2.log
+      - PRIORITY=secondary
+    volumes:
+      - ./config/stp:/config:ro
+      - ./logs:/logs
+      - ./pcaps:/pcaps
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Home HLR/HSS ---
+  hlr_home:
+    image: ghcr.io/swordops/ss7-hlr:latest
+    build:
+      context: ./nodes/hlr
+      dockerfile: Dockerfile
+    container_name: ss7_hlr_home
+    hostname: hlr-home
+    profiles: ["base", "roam", "threat", "full"]
+    networks:
+      - net_home
+    environment:
+      - NODE_NAME=hlr_home
+      - PC=0.1.10
+      - GT=441000000000          # Base GT for range
+      - GT_RANGE=441000000000-441999999999
+      - MCC=234                  # UK
+      - MNC=15                   # Dummy operator code
+      - SSN=6                    # HLR SSN
+      - SUBSCRIBER_DB=/data/hlr.db
+      - HONEYPOT_MODE=true       # Log everything, return fake data
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/hlr_home.log
+    volumes:
+      - ./config/hlr:/config:ro
+      - ./data/hlr_home:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Home MSC/VLR ---
+  msc_home:
+    image: ghcr.io/swordops/ss7-msc:latest
+    build:
+      context: ./nodes/msc
+      dockerfile: Dockerfile
+    container_name: ss7_msc_home
+    hostname: msc-home
+    profiles: ["roam", "full"]
+    networks:
+      - net_home
+    environment:
+      - NODE_NAME=msc_home
+      - PC=0.1.20
+      - GT=441000100000
+      - MCC=234
+      - MNC=15
+      - SSN=8                    # MSC SSN
+      - HLR_GT=441000000000      # Points to hlr_home
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/msc_home.log
+    volumes:
+      - ./config/msc:/config:ro
+      - ./data/msc_home:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Home SMSC ---
+  smsc_home:
+    image: ghcr.io/swordops/ss7-smsc:latest
+    build:
+      context: ./nodes/smsc
+      dockerfile: Dockerfile
+    container_name: ss7_smsc_home
+    hostname: smsc-home
+    profiles: ["roam", "full"]
+    networks:
+      - net_home
+    environment:
+      - NODE_NAME=smsc_home
+      - PC=0.1.30
+      - GT=441000200000
+      - MCC=234
+      - MNC=15
+      - SSN=8
+      - HLR_GT=441000000000
+      - SMPP_PORT=2775
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/smsc_home.log
+    volumes:
+      - ./config/smsc:/config:ro
+      - ./data/smsc_home:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Home GMSC (Gateway MSC) ---
+  gmsc_home:
+    image: ghcr.io/swordops/ss7-gmsc:latest
+    build:
+      context: ./nodes/gmsc
+      dockerfile: Dockerfile
+    container_name: ss7_gmsc_home
+    hostname: gmsc-home
+    profiles: ["full"]
+    networks:
+      - net_home
+    environment:
+      - NODE_NAME=gmsc_home
+      - PC=0.1.40
+      - GT=441000300000
+      - MCC=234
+      - MNC=15
+      - SSN=8
+      - HLR_GT=441000000000
+      - SMSC_GT=441000200000
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/gmsc_home.log
+    volumes:
+      - ./config/gmsc:/config:ro
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # ============================================================================
+  # VISITED PLMN – Roaming partner network
+  # ============================================================================
+
+  # --- Visited STP ---
+  stp_visit:
+    image: ghcr.io/swordops/ss7-stp:latest
+    build:
+      context: ./nodes/stp
+      dockerfile: Dockerfile
+    container_name: ss7_stp_visit
+    hostname: stp-visit
+    profiles: ["roam", "full"]
+    networks:
+      - net_visit
+      - net_ipx
+    environment:
+      - NODE_NAME=stp_visit
+      - PC=0.2.1
+      - SSN=8
+      - SCTP_PEERS=stp_ipx_1:2905,stp_ipx_2:2905
+      - GT_ROUTES=/config/routes_visit.cfg
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/stp_visit.log
+    volumes:
+      - ./config/stp:/config:ro
+      - ./logs:/logs
+      - ./pcaps:/pcaps
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Visited HLR ---
+  hlr_visit:
+    image: ghcr.io/swordops/ss7-hlr:latest
+    build:
+      context: ./nodes/hlr
+      dockerfile: Dockerfile
+    container_name: ss7_hlr_visit
+    hostname: hlr-visit
+    profiles: ["roam", "full"]
+    networks:
+      - net_visit
+    environment:
+      - NODE_NAME=hlr_visit
+      - PC=0.2.10
+      - GT=338000000000          # French MCC
+      - GT_RANGE=338000000000-338999999999
+      - MCC=338
+      - MNC=01
+      - SSN=6
+      - SUBSCRIBER_DB=/data/hlr.db
+      - HONEYPOT_MODE=true
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/hlr_visit.log
+    volumes:
+      - ./config/hlr:/config:ro
+      - ./data/hlr_visit:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Visited MSC ---
+  msc_visit:
+    image: ghcr.io/swordops/ss7-msc:latest
+    build:
+      context: ./nodes/msc
+      dockerfile: Dockerfile
+    container_name: ss7_msc_visit
+    hostname: msc-visit
+    profiles: ["roam", "full"]
+    networks:
+      - net_visit
+    environment:
+      - NODE_NAME=msc_visit
+      - PC=0.2.20
+      - GT=338000100000
+      - MCC=338
+      - MNC=01
+      - SSN=8
+      - HLR_GT=338000000000
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/msc_visit.log
+    volumes:
+      - ./config/msc:/config:ro
+      - ./data/msc_visit:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 1g
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- Visited SMSC ---
+  smsc_visit:
+    image: ghcr.io/swordops/ss7-smsc:latest
+    build:
+      context: ./nodes/smsc
+      dockerfile: Dockerfile
+    container_name: ss7_smsc_visit
+    hostname: smsc-visit
+    profiles: ["roam", "full"]
+    networks:
+      - net_visit
+    environment:
+      - NODE_NAME=smsc_visit
+      - PC=0.2.30
+      - GT=338000200000
+      - MCC=338
+      - MNC=01
+      - SSN=8
+      - HLR_GT=338000000000
+      - SMPP_PORT=2775
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/smsc_visit.log
+    volumes:
+      - ./config/smsc:/config:ro
+      - ./data/smsc_visit:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # ============================================================================
+  # IPX / SS7 HUB – Interconnect and screening layer
+  # ============================================================================
+
+  # --- IPX STP (Primary) ---
+  stp_ipx_1:
+    image: ghcr.io/swordops/ss7-stp:latest
+    build:
+      context: ./nodes/stp
+      dockerfile: Dockerfile
+    container_name: ss7_stp_ipx_1
+    hostname: stp-ipx-1
+    profiles: ["base", "roam", "threat", "full"]
+    networks:
+      - net_ipx
+    environment:
+      - NODE_NAME=stp_ipx_1
+      - PC=0.9.1
+      - SSN=8
+      - SCTP_LISTEN=0.0.0.0:2905
+      - GT_ROUTES=/config/routes_ipx.cfg
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/stp_ipx_1.log
+      - HUB_MODE=true            # Accept connections from any peer
+    volumes:
+      - ./config/stp:/config:ro
+      - ./logs:/logs
+      - ./pcaps:/pcaps
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- IPX STP (Secondary) ---
+  stp_ipx_2:
+    image: ghcr.io/swordops/ss7-stp:latest
+    build:
+      context: ./nodes/stp
+      dockerfile: Dockerfile
+    container_name: ss7_stp_ipx_2
+    hostname: stp-ipx-2
+    profiles: ["full"]
+    networks:
+      - net_ipx
+    environment:
+      - NODE_NAME=stp_ipx_2
+      - PC=0.9.2
+      - SSN=8
+      - SCTP_LISTEN=0.0.0.0:2905
+      - GT_ROUTES=/config/routes_ipx.cfg
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/stp_ipx_2.log
+      - HUB_MODE=true
+      - PRIORITY=secondary
+    volumes:
+      - ./config/stp:/config:ro
+      - ./logs:/logs
+      - ./pcaps:/pcaps
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # --- IPX SS7 Firewall/Honeypot ---
+  ss7_firewall_ipx:
+    image: ghcr.io/swordops/ss7-firewall:latest
+    build:
+      context: ./nodes/firewall
+      dockerfile: Dockerfile
+    container_name: ss7_firewall_ipx
+    hostname: firewall-ipx
+    profiles: ["full"]
+    networks:
+      - net_ipx
+    environment:
+      - NODE_NAME=ss7_firewall_ipx
+      - PC=0.9.50
+      - RULES=/config/firewall_ipx.cfg
+      - HONEYPOT_MODE=true
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/firewall_ipx.log
+      - ALERT_FILE=/logs/firewall_ipx_alerts.json
+    volumes:
+      - ./config/firewall:/config:ro
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # ============================================================================
+  # THREAT LAB – Attacker and rogue operator nodes
+  # ============================================================================
+
+  # --- Attacker 1 (Primary) ---
+  ss7_attacker_1:
+    image: ghcr.io/swordops/ss7-attacker:latest
+    build:
+      context: ./nodes/attacker
+      dockerfile: Dockerfile
+    container_name: ss7_attacker_1
+    hostname: attacker-1
+    profiles: ["base", "roam", "threat", "full"]
+    networks:
+      - net_threat
+      - net_ipx
+    environment:
+      - NODE_NAME=ss7_attacker_1
+      - OPC=0.8.1                # Own point code
+      - DPC=0.1.10               # Default target (HLR Home)
+      - OGT=99701000000000       # Own GT
+      - TARGET_GT=441000000000   # Target GT range
+      - TARGET_IMSI=234150000000001
+      - STP_PEER=stp_ipx_1:2905
+      - TOOLS=sigploit,ss7maper,sctp_scan
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/attacker_1.log
+    volumes:
+      - ./config/attacker:/config:ro
+      - ./tools:/tools:ro
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+    mem_limit: 1g
+    cpus: 1.0
+    stdin_open: true           # For interactive attacks
+    tty: true
+    restart: unless-stopped
+
+  # --- Attacker 2 (Compromised SMSC Simulation) ---
+  ss7_attacker_2:
+    image: ghcr.io/swordops/ss7-attacker:latest
+    build:
+      context: ./nodes/attacker
+      dockerfile: Dockerfile
+    container_name: ss7_attacker_2
+    hostname: attacker-2
+    profiles: ["threat", "full"]
+    networks:
+      - net_threat
+      - net_ipx
+    environment:
+      - NODE_NAME=ss7_attacker_2
+      - OPC=0.8.2
+      - DPC=0.1.10
+      - OGT=99702000000000
+      - TARGET_GT=441000000000
+      - STP_PEER=stp_ipx_1:2905
+      - TOOLS=sigploit,ss7maper
+      - ROLE=compromised_smsc    # Pretends to be legit SMSC
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/attacker_2.log
+    volumes:
+      - ./config/attacker:/config:ro
+      - ./tools:/tools:ro
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+    mem_limit: 1g
+    cpus: 1.0
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  # --- Rogue Operator Core (Fake PLMN) ---
+  rogue_operator_core:
+    image: ghcr.io/swordops/ss7-rogue-plmn:latest
+    build:
+      context: ./nodes/rogue
+      dockerfile: Dockerfile
+    container_name: ss7_rogue_operator
+    hostname: rogue-operator
+    profiles: ["threat", "full"]
+    networks:
+      - net_threat
+      - net_ipx
+    environment:
+      - NODE_NAME=rogue_operator_core
+      - PC=0.8.10
+      - GT=99700000000000        # Fake operator GT
+      - MCC=997                  # Non-existent MCC
+      - MNC=00
+      - SSN=6
+      - HLR_MODE=true            # Acts as fake HLR
+      - CAPTURE_ALL=true         # Intercepts routed traffic
+      - LOG_LEVEL=INFO
+      - LOG_FILE=/logs/rogue_operator.log
+    volumes:
+      - ./config/rogue:/config:ro
+      - ./data/rogue_operator:/data
+      - ./logs:/logs
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+
+  # ============================================================================
+  # CONSOLE – Management and monitoring
+  # ============================================================================
+
+  ss7_console:
+    image: ghcr.io/swordops/ss7-console:latest
+    build:
+      context: ./nodes/console
+      dockerfile: Dockerfile
+    container_name: ss7_console
+    hostname: console
+    profiles: ["base", "roam", "threat", "full"]
+    networks:
+      - net_mgmt
+      - net_home
+      - net_visit
+      - net_ipx
+      - net_threat
+    environment:
+      - NODE_NAME=ss7_console
+      - ENABLE_WIRESHARK=true
+      - ENABLE_GRAFANA=true
+      - ENABLE_KIBANA=true
+      - LOG_DIR=/logs
+      - PCAP_DIR=/pcaps
+      - METRICS_SCRAPE_INTERVAL=5s
+    volumes:
+      - ./logs:/logs:ro
+      - ./pcaps:/pcaps:ro
+      - ./dashboards:/dashboards:ro
+      - ./config:/config:ro
+    ports:
+      - "3000:3000"              # Grafana (optional, for host access)
+      - "5601:5601"              # Kibana (optional)
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW                  # For Wireshark
+    mem_limit: 2g
+    cpus: 2.0
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+# ==============================================================================
+# NETWORKS – Isolated Docker networks for domain separation
+# ==============================================================================
+
+networks:
+  net_home:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br_home
+
+  net_visit:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br_visit
+
+  net_ipx:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.9.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br_ipx
+
+  net_threat:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.8.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br_threat
+
+  net_mgmt:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.100.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br_mgmt
+
+# ==============================================================================
+# VOLUMES – Persistent storage for data and logs
+# ==============================================================================
+
+volumes:
+  logs:
+    driver: local
+  pcaps:
+    driver: local
+  hlr_home_data:
+    driver: local
+  hlr_visit_data:
+    driver: local
+  msc_home_data:
+    driver: local
+  msc_visit_data:
+    driver: local
+  smsc_home_data:
+    driver: local
+  smsc_visit_data:
+    driver: local
+  rogue_operator_data:
+    driver: local
+
+# ==============================================================================
+# CONFIGURATION NOTES
+# ==============================================================================
+#
+# Complexity Profiles Usage:
+#
+#   1. BASE (Minimal):
+#      docker compose --profile base up -d
+#      Nodes: stp_home_1, hlr_home, stp_ipx_1, ss7_attacker_1, ss7_console
+#
+#   2. ROAM (Multi-PLMN):
+#      docker compose --profile roam up -d
+#      Adds: stp_visit, hlr_visit, msc_visit, smsc_visit, msc_home, smsc_home
+#
+#   3. THREAT (Advanced Attacks):
+#      docker compose --profile threat up -d
+#      Adds: ss7_attacker_2, rogue_operator_core
+#
+#   4. FULL (Everything):
+#      docker compose --profile full up -d
+#      Adds: stp_home_2, stp_ipx_2, gmsc_home, ss7_firewall_ipx
+#
+# Direct Bypass Configuration (Full profile only):
+#   Set ENABLE_DIRECT_BYPASS=true in .env to connect stp_home directly to
+#   stp_visit, simulating misconfigured bilateral link that skips IPX.
+#
+# External Peer Testing (REQUIRES AUTHORIZATION):
+#   Set EXTERNAL_PEER_ALLOWED=true and expose ports:
+#     ports:
+#       - "2905:2905/sctp"  # On stp_home_1 or stp_ipx_1
+#   ONLY do this with documented, signed authorization for pentesting.
+#
+# ==============================================================================
