@@ -1,0 +1,43 @@
+# SS7 Lab .gitignore
+
+# Runtime data
+logs/*.log
+logs/*.json
+pcaps/*.pcap
+pcaps/*.pcapng
+
+# Subscriber databases
+data/*/hlr.db
+data/*/hlr.db-*
+data/*/*.db
+
+# Temporary files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Docker volumes
+.volumes/
+
+# Local environment overrides
+.env.local
+docker-compose.override.yml
+
+# Authorization docs (contain sensitive info)
+docs/authorizations/*.md
+!docs/authorizations/README.md
+
+# Reports and analysis output
+reports/*.pdf
+reports/*.html
+reports/*.csv
+
+# Keep directory structure but ignore content
+!logs/.gitkeep
+!pcaps/.gitkeep
+!data/.gitkeep
+!reports/.gitkeep
