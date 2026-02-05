@@ -186,7 +186,8 @@ public class ConnectionQualityManager {
         private String generateAnonymousId() {
             try {
                 String deviceInfo = Build.MANUFACTURER + ":" + Build.MODEL + ":" + Build.VERSION.SDK_INT;
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                // CNSA 2.0 compliance: Use SHA-384
+                MessageDigest digest = MessageDigest.getInstance("SHA-384");
                 byte[] hash = digest.digest(deviceInfo.getBytes("UTF-8"));
 
                 // Convert to hex string (first 16 bytes = 32 hex chars)

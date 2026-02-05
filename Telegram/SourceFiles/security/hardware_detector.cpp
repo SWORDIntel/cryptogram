@@ -247,7 +247,7 @@ TPMInfo HardwareDetector::detectLinuxTPM() {
         }
 
         // Get supported algorithms
-        tpm.algorithms = {"SHA-1", "SHA-256", "SHA-384", "SHA-512", "RSA", "ECC"};
+        tpm.algorithms = {"SHA-384", "SHA-512", "ECC"};
         if (tpm.version == "2.0") {
             tpm.algorithms.append({"AES", "HMAC", "ECDSA", "ECDH"});
             tpm.attestationSupport = true;
@@ -279,7 +279,7 @@ TPMInfo HardwareDetector::detectMacTPM() {
         tpm.version = "Secure Enclave";
         tpm.manufacturer = "Apple";
         tpm.devicePath = "secure_enclave";
-        tpm.algorithms = {"AES", "SHA-256", "ECC", "ECDSA"};
+        tpm.algorithms = {"AES", "ECC", "ECDSA"};
         tpm.attestationSupport = true;
         tpm.fipsCompliant = true;
         tpm.keySlots = 32; // Secure Enclave capacity

@@ -24,14 +24,11 @@ namespace {
 constexpr auto kSendNextTimeout = crl::time(800);
 
 constexpr auto kPublicKey = "\
------BEGIN RSA PUBLIC KEY-----\n\
-MIIBCgKCAQEAyr+18Rex2ohtVy8sroGPBwXD3DOoKCSpjDqYoXgCqB7ioln4eDCF\n\
-fOBUlfXUEvM/fnKCpF46VkAftlb4VuPDeQSS/ZxZYEGqHaywlroVnXHIjgqoxiAd\n\
-192xRGreuXIaUKmkwlM9JID9WS2jUsTpzQ91L8MEPLJ/4zrBwZua8W5fECwCCh2c\n\
-9G5IzzBm+otMS/YKwmR1olzRCyEkyAEjXWqBI9Ftv5eG8m0VkBzOG655WIYdyV0H\n\
-fDK/NWcvGqa0w/nriMD6mDjKOryamw0OP9QuYgMN0C9xMW9y8SmP4h92OAWodTYg\n\
-Y1hZCxdv6cs5UnW9+PWvS+WIbkh+GaWYxwIDAQAB\n\
------END RSA PUBLIC KEY-----\
+-----BEGIN PUBLIC KEY-----\n\
+MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEI56Fn65OyKMJ3IQLZqEctJMG7IMKs87W\n\
+Gwxk0yT/paOcFHs2C5VIJLpkwuJUscHSDhsh51vFlOuaOAmeI2YgEMFzP1D2yQS8\n\
+R0Ta0w4MqB5F3DA7GZV35624v/r4BNW7\n\
+-----END PUBLIC KEY-----\
 "_cs;
 
 const auto kRemoteProject = "peak-vista-421";
@@ -457,7 +454,7 @@ bool SpecialConfigRequest::decryptSimpleConfig(const QByteArray &bytes) {
 	constexpr auto kDigestSize = 16;
 	auto dataSize = aesEncryptedBytes.size() - kDigestSize;
 	auto data = aesEncryptedBytes.subspan(0, dataSize);
-	auto hash = openssl::Sha256(data);
+	auto hash = openssl::Sha384(data);
 	if (bytes::compare(gsl::make_span(hash).subspan(0, kDigestSize), aesEncryptedBytes.subspan(dataSize)) != 0) {
 		LOG(("Config Error: Bad digest."));
 		return false;

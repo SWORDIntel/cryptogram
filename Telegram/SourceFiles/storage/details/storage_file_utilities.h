@@ -78,7 +78,7 @@ private:
 	QDataStream _stream;
 	QByteArray _safeData;
 	QString _base;
-	HashMd5 _md5;
+	HashSha384 _hash;
 	int _fullSize = 0;
 	bool _sync = false;
 

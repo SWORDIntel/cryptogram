@@ -353,11 +353,11 @@ bool EnhancedPrivacy::IsMutuallyEncrypted(const TextWithEntities &text) {
 }
 
 QString EnhancedPrivacy::EncryptString(const QString &text, const QString &key) {
-    // Generate a key from the passphrase using SHA-256
+    // Generate a key from the passphrase using SHA-384 (CNSA 2.0 compliant)
     QByteArray keyData = QCryptographicHash::hash(
         key.toUtf8(),
-        QCryptographicHash::Sha256
-    );
+        QCryptographicHash::Sha384
+    ).left(32); // Use first 256 bits for AES-256 key
     
     // Generate a random IV
     QByteArray iv(16, 0);
@@ -393,11 +393,11 @@ QString EnhancedPrivacy::EncryptString(const QString &text, const QString &key) 
 }
 
 QString EnhancedPrivacy::DecryptString(const QString &text, const QString &key) {
-    // Generate key from passphrase
+    // Generate key from passphrase using SHA-384 (CNSA 2.0 compliant)
     QByteArray keyData = QCryptographicHash::hash(
         key.toUtf8(),
-        QCryptographicHash::Sha256
-    );
+        QCryptographicHash::Sha384
+    ).left(32); // Use first 256 bits for AES-256 key
     
     // Decode Base64
     QByteArray encryptedData = QByteArray::fromBase64(text.toLatin1());
@@ -1016,7 +1016,7 @@ QString EnhancedPrivacy::DeriveTimeBasedKey(int64 timestamp) {
     const auto input = QString("%1:%2").arg(_timeBasedKeySalt).arg(timestamp);
     return QCryptographicHash::hash(
         input.toUtf8(),
-        QCryptographicHash::Sha256
+        QCryptographicHash::Sha384
     ).toHex();
 }
 
@@ -1452,8 +1452,8 @@ QByteArray EnhancedPrivacy::AddTrafficPadding(QByteArray &data) {
     stream << (quint32)paddingSize;
     stream << (quint32)data.size();
     
-    // Calculate checksum of original data
-    QByteArray checksum = QCryptographicHash::hash(data, QCryptographicHash::Md5).left(4);
+    // Calculate checksum of original data using SHA-384 (CNSA 2.0 compliant)
+    QByteArray checksum = QCryptographicHash::hash(data, QCryptographicHash::Sha384).left(4);
     stream.writeRawData(checksum.constData(), 4);
     
     // Add the original data
@@ -1499,8 +1499,8 @@ QByteArray EnhancedPrivacy::RemoveTrafficPadding(QByteArray &data) {
     // Extract the original data
     QByteArray originalData = data.mid(17, dataSize);
     
-    // Verify checksum
-    QByteArray calculatedChecksum = QCryptographicHash::hash(originalData, QCryptographicHash::Md5).left(4);
+    // Verify checksum using SHA-384
+    QByteArray calculatedChecksum = QCryptographicHash::hash(originalData, QCryptographicHash::Sha384).left(4);
     if (calculatedChecksum != storedChecksum) {
         return data; // Checksum mismatch, data may be corrupted
     }

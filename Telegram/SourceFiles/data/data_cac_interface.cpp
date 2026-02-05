@@ -49,41 +49,11 @@ void CACUserRegistry::clearRegistry() {
 
 CACAlgorithmInfo getAlgorithmInfo(CACAlgorithm algorithm) {
     switch (algorithm) {
-    case CACAlgorithm::RSA_2048_SHA256:
-        return {
-            CACAlgorithm::RSA_2048_SHA256,
-            "RSA-2048/SHA-256",
-            "RSA 2048-bit with SHA-256 (Standard DoD)",
-            2048,
-            "SHA-256",
-            3  // Medium-high security
-        };
-
-    case CACAlgorithm::RSA_4096_SHA384:
-        return {
-            CACAlgorithm::RSA_4096_SHA384,
-            "RSA-4096/SHA-384",
-            "RSA 4096-bit with SHA-384 (High security)",
-            4096,
-            "SHA-384",
-            4  // High security
-        };
-
-    case CACAlgorithm::ECC_P256_SHA256:
-        return {
-            CACAlgorithm::ECC_P256_SHA256,
-            "ECDSA P-256/SHA-256",
-            "NIST P-256 curve with SHA-256 (Fast, standard)",
-            256,
-            "SHA-256",
-            3  // Medium-high security
-        };
-
     case CACAlgorithm::ECC_P384_SHA384:
         return {
             CACAlgorithm::ECC_P384_SHA384,
             "ECDSA P-384/SHA-384",
-            "NIST P-384 curve with SHA-384 (Recommended)",
+            "NIST P-384 curve with SHA-384 (CNSA 2.0 Compliant)",
             384,
             "SHA-384",
             4  // High security
@@ -93,7 +63,7 @@ CACAlgorithmInfo getAlgorithmInfo(CACAlgorithm algorithm) {
         return {
             CACAlgorithm::ECC_P521_SHA512,
             "ECDSA P-521/SHA-512",
-            "NIST P-521 curve with SHA-512 (Maximum security)",
+            "NIST P-521 curve with SHA-512 (CNSA 2.0 Compliant)",
             521,
             "SHA-512",
             5  // Maximum security
@@ -101,7 +71,7 @@ CACAlgorithmInfo getAlgorithmInfo(CACAlgorithm algorithm) {
 
     default:
         return {
-            CACAlgorithm::ECC_P256_SHA256,
+            CACAlgorithm::ECC_P384_SHA384,
             "Unknown",
             "Unknown algorithm",
             0,
@@ -112,20 +82,14 @@ CACAlgorithmInfo getAlgorithmInfo(CACAlgorithm algorithm) {
 }
 
 CACAlgorithm algorithmFromString(const QString &name) {
-    if (name.contains("RSA-2048") || name.contains("RSA_2048")) {
-        return CACAlgorithm::RSA_2048_SHA256;
-    } else if (name.contains("RSA-4096") || name.contains("RSA_4096")) {
-        return CACAlgorithm::RSA_4096_SHA384;
-    } else if (name.contains("P-256") || name.contains("P256")) {
-        return CACAlgorithm::ECC_P256_SHA256;
-    } else if (name.contains("P-384") || name.contains("P384")) {
+    if (name.contains("P-384") || name.contains("P384")) {
         return CACAlgorithm::ECC_P384_SHA384;
     } else if (name.contains("P-521") || name.contains("P521")) {
         return CACAlgorithm::ECC_P521_SHA512;
     }
 
-    // Default to P-256 (most compatible)
-    return CACAlgorithm::ECC_P256_SHA256;
+    // Default to P-384 (CNSA 2.0 Compliant)
+    return CACAlgorithm::ECC_P384_SHA384;
 }
 
 QString algorithmToString(CACAlgorithm algorithm) {
@@ -161,8 +125,8 @@ public:
         info.issuerDN = "CN=DoD Root CA,O=U.S. Government,C=US";
         info.certificateExpiry = QDateTime::currentDateTime().addYears(1);
         info.isValid = true;
-        info.defaultAlgorithm = CACAlgorithm::ECC_P256_SHA256;
-        info.supportedAlgorithms = {"RSA-2048/SHA-256", "ECC P-256/SHA-256", "ECC P-384/SHA-384"};
+        info.defaultAlgorithm = CACAlgorithm::ECC_P384_SHA384;
+        info.supportedAlgorithms = {"ECC P-384/SHA-384", "ECC P-521/SHA-512"};
         return info;
     }
 
@@ -215,8 +179,7 @@ public:
     }
 
     QStringList getSupportedAlgorithms() override {
-        return {"RSA-2048/SHA-256", "RSA-4096/SHA-384",
-                "ECC P-256/SHA-256", "ECC P-384/SHA-384", "ECC P-521/SHA-512"};
+        return {"ECC P-384/SHA-384", "ECC P-521/SHA-512"};
     }
 
     CACResult setAlgorithm(CACAlgorithm algorithm) override {
@@ -239,7 +202,7 @@ public:
 private:
     bool _initialized = false;
     bool _pinVerified = false;
-    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P256_SHA256;
+    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P384_SHA384;
 };
 
 #elif defined(Q_OS_LINUX)
@@ -323,7 +286,7 @@ public:
 
 private:
     bool _initialized = false;
-    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P256_SHA256;
+    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P384_SHA384;
 };
 
 #elif defined(Q_OS_MAC)
@@ -406,7 +369,7 @@ public:
 
 private:
     bool _initialized = false;
-    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P256_SHA256;
+    CACAlgorithm _currentAlgorithm = CACAlgorithm::ECC_P384_SHA384;
 };
 #endif
 

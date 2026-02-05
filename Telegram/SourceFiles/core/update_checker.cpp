@@ -39,6 +39,7 @@ extern "C" {
 #include <openssl/pem.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
+#include <openssl/evp.h>
 } // extern "C"
 
 #ifndef TDESKTOP_DISABLE_AUTOUPDATE
@@ -278,9 +279,9 @@ bool UnpackUpdate(const QString &filepath) {
 	}
 
 #if defined Q_OS_WIN && !defined TDESKTOP_USE_PACKAGED // use Lzma SDK for win
-	const int32 hSigLen = 128, hShaLen = 20, hPropsLen = LZMA_PROPS_SIZE, hOriginalSizeLen = sizeof(int32), hSize = hSigLen + hShaLen + hPropsLen + hOriginalSizeLen; // header
+	const int32 hSigLen = 128, hShaLen = 48, hPropsLen = LZMA_PROPS_SIZE, hOriginalSizeLen = sizeof(int32), hSize = hSigLen + hShaLen + hPropsLen + hOriginalSizeLen; // header
 #else // Q_OS_WIN && !TDESKTOP_USE_PACKAGED
-	const int32 hSigLen = 128, hShaLen = 20, hPropsLen = 0, hOriginalSizeLen = sizeof(int32), hSize = hSigLen + hShaLen + hOriginalSizeLen; // header
+	const int32 hSigLen = 128, hShaLen = 48, hPropsLen = 0, hOriginalSizeLen = sizeof(int32), hSize = hSigLen + hShaLen + hOriginalSizeLen; // header
 #endif // Q_OS_WIN && !TDESKTOP_USE_PACKAGED
 
 	QByteArray compressed = input.readAll();
@@ -300,50 +301,75 @@ bool UnpackUpdate(const QString &filepath) {
 		return false;
 	}
 
-	uchar sha1Buffer[20];
-	bool goodSha1 = !memcmp(compressed.constData() + hSigLen, hashSha1(compressed.constData() + hSigLen + hShaLen, compressedLen + hPropsLen + hOriginalSizeLen, sha1Buffer), hShaLen);
-	if (!goodSha1) {
-		LOG(("Update Error: bad SHA1 hash of update file!"));
+	uchar shaBuffer[48];
+	bool goodSha = !memcmp(compressed.constData() + hSigLen, hashSha384(compressed.constData() + hSigLen + hShaLen, compressedLen + hPropsLen + hOriginalSizeLen, shaBuffer), hShaLen);
+	if (!goodSha) {
+		LOG(("Update Error: bad SHA-384 hash of update file!"));
 		return false;
 	}
 
-	RSA *pbKey = [] {
+	EVP_PKEY *pbKey = [] {
 		const auto bio = MakeBIO(
 			const_cast<char*>(
 				AppBetaVersion
 					? UpdatesPublicBetaKey
 					: UpdatesPublicKey),
 			-1);
-		return PEM_read_bio_RSAPublicKey(bio.get(), 0, 0, 0);
+		return PEM_read_bio_PUBKEY(bio.get(), nullptr, nullptr, nullptr);
 	}();
 	if (!pbKey) {
-		LOG(("Update Error: cant read public rsa key!"));
+		LOG(("Update Error: cant read public key!"));
 		return false;
 	}
-	if (RSA_verify(NID_sha1, (const uchar*)(compressed.constData() + hSigLen), hShaLen, (const uchar*)(compressed.constData()), hSigLen, pbKey) != 1) { // verify signature
-		RSA_free(pbKey);
+
+	auto ctx = EVP_PKEY_CTX_new(pbKey, nullptr);
+	bool signatureValid = false;
+	if (ctx) {
+		if (EVP_PKEY_verify_init(ctx) > 0 &&
+			EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha384()) > 0) {
+			if (EVP_PKEY_verify(ctx, (const uchar*)compressed.constData(), hSigLen, (const uchar*)(compressed.constData() + hSigLen), hShaLen) == 1) {
+				signatureValid = true;
+			}
+		}
+		EVP_PKEY_CTX_free(ctx);
+	}
+
+	if (!signatureValid) {
+		EVP_PKEY_free(pbKey);
 
 		// try other public key, if we update from beta to stable or vice versa
-		pbKey = [] {
+		EVP_PKEY *pbKey = [] {
 			const auto bio = MakeBIO(
 				const_cast<char*>(
 					AppBetaVersion
-						? UpdatesPublicKey
-						: UpdatesPublicBetaKey),
+						? UpdatesPublicBetaKey
+						: UpdatesPublicKey),
 				-1);
-			return PEM_read_bio_RSAPublicKey(bio.get(), 0, 0, 0);
+			return PEM_read_bio_PUBKEY(bio.get(), nullptr, nullptr, nullptr);
 		}();
 		if (!pbKey) {
-			LOG(("Update Error: cant read public rsa key!"));
+			LOG(("Update Error: cant read public key!"));
 			return false;
 		}
-		if (RSA_verify(NID_sha1, (const uchar*)(compressed.constData() + hSigLen), hShaLen, (const uchar*)(compressed.constData()), hSigLen, pbKey) != 1) { // verify signature
-			RSA_free(pbKey);
-			LOG(("Update Error: bad RSA signature of update file!"));
+
+		ctx = EVP_PKEY_CTX_new(pbKey, nullptr);
+		if (ctx) {
+			if (EVP_PKEY_verify_init(ctx) > 0 &&
+				EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha384()) > 0) {
+				if (EVP_PKEY_verify(ctx, (const uchar*)compressed.constData(), hSigLen, (const uchar*)(compressed.constData() + hSigLen), hShaLen) == 1) {
+					signatureValid = true;
+				}
+			}
+			EVP_PKEY_CTX_free(ctx);
+		}
+
+		if (!signatureValid) {
+			EVP_PKEY_free(pbKey);
+			LOG(("Update Error: bad signature of update file!"));
 			return false;
 		}
 	}
-	RSA_free(pbKey);
+	EVP_PKEY_free(pbKey);
 
 	QByteArray uncompressed;
 
@@ -1680,39 +1706,48 @@ QString countAlphaVersionSignature(uint64 version) { // duplicated in packer.cpp
 
 	QByteArray signedData = (qstr("TelegramBeta_") + QString::number(version, 16).toLower()).toUtf8();
 
-	static const int32 shaSize = 20, keySize = 128;
+	static const int32 shaSize = 48, keySize = 128;
 
-	uchar sha1Buffer[shaSize];
-	hashSha1(signedData.constData(), signedData.size(), sha1Buffer); // count sha1
+	uchar shaBuffer[shaSize];
+	hashSha384(signedData.constData(), signedData.size(), shaBuffer); // count sha384
 
 	uint32 siglen = 0;
 
-	RSA *prKey = [] {
+	EVP_PKEY *prKey = [] {
 		const auto bio = MakeBIO(
 			const_cast<char*>(cAlphaPrivateKey().constData()),
 			-1);
-		return PEM_read_bio_RSAPrivateKey(bio.get(), 0, 0, 0);
+		return PEM_read_bio_PrivateKey(bio.get(), 0, 0, 0);
 	}();
 	if (!prKey) {
 		LOG(("Error: Could not read alpha private key!"));
 		return QString();
 	}
-	if (RSA_size(prKey) != keySize) {
-		LOG(("Error: Bad alpha private key size: %1").arg(RSA_size(prKey)));
-		RSA_free(prKey);
-		return QString();
-	}
+	
 	QByteArray signature;
-	signature.resize(keySize);
-	if (RSA_sign(NID_sha1, (const uchar*)(sha1Buffer), shaSize, (uchar*)(signature.data()), &siglen, prKey) != 1) { // count signature
-		LOG(("Error: Counting alpha version signature failed!"));
-		RSA_free(prKey);
-		return QString();
+	size_t siglen_t = 0;
+	
+	auto ctx = EVP_PKEY_CTX_new(prKey, nullptr);
+	bool signSuccess = false;
+	if (ctx) {
+		if (EVP_PKEY_sign_init(ctx) > 0 &&
+			EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha384()) > 0) {
+			
+			// First call to get length
+			if (EVP_PKEY_sign(ctx, nullptr, &siglen_t, (const uchar*)shaBuffer, shaSize) > 0) {
+				signature.resize(siglen_t);
+				if (EVP_PKEY_sign(ctx, (uchar*)signature.data(), &siglen_t, (const uchar*)shaBuffer, shaSize) > 0) {
+					signSuccess = true;
+					signature.resize(siglen_t);
+				}
+			}
+		}
+		EVP_PKEY_CTX_free(ctx);
 	}
-	RSA_free(prKey);
+	EVP_PKEY_free(prKey);
 
-	if (siglen != keySize) {
-		LOG(("Error: Bad alpha version signature length: %1").arg(siglen));
+	if (!signSuccess) {
+		LOG(("Error: Counting alpha version signature failed!"));
 		return QString();
 	}
 

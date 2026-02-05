@@ -1314,17 +1314,17 @@ void SessionPrivate::handleReceived() {
 		// Can underflow, but it is an unsigned type, so we just check the range later.
 		auto paddingSize = static_cast<uint32>(encryptedBytesCount) - static_cast<uint32>(fullDataLength);
 
-		std::array<uchar, 32> sha256Buffer = { { 0 } };
+		std::array<uchar, 48> shaBuffer = { { 0 } };
 
-		SHA256_CTX msgKeyLargeContext;
-		SHA256_Init(&msgKeyLargeContext);
-		SHA256_Update(&msgKeyLargeContext, _encryptionKey->partForMsgKey(false), 32);
-		SHA256_Update(&msgKeyLargeContext, decryptedInts, encryptedBytesCount);
-		SHA256_Final(sha256Buffer.data(), &msgKeyLargeContext);
+		SHA512_CTX msgKeyLargeContext;
+		SHA384_Init(&msgKeyLargeContext);
+		SHA384_Update(&msgKeyLargeContext, _encryptionKey->partForMsgKey(false), 32);
+		SHA384_Update(&msgKeyLargeContext, decryptedInts, encryptedBytesCount);
+		SHA384_Final(shaBuffer.data(), &msgKeyLargeContext);
 
 		constexpr auto kMsgKeyShift = 8U;
-		if (ConstTimeIsDifferent(&msgKey, sha256Buffer.data() + kMsgKeyShift, sizeof(msgKey))) {
-			LOG(("TCP Error: bad SHA256 hash after aesDecrypt in message"));
+		if (ConstTimeIsDifferent(&msgKey, shaBuffer.data() + kMsgKeyShift, sizeof(msgKey))) {
+			LOG(("TCP Error: bad SHA384 hash after aesDecrypt in message"));
 			return restart();
 		}
 
@@ -2520,11 +2520,11 @@ DcType SessionPrivate::tryAcquireKeyCreation() {
 			releaseKeyCreationOnFail();
 			if (result.error() == Error::UnknownPublicKey) {
 				if (_realDcType == DcType::Cdn) {
-					LOG(("Warning: CDN public RSA key not found"));
+					LOG(("Warning: CDN public key not found"));
 					requestCDNConfig();
 					return;
 				}
-				LOG(("AuthKey Error: could not choose public RSA key"));
+				LOG(("AuthKey Error: could not choose public key"));
 			}
 			restart();
 			return;

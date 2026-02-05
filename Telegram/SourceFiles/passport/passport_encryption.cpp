@@ -348,7 +348,7 @@ EncryptedData EncryptData(
 	bytes::copy(
 		gsl::make_span(unencrypted).subspan(padding),
 		bytes);
-	const auto dataHash = openssl::Sha256(unencrypted);
+	const auto dataHash = openssl::Sha512(unencrypted);
 	const auto bytesForEncryptionKey = bytes::concatenate(
 		dataSecret,
 		dataHash);
@@ -381,7 +381,7 @@ bytes::vector DecryptData(
 		dataHash);
 	auto params = PrepareAesParams(bytesForEncryptionKey);
 	const auto decrypted = Decrypt(encrypted, std::move(params));
-	if (bytes::compare(openssl::Sha256(decrypted), dataHash) != 0) {
+	if (bytes::compare(openssl::Sha512(decrypted), dataHash) != 0) {
 		LOG(("API Error: Bad data hash."));
 		return {};
 	}
@@ -399,7 +399,7 @@ bytes::vector DecryptData(
 bytes::vector PrepareValueHash(
 		bytes::const_span dataHash,
 		bytes::const_span valueSecret) {
-	return openssl::Sha256(dataHash, valueSecret);
+	return openssl::Sha512(dataHash, valueSecret);
 }
 
 bytes::vector EncryptValueSecret(
@@ -423,7 +423,7 @@ bytes::vector DecryptValueSecret(
 }
 
 uint64 CountSecureSecretId(bytes::const_span secret) {
-	const auto full = openssl::Sha256(secret);
+	const auto full = openssl::Sha512(secret);
 	return *reinterpret_cast<const uint64*>(full.data());
 }
 

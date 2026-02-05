@@ -20,7 +20,7 @@ namespace Storage {
 namespace details {
 namespace {
 
-constexpr char TdfMagic[] = { 'T', 'D', 'F', '$' };
+constexpr char TdfMagic[] = { 'T', 'D', 'F', '#' };
 constexpr auto TdfMagicLen = int(sizeof(TdfMagic));
 
 constexpr auto kStrongIterationsCount = 100'000;
@@ -29,7 +29,7 @@ struct WriteEntry {
 	QString basePath;
 	QString base;
 	QByteArray data;
-	QByteArray md5;
+	QByteArray hash;
 };
 
 class WriteManager final {
@@ -103,7 +103,7 @@ void WriteManager::writeNow(WriteEntry &&entry) {
 	};
 	const auto write = [&](auto &file) {
 		file.write(entry.data);
-		file.write(entry.md5);
+		file.write(entry.hash);
 	};
 	const auto safe = path('s');
 	const auto simple = path('0');
@@ -328,12 +328,13 @@ MTP::AuthKeyPtr CreateLegacyLocalKey(
 		? LocalEncryptNoPwdIterCount // Don't slow down for no password.
 		: LocalEncryptIterCount;
 
-	PKCS5_PBKDF2_HMAC_SHA1(
+	PKCS5_PBKDF2_HMAC(
 		passcode.constData(),
 		passcode.size(),
 		(uchar*)salt.data(),
 		salt.size(),
 		iterationsCount,
+		EVP_sha384(),
 		key.size(),
 		(uchar*)key.data());
 
@@ -413,8 +414,8 @@ void FileWriteDescriptor::writeData(const QByteArray &data) {
 	if (QSysInfo::ByteOrder != QSysInfo::BigEndian) {
 		len = qbswap(len);
 	}
-	_md5.feed(&len, sizeof(len));
-	_md5.feed(data.constData(), data.size());
+	_hash.feed(&len, sizeof(len));
+	_hash.feed(data.constData(), data.size());
 	_fullSize += sizeof(len) + data.size();
 }
 
@@ -430,10 +431,10 @@ void FileWriteDescriptor::finish() {
 	}
 
 	_stream.setDevice(nullptr);
-	_md5.feed(&_fullSize, sizeof(_fullSize));
+	_hash.feed(&_fullSize, sizeof(_fullSize));
 	qint32 version = AppVersion;
-	_md5.feed(&version, sizeof(version));
-	_md5.feed(TdfMagic, TdfMagicLen);
+	_hash.feed(&version, sizeof(version));
+	_hash.feed(TdfMagic, TdfMagicLen);
 
 	_buffer.close();
 
@@ -441,7 +442,7 @@ void FileWriteDescriptor::finish() {
 		.basePath = _basePath,
 		.base = _base,
 		.data = _safeData,
-		.md5 = QByteArray((const char*)_md5.result(), 0x10)
+		.hash = QByteArray((const char*)_hash.result(), 48)
 	};
 	if (_sync) {
 		Manager.writeSync(std::move(entry));
@@ -464,8 +465,8 @@ void FileWriteDescriptor::finish() {
 		base::RandomFill(toEncrypt.data() + size, fullSize - size);
 	}
 	*(uint32*)toEncrypt.data() = size;
-	QByteArray encrypted(0x10 + fullSize, Qt::Uninitialized); // 128bit of sha1 - key128, sizeof(data), data
-	hashSha1(toEncrypt.constData(), toEncrypt.size(), encrypted.data());
+	QByteArray encrypted(0x10 + fullSize, Qt::Uninitialized); // 128bit of sha384 - key128, sizeof(data), data
+	hashSha384(toEncrypt.constData(), toEncrypt.size(), encrypted.data()); // Writes 48 bytes, but we use only first 16 for key
 	MTP::aesEncryptLocal(toEncrypt.constData(), encrypted.data() + 0x10, fullSize, key, encrypted.constData());
 
 	return encrypted;
@@ -544,7 +545,7 @@ bool ReadFile(
 
 		// read data
 		QByteArray bytes = f.read(f.size());
-		int32 dataSize = bytes.size() - 16;
+		int32 dataSize = bytes.size() - 48; // SHA-384 is 48 bytes
 		if (dataSize < 0) {
 			DEBUG_LOG(("App Info: bad file '%1', could not read sign part"
 				).arg(name));
@@ -552,12 +553,12 @@ bool ReadFile(
 		}
 
 		// check signature
-		HashMd5 md5;
-		md5.feed(bytes.constData(), dataSize);
-		md5.feed(&dataSize, sizeof(dataSize));
-		md5.feed(&version, sizeof(version));
-		md5.feed(magic, TdfMagicLen);
-		if (memcmp(md5.result(), bytes.constData() + dataSize, 16)) {
+		HashSha384 hash;
+		hash.feed(bytes.constData(), dataSize);
+		hash.feed(&dataSize, sizeof(dataSize));
+		hash.feed(&version, sizeof(version));
+		hash.feed(magic, TdfMagicLen);
+		if (memcmp(hash.result(), bytes.constData() + dataSize, 48)) {
 			DEBUG_LOG(("App Info: bad file '%1', signature did not match"
 				).arg(name));
 			continue;
@@ -596,8 +597,8 @@ bool DecryptLocal(
 	decrypted.resize(fullLen);
 	const char *encryptedKey = encrypted.constData(), *encryptedData = encrypted.constData() + 16;
 	aesDecryptLocal(encryptedData, decrypted.data(), fullLen, key, encryptedKey);
-	uchar sha1Buffer[20];
-	if (memcmp(hashSha1(decrypted.constData(), decrypted.size(), sha1Buffer), encryptedKey, 16)) {
+	uchar shaBuffer[48];
+	if (memcmp(hashSha384(decrypted.constData(), decrypted.size(), shaBuffer), encryptedKey, 16)) { // Compare first 16 bytes of SHA-384
 		LOG(("App Info: bad decrypt key, data not decrypted - incorrect password?"));
 		return false;
 	}

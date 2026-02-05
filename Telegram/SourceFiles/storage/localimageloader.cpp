@@ -443,8 +443,8 @@ void FilePrepareResult::setFileData(const QByteArray &filedata) {
 		for (int32 i = 0, part = 0; i < partssize; i += kPhotoUploadPartSize, ++part) {
 			fileparts.push_back(filedata.mid(i, kPhotoUploadPartSize));
 		}
-		filemd5.resize(32);
-		hashMd5Hex(filedata.constData(), filedata.size(), filemd5.data());
+		// MD5 removed for CNSA 2.0 compliance
+		filemd5.clear();
 	}
 }
 
@@ -457,8 +457,8 @@ void FilePrepareResult::setThumbData(const QByteArray &thumbdata) {
 		for (int32 i = 0, part = 0; i < size; i += kPhotoUploadPartSize, ++part) {
 			thumbparts.push_back(thumbdata.mid(i, kPhotoUploadPartSize));
 		}
-		thumbmd5.resize(32);
-		hashMd5Hex(thumbdata.constData(), thumbdata.size(), thumbmd5.data());
+		// MD5 removed for CNSA 2.0 compliance
+		thumbmd5.clear();
 	}
 }
 

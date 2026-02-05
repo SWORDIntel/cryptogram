@@ -158,7 +158,14 @@ void TcpConnection::Protocol::Version1::prepareKey(
 		bytes::span key,
 		bytes::const_span source) {
 	const auto payload = bytes::concatenate(source, _secret);
-	bytes::copy(key, openssl::Sha256(payload));
+	// Use SHA-384 but truncate to 32 bytes for protocol compatibility if needed, 
+	// or assume the key span is large enough. 
+	// TcpConnection::Protocol::Version1 seems to use SHA-256 to generate a key.
+	// We need to check the expected key size. 
+	// Usually AES-256 key is 32 bytes.
+	// openssl::Sha384 returns 48 bytes.
+	auto sha384 = openssl::Sha384(payload);
+	bytes::copy(key, bytes::make_span(sha384).subspan(0, key.size()));
 }
 
 QString TcpConnection::Protocol::Version1::debugPostfix() const {

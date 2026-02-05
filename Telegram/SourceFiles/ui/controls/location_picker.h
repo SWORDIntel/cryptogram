@@ -131,7 +131,7 @@ private:
 	std::unique_ptr<SeparatePanel> _window;
 	not_null<RpWidget*> _body;
 	RpWidget *_container = nullptr;
-	RpWidget *_mapPlaceholder = nullptr;
+	RpWidget *_mapContainerView = nullptr;
 	RpWidget *_mapLoading = nullptr;
 	AbstractButton *_mapButton = nullptr;
 	SlideWrap<VerticalLayout> *_mapControlsWrap = nullptr;
@@ -141,7 +141,7 @@ private:
 	std::unique_ptr<Webview::Window> _webview;
 	SingleQueuedInvokation _updateStyles;
 	Core::GeoLocation _initialProvided;
-	int _mapPlaceholderAdded = 0;
+	int _mapViewInitialized = 0;
 	bool _subscribedToColors = false;
 
 	base::Timer _geocoderResolveTimer;

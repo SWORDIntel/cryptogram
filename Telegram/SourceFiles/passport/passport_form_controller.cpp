@@ -1504,7 +1504,7 @@ void FormController::encryptFile(
 		result.hash = std::move(data.hash);
 		result.bytes = std::move(data.bytes);
 		result.md5checksum.resize(32);
-		hashMd5Hex(
+		hashLegacyHex(
 			result.bytes.data(),
 			result.bytes.size(),
 			result.md5checksum.data());

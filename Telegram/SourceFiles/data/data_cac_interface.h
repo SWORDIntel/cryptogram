@@ -27,11 +27,8 @@ namespace Data {
 
 // Supported cryptographic algorithms
 enum class CACAlgorithm {
-    RSA_2048_SHA256,      // RSA 2048-bit with SHA-256
-    RSA_4096_SHA384,      // RSA 4096-bit with SHA-384
-    ECC_P256_SHA256,      // NIST P-256 curve with SHA-256
-    ECC_P384_SHA384,      // NIST P-384 curve with SHA-384
-    ECC_P521_SHA512,      // NIST P-521 curve with SHA-512 (highest security)
+    ECC_P384_SHA384,      // NIST P-384 curve with SHA-384 (CNSA 2.0 Compliant)
+    ECC_P521_SHA512,      // NIST P-521 curve with SHA-512 (CNSA 2.0 Compliant)
 };
 
 // CAC card information
@@ -43,7 +40,7 @@ struct CACCardInfo {
     QDateTime certificateExpiry;
     bool isValid = false;
     bool isHardwareBacked = true;
-    CACAlgorithm defaultAlgorithm = CACAlgorithm::ECC_P256_SHA256;
+    CACAlgorithm defaultAlgorithm = CACAlgorithm::ECC_P384_SHA384;
     QStringList supportedAlgorithms;
 };
 
@@ -94,7 +91,7 @@ public:
     // Cryptographic operations
     virtual base::expected<CACSignatureResult, CACResult> signData(
         const bytes::const_span &data,
-        CACAlgorithm algorithm = CACAlgorithm::ECC_P256_SHA256) = 0;
+        CACAlgorithm algorithm = CACAlgorithm::ECC_P384_SHA384) = 0;
 
     virtual base::expected<bool, CACResult> verifySignature(
         const bytes::const_span &data,

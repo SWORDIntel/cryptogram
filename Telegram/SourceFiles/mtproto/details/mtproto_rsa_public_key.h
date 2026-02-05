@@ -31,10 +31,10 @@ public:
 	[[nodiscard]] bytes::vector getN() const;
 	[[nodiscard]] bytes::vector getE() const;
 
-	// data has exactly 256 chars to be encrypted
+	// data has exactly 256 chars to be encrypted (RSA) or variable for ECC
 	[[nodiscard]] bytes::vector encrypt(bytes::const_span data) const;
 
-	// data has exactly 256 chars to be decrypted
+	// data has exactly 256 chars to be decrypted (RSA) or variable for ECC
 	[[nodiscard]] bytes::vector decrypt(bytes::const_span data) const;
 
 	// data has lequal than 215 chars to be decrypted

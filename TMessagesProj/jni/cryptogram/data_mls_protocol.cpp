@@ -27,7 +27,7 @@ constexpr int kX25519KeySize = 32;
 constexpr int kX448KeySize = 56;
 constexpr int kEd25519KeySize = 32;
 constexpr int kEd448KeySize = 57;
-constexpr int kSHA256Size = 32;
+constexpr int kSHA384Size = 48; // Upgraded from 32 (legacy hash)
 constexpr int kSHA512Size = 64;
 constexpr int kAES128KeySize = 16;
 constexpr int kAES256KeySize = 32;
@@ -64,17 +64,17 @@ int getHashSize(MLSCiphersuite ciphersuite) {
 	switch (ciphersuite) {
 	case MLSCiphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519:
 	case MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519:
-		return kSHA256Size;
+		return kSHA384Size; // Upgraded to SHA-384
 	case MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448:
 		return kSHA512Size;
 	}
-	return kSHA256Size;
+	return kSHA384Size;
 }
 
-// Compute SHA-256 hash
-bytes::vector computeSHA256(const bytes::vector &data) {
-	bytes::vector result(kSHA256Size);
-	SHA256(data.data(), data.size(), result.data());
+// Compute SHA-384 hash (replaces SHA-256)
+bytes::vector computeSHA384(const bytes::vector &data) {
+	bytes::vector result(kSHA384Size);
+	SHA384(data.data(), data.size(), result.data());
 	return result;
 }
 
@@ -90,11 +90,11 @@ bytes::vector hashData(const bytes::vector &data, MLSCiphersuite ciphersuite) {
 	switch (ciphersuite) {
 	case MLSCiphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519:
 	case MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519:
-		return computeSHA256(data);
+		return computeSHA384(data);
 	case MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448:
 		return computeSHA512(data);
 	}
-	return computeSHA256(data);
+	return computeSHA384(data);
 }
 
 // Generate random bytes

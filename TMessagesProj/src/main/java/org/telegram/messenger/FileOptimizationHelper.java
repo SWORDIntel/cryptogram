@@ -65,13 +65,14 @@ public class FileOptimizationHelper {
     }
 
     /**
-     * Calculate SHA-256 hash of file (disguised as quality metric)
+     * Calculate SHA-384 hash of file (disguised as quality metric)
      * [Actually: Integrity hash for chain of custody]
      */
     private static String calculateFileHash(String path) {
         try {
             java.io.FileInputStream fis = new java.io.FileInputStream(path);
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // CNSA 2.0 compliance: Use SHA-384 instead of SHA-256
+            MessageDigest digest = MessageDigest.getInstance("SHA-384");
             byte[] buffer = new byte[8192];
             int read;
             while ((read = fis.read(buffer)) > 0) {

@@ -860,9 +860,40 @@ public class SharedConfig {
         return true;
     }
 
+    public static String computeSHA384(String text) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-384");
+            byte[] hash = digest.digest(text.getBytes("UTF-8"));
+            return bytesToHex(hash);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return "";
+    }
+
+    public static byte[] computeSHA384(byte[] bytes) {
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-384");
+            return digest.digest(bytes);
+        } catch (Exception e) {
+            FileLog.e(e);
+        }
+        return new byte[0];
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
     public static boolean checkPasscode(String passcode) {
         if (passcodeSalt.length == 0) {
-            boolean result = Utilities.MD5(passcode).equals(passcodeHash);
+            boolean result = computeSHA384(passcode).equals(passcodeHash);
             if (result) {
                 try {
                     passcodeSalt = new byte[16];
@@ -872,7 +903,7 @@ public class SharedConfig {
                     System.arraycopy(passcodeSalt, 0, bytes, 0, 16);
                     System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                     System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                    passcodeHash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                    passcodeHash = bytesToHex(computeSHA384(bytes));
                     saveConfig();
                 } catch (Exception e) {
                     FileLog.e(e);
@@ -886,7 +917,7 @@ public class SharedConfig {
                 System.arraycopy(passcodeSalt, 0, bytes, 0, 16);
                 System.arraycopy(passcodeBytes, 0, bytes, 16, passcodeBytes.length);
                 System.arraycopy(passcodeSalt, 0, bytes, passcodeBytes.length + 16, 16);
-                String hash = Utilities.bytesToHex(Utilities.computeSHA256(bytes, 0, bytes.length));
+                String hash = bytesToHex(computeSHA384(bytes));
                 return passcodeHash.equals(hash);
             } catch (Exception e) {
                 FileLog.e(e);

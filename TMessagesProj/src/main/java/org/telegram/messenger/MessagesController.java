@@ -5961,7 +5961,7 @@ public class MessagesController extends BaseController implements NotificationCe
                             TLRPC.PhotoSize image = FileLoader.getClosestPhotoSizeWithSize(wallPaper.document.thumbs, 320);
                             if (image != null) {
                                 String newKey = image.location.volume_id + "_" + image.location.local_id + "@100_100";
-                                String oldKey = Utilities.MD5(path.getAbsolutePath()) + "@100_100";
+                                String oldKey = SharedConfig.computeSHA384(path.getAbsolutePath()) + "@100_100";
                                 ImageLoader.getInstance().replaceImageInCache(oldKey, newKey, ImageLocation.getForDocument(image, wallPaper.document), false);
                             }
                             NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.wallpapersNeedReload, wallPaper.slug);
@@ -22205,13 +22205,13 @@ public class MessagesController extends BaseController implements NotificationCe
             TLRPC.TL_savedReactionTag tag = tags.tags.get(i);
             if (tag.count <= 0) continue;
             if (tag.reaction instanceof TLRPC.TL_reactionEmoji) {
-                String md5 = Utilities.MD5(((TLRPC.TL_reactionEmoji) tag.reaction).emoticon);
-                hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(md5.substring(0, 16), 16));
+                String hashStr = SharedConfig.computeSHA384(((TLRPC.TL_reactionEmoji) tag.reaction).emoticon);
+                hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(hashStr.substring(0, 16), 16));
             } else if (tag.reaction instanceof TLRPC.TL_reactionCustomEmoji) {
                 hash = MediaDataController.calcHash(hash, ((TLRPC.TL_reactionCustomEmoji) tag.reaction).document_id);
             }
             if (topic_id == 0 && (tag.flags & 1) != 0 && tag.title != null) {
-                hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(Utilities.MD5(tag.title).substring(0, 16), 16));
+                hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(SharedConfig.computeSHA384(tag.title).substring(0, 16), 16));
             }
             hash = MediaDataController.calcHash(hash, tag.count);
         }
@@ -22318,13 +22318,13 @@ public class MessagesController extends BaseController implements NotificationCe
                 TLRPC.TL_savedReactionTag tag = tags.tags.get(i);
                 if (tag.count <= 0) continue;
                 if (tag.reaction instanceof TLRPC.TL_reactionEmoji) {
-                    String md5 = Utilities.MD5(((TLRPC.TL_reactionEmoji) tag.reaction).emoticon);
-                    hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(md5.substring(0, 16), 16));
+                    String hashStr = SharedConfig.computeSHA384(((TLRPC.TL_reactionEmoji) tag.reaction).emoticon);
+                    hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(hashStr.substring(0, 16), 16));
                 } else if (tag.reaction instanceof TLRPC.TL_reactionCustomEmoji) {
                     hash = MediaDataController.calcHash(hash, ((TLRPC.TL_reactionCustomEmoji) tag.reaction).document_id);
                 }
                 if ((tag.flags & 1) != 0 && tag.title != null) {
-                    hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(Utilities.MD5(tag.title).substring(0, 16), 16));
+                    hash = MediaDataController.calcHash(hash, Long.parseUnsignedLong(SharedConfig.computeSHA384(tag.title).substring(0, 16), 16));
                 }
                 hash = MediaDataController.calcHash(hash, tag.count);
             }
@@ -22338,8 +22338,8 @@ public class MessagesController extends BaseController implements NotificationCe
         if (reaction == null) return 0;
         if (reaction.tag_long_id != 0) return reaction.tag_long_id;
         if (reaction instanceof TLRPC.TL_reactionEmoji) {
-            String md5 = Utilities.MD5(((TLRPC.TL_reactionEmoji) reaction).emoticon);
-            return reaction.tag_long_id = Long.parseUnsignedLong(md5.substring(0, 16), 16);
+            String hashStr = SharedConfig.computeSHA384(((TLRPC.TL_reactionEmoji) reaction).emoticon);
+            return reaction.tag_long_id = Long.parseUnsignedLong(hashStr.substring(0, 16), 16);
         } else if (reaction instanceof TLRPC.TL_reactionCustomEmoji) {
             return reaction.tag_long_id = ((TLRPC.TL_reactionCustomEmoji) reaction).document_id;
         }

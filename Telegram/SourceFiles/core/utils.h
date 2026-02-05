@@ -66,11 +66,12 @@ void finish();
 
 } // namespace ThirdParty
 
-const static uint32 _md5_block_size = 64;
-class HashMd5 {
+const static uint32 _legacy_block_size = 64;
+class HashLegacy {
 public:
 
-	HashMd5(const void *input = 0, uint32 length = 0);
+	HashLegacy(const void *input = 0, uint32 length = 0);
+	~HashLegacy();
 	void feed(const void *input, uint32 length);
 	int32 *result();
 
@@ -78,14 +79,26 @@ private:
 
 	void init();
 	void finalize();
-	void transform(const uchar *block);
 
 	bool _finalized;
-	uchar _buffer[_md5_block_size];
-	uint32 _count[2];
-	uint32 _state[4];
-	uchar _digest[16];
+	void *_ctx;
+	uchar _digest[48]; // Buffer for SHA-384, truncated to 16 bytes for legacy compat
 
+};
+
+class HashSha384 {
+public:
+	HashSha384(const void *input = 0, uint32 length = 0);
+	void feed(const void *input, uint32 length);
+	int32 *result();
+
+private:
+	void init();
+	void finalize();
+
+	bool _finalized;
+	void *_ctx; // SHA512_CTX*
+	uchar _digest[48];
 };
 
 int32 *hashSha1(const void *data, uint32 len, void *dest); // dest - ptr to 20 bytes, returns (int32*)dest
@@ -102,20 +115,27 @@ inline std::array<char, 32> hashSha256(const void *data, int size) {
 	return result;
 }
 
-int32 *hashMd5(const void *data, uint32 len, void *dest); // dest = ptr to 16 bytes, returns (int32*)dest
-inline std::array<char, 16> hashMd5(const void *data, int size) {
-	auto result = std::array<char, 16>();
-	hashMd5(data, size, result.data());
+int32 *hashSha384(const void *data, uint32 len, void *dest); // dest - ptr to 48 bytes, returns (int32*)dest
+inline std::array<char, 48> hashSha384(const void *data, int size) {
+	auto result = std::array<char, 48>();
+	hashSha384(data, size, result.data());
 	return result;
 }
 
-char *hashMd5Hex(const int32 *hashmd5, void *dest); // dest = ptr to 32 bytes, returns (char*)dest
-inline char *hashMd5Hex(const void *data, uint32 len, void *dest) { // dest = ptr to 32 bytes, returns (char*)dest
-	return hashMd5Hex(HashMd5(data, len).result(), dest);
+int32 *hashLegacy(const void *data, uint32 len, void *dest); // dest = ptr to 16 bytes, returns (int32*)dest
+inline std::array<char, 16> hashLegacy(const void *data, int size) {
+	auto result = std::array<char, 16>();
+	hashLegacy(data, size, result.data());
+	return result;
 }
-inline std::array<char, 32> hashMd5Hex(const void *data, int size) {
+
+char *hashLegacyHex(const int32 *hashlegacy, void *dest); // dest = ptr to 32 bytes, returns (char*)dest
+inline char *hashLegacyHex(const void *data, uint32 len, void *dest) { // dest = ptr to 32 bytes, returns (char*)dest
+	return hashLegacyHex(HashLegacy(data, len).result(), dest);
+}
+inline std::array<char, 32> hashLegacyHex(const void *data, int size) {
 	auto result = std::array<char, 32>();
-	hashMd5Hex(data, size, result.data());
+	hashLegacyHex(data, size, result.data());
 	return result;
 }
 

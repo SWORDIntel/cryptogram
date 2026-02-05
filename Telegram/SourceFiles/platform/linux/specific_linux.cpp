@@ -359,7 +359,7 @@ bool GenerateDesktopFile(
 			cExeName()).toUtf8();
 
 		char md5Hash[33] = { 0 };
-		hashMd5Hex(
+		hashLegacyHex(
 			appimagePath.constData(),
 			appimagePath.size(),
 			md5Hash);
@@ -369,7 +369,7 @@ bool GenerateDesktopFile(
 			AppName.utf16().replace(' ', '_')));
 
 		const auto d = QFile::encodeName(QDir(cWorkingDir()).absolutePath());
-		hashMd5Hex(d.constData(), d.size(), md5Hash);
+		hashLegacyHex(d.constData(), d.size(), md5Hash);
 
 		if (!Core::Launcher::Instance().customWorkingDir()) {
 			QFile::remove(u"%1io.github.tdesktop_x64.TDesktop._%2.desktop"_q.arg(
@@ -378,7 +378,7 @@ bool GenerateDesktopFile(
 
 			const auto exePath = QFile::encodeName(
 				cExeDir() + cExeName());
-			hashMd5Hex(exePath.constData(), exePath.size(), md5Hash);
+			hashLegacyHex(exePath.constData(), exePath.size(), md5Hash);
 		}
 
 		QFile::remove(u"%1io.github.tdesktop_x64.TDesktop.desktop"_q.arg(
@@ -437,7 +437,7 @@ bool GenerateServiceFile(bool silent = false) {
 
 		char md5Hash[33] = { 0 };
 		const auto d = QFile::encodeName(QDir(cWorkingDir()).absolutePath());
-		hashMd5Hex(d.constData(), d.size(), md5Hash);
+		hashLegacyHex(d.constData(), d.size(), md5Hash);
 
 		QFile::remove(u"%1io.github.tdesktop_x64.TDesktop._%2.service"_q.arg(
 			targetPath,
@@ -518,7 +518,7 @@ void InstallLauncher() {
 [[nodiscard]] QByteArray HashForSocketPath() {
 	constexpr auto kHashForSocketPathLength = 24;
 
-	const auto binary = openssl::Sha256(
+	const auto binary = openssl::Sha384(
 		bytes::make_span(Core::Launcher::Instance().instanceHash()));
 	const auto base64 = QByteArray(
 		reinterpret_cast<const char*>(binary.data()),

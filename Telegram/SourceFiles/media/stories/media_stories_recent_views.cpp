@@ -488,7 +488,7 @@ void RecentViews::showMenu() {
 		_menuShortLifetime.destroy();
 		_menuEntries.clear();
 		_menuEntriesCount = 0;
-		_menuPlaceholderCount = 0;
+		_menuLoadingItemCount = 0;
 	}));
 
 	const auto size = _menu->size();
@@ -537,8 +537,8 @@ void RecentViews::addMenuRow(Data::StoryView entry, const QDateTime &now) {
 			.callback = [=] { show->show(PrepareShortInfoBox(peer)); },
 		};
 	};
-	if (_menuPlaceholderCount > 0) {
-		const auto i = _menuEntries.end() - (_menuPlaceholderCount--);
+	if (_menuLoadingItemCount > 0) {
+		const auto i = _menuEntries.end() - (_menuLoadingItemCount--);
 		auto data = prepare(i->view);
 		i->peer = peer;
 		i->type = type;
@@ -568,7 +568,7 @@ void RecentViews::addMenuRow(Data::StoryView entry, const QDateTime &now) {
 			.view = std::move(view),
 		});
 	}
-	const auto i = end(_menuEntries) - _menuPlaceholderCount - 1;
+	const auto i = end(_menuEntries) - _menuLoadingItemCount - 1;
 	i->key = peer->userpicUniqueKey(i->view);
 	if (peer->hasUserpic() && peer->useEmptyUserpic(i->view)) {
 		if (_waitingForUserpics.emplace(i - begin(_menuEntries)).second
@@ -587,18 +587,18 @@ void RecentViews::addMenuRowPlaceholder(not_null<Main::Session*> session) {
 	const auto raw = action.get();
 	_menu->addAction(std::move(action));
 	_menuEntries.push_back({ .action = raw });
-	++_menuPlaceholderCount;
+	++_menuLoadingItemCount;
 }
 
 void RecentViews::rebuildMenuTail() {
-	const auto elements = _menuEntries.size() - _menuPlaceholderCount;
+	const auto elements = _menuEntries.size() - _menuLoadingItemCount;
 	const auto views = _controller->views(elements + kAddPerPage, false);
 	if (views.list.size() <= elements) {
 		return;
 	}
 	const auto now = QDateTime::currentDateTime();
 	const auto added = std::min(
-		_menuPlaceholderCount + kAddPerPage,
+		_menuLoadingItemCount + kAddPerPage,
 		int(views.list.size() - elements));
 	const auto height = _menu->height();
 	for (auto i = elements, till = i + added; i != till; ++i) {

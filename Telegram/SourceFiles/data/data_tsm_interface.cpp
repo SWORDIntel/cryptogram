@@ -72,7 +72,7 @@ QString makeKeyId() {
     const QByteArray raw(
         reinterpret_cast<const char*>(randomData.data()),
         randomData.size());
-    const auto hash = QCryptographicHash::hash(raw, QCryptographicHash::Sha256);
+    const auto hash = QCryptographicHash::hash(raw, QCryptographicHash::Sha384);
     return QString::fromLatin1(hash.toHex());
 }
 
@@ -184,7 +184,7 @@ bytes::vector hmacSha256(
     bytes::vector result(EVP_MAX_MD_SIZE);
     unsigned int len = 0;
     HMAC(
-        EVP_sha256(),
+        EVP_sha384(),
         asConstUChar(key),
         key.size(),
         asConstUChar(data),
@@ -217,7 +217,7 @@ public:
         _capabilities.supportsSigning = true;
         _capabilities.supportsAttestation = false;
         _capabilities.supportsSecureStorage = false;
-        _capabilities.supportedAlgorithms = {"AES-256-GCM", "HMAC-SHA256"};
+        _capabilities.supportedAlgorithms = {"AES-256-GCM", "HMAC-SHA384"};
         return TSMResult::Success;
     }
 
@@ -328,8 +328,8 @@ public:
         }
         TSMSignatureResult result;
         result.keyId = keyId;
-        result.algorithm = "HMAC-SHA256";
-        result.signature = hmacSha256(it->second.rawKey, data);
+        result.algorithm = "HMAC-SHA384";
+        result.signature = hmacSha384(it->second.rawKey, data);
         return result;
     }
 

@@ -68,12 +68,12 @@ QByteArray generateSecurityToken(const QByteArray &data) {
         int(randomData.size()));
     const auto hmacKey = QCryptographicHash::hash(
         randomBytes,
-        QCryptographicHash::Sha256);
+        QCryptographicHash::Sha384);
 
     return QMessageAuthenticationCode::hash(
         data,
         hmacKey,
-        QCryptographicHash::Sha256).toHex();
+        QCryptographicHash::Sha384).toHex();
 }
 
 // Check for common installation paths
@@ -432,10 +432,10 @@ QByteArray VoiceSecurityManager::createVerificationToken(const QByteArray &proce
     settingsStream << _settings.addNoiseLayer;
     settingsStream << _settings.noiseLevel;
     
-    // Hash the voice data with SHA-256
+    // Hash the voice data with SHA-384 (CNSA 2.0 compliant)
     const auto dataHash = QCryptographicHash::hash(
         processedData, 
-        QCryptographicHash::Sha256);
+        QCryptographicHash::Sha384);
         
     // Create timestamp and nonce
     const auto timestamp = QString::number(QDateTime::currentSecsSinceEpoch());
@@ -450,8 +450,8 @@ QByteArray VoiceSecurityManager::createVerificationToken(const QByteArray &proce
     messageStream << timestamp.toUtf8();
     messageStream << nonce.toUtf8();
     
-    // Create HMAC-SHA256 signature
-    QMessageAuthenticationCode hmac(QCryptographicHash::Sha256);
+    // Create HMAC-SHA384 signature
+    QMessageAuthenticationCode hmac(QCryptographicHash::Sha384);
     const auto keyData = authKey->creationTime() > 0
         ? authSpan
         : MTP::AuthKey::GenerateRandomData();

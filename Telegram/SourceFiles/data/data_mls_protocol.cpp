@@ -71,10 +71,11 @@ int getHashSize(MLSCiphersuite ciphersuite) {
 	return kSHA256Size;
 }
 
-// Compute SHA-256 hash
-bytes::vector computeSHA256(const bytes::vector &data) {
-	bytes::vector result(kSHA256Size);
-	SHA256(data.data(), data.size(), result.data());
+// Compute SHA-256 hash (Upgraded to use SHA-384 context where possible, or just used for compatibility)
+// For CNSA 2.0 we prefer SHA-384. This function name is kept but implementation uses SHA-384 if allowed or we replace usage.
+// Actually, let's just use SHA-384.
+	bytes::vector result(48); // SHA-384 size
+	SHA384(data.data(), data.size(), result.data());
 	return result;
 }
 

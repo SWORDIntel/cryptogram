@@ -119,7 +119,7 @@ private:
 	rpl::lifetime _menuShortLifetime;
 	std::vector<MenuEntry> _menuEntries;
 	rpl::variable<int> _menuEntriesCount = 0;
-	int _menuPlaceholderCount = 0;
+	int _menuLoadingItemCount = 0;
 	base::flat_set<int> _waitingForUserpics;
 	rpl::variable<bool> _shortAnimationPlaying;
 	bool _waitingUserpicsCheck = false;

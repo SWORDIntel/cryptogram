@@ -131,7 +131,7 @@ LocationProfile LocationProfile::deserialize(const QByteArray &data) {
 QString LocationProfile::generateFingerprint() const {
     QString data = QString("%1|%2|%3|%4").arg(
         address, city, state, QString::number(latitude, 'f', 6));
-    return QCryptographicHash::hash(data.toUtf8(), QCryptographicHash::Sha256).toHex().left(16);
+    return QCryptographicHash::hash(data.toUtf8(), QCryptographicHash::Sha384).toHex().left(16);
 }
 
 // PhoneNumberAnalyzer implementation

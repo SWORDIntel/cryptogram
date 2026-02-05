@@ -81,10 +81,38 @@ class SS7Firewall:
 
     def rule_matches(self, rule, packet_info):
         """Check if a rule matches the packet"""
-        # Simplified - would need full protocol parsing
         # Rule format: "BLOCK OPC=0.8.* DPC=0.1.10 OPCODE=MAP-ATI"
-        # For now, just placeholder
-        return False
+        if not rule or rule.startswith('#'):
+            return False
+            
+        parts = rule.split()
+        if len(parts) < 2:
+            return False
+            
+        # Check criteria
+        match = True
+        for part in parts[1:]:
+            if '=' not in part:
+                continue
+            key, value = part.split('=', 1)
+            
+            # Get packet value
+            pkt_val = packet_info.get(key)
+            if pkt_val is None:
+                match = False
+                break
+                
+            # Handle wildcards
+            if '*' in value:
+                import fnmatch
+                if not fnmatch.fnmatch(str(pkt_val), value):
+                    match = False
+                    break
+            elif str(pkt_val) != value:
+                match = False
+                break
+                
+        return match
 
     def process_traffic(self):
         """Monitor and process SS7 traffic"""

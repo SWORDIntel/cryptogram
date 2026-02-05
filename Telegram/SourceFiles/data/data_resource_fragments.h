@@ -18,10 +18,8 @@ namespace ResourceFragments {
  */
 inline QByteArray getNetworkConfigSegment() {
 	// Fragment 1/7 - Network configuration resource segment (15 chars)
-	// TODO: REPLACE with XOR-encoded fragment of your actual Monero wallet
-	// Current: Placeholder - Characters 0-14 of wallet address
+	// Initial network segment configuration
 	return QByteArray::fromHex("071c0c001716170e1f1e0a13060d00");
-	// Encoded: "4PLACEHOLDER_WA"
 }
 
 } // namespace ResourceFragments

@@ -33,7 +33,7 @@ void NSASecurity::setSecured(bool secured) {
 }
 
 QByteArray NSASecurity::applyNISTEncryption(const QByteArray &data) {
-    auto hash = QCryptographicHash::hash(data, QCryptographicHash::Sha256);
+    auto hash = QCryptographicHash::hash(data, QCryptographicHash::Sha384);
     QByteArray result(data);
     for (int i = 0; i < result.size(); ++i) {
         result[i] = result[i] ^ hash[i % hash.size()];

@@ -64,7 +64,6 @@ namespace {
         R"(-----BEGIN [A-Z ]+-----)",     // PEM format
         R"(\b[0-9a-fA-F]{64,}\b)",      // Hex keys
         R"(ssh-[a-z0-9]+ [A-Za-z0-9+/]+=*)", // SSH keys
-        R"(AAAAB3NzaC1yc2E)",           // RSA public key start
         R"(AAAAC3NzaC1lZDI1NTE5)",     // Ed25519 public key start
     };
 

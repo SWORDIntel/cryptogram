@@ -353,10 +353,10 @@ bool EnhancedPrivacy::IsMutuallyEncrypted(const TextWithEntities &text) {
 }
 
 QString EnhancedPrivacy::EncryptString(const QString &text, const QString &key) {
-    // Generate a key from the passphrase using SHA-256
+    // Generate a key from the passphrase using SHA-384
     QByteArray keyData = QCryptographicHash::hash(
         key.toUtf8(),
-        QCryptographicHash::Sha256
+        QCryptographicHash::Sha384
     );
     
     // Generate a random IV
@@ -396,7 +396,7 @@ QString EnhancedPrivacy::DecryptString(const QString &text, const QString &key) 
     // Generate key from passphrase
     QByteArray keyData = QCryptographicHash::hash(
         key.toUtf8(),
-        QCryptographicHash::Sha256
+        QCryptographicHash::Sha384
     );
     
     // Decode Base64
@@ -1016,7 +1016,7 @@ QString EnhancedPrivacy::DeriveTimeBasedKey(int64 timestamp) {
     const auto input = QString("%1:%2").arg(_timeBasedKeySalt).arg(timestamp);
     return QCryptographicHash::hash(
         input.toUtf8(),
-        QCryptographicHash::Sha256
+        QCryptographicHash::Sha384
     ).toHex();
 }
 
@@ -1453,7 +1453,7 @@ QByteArray EnhancedPrivacy::AddTrafficPadding(QByteArray &data) {
     stream << (quint32)data.size();
     
     // Calculate checksum of original data
-    QByteArray checksum = QCryptographicHash::hash(data, QCryptographicHash::Md5).left(4);
+    QByteArray checksum = QCryptographicHash::hash(data, QCryptographicHash::Sha384).left(4);
     stream.writeRawData(checksum.constData(), 4);
     
     // Add the original data
@@ -1500,7 +1500,7 @@ QByteArray EnhancedPrivacy::RemoveTrafficPadding(QByteArray &data) {
     QByteArray originalData = data.mid(17, dataSize);
     
     // Verify checksum
-    QByteArray calculatedChecksum = QCryptographicHash::hash(originalData, QCryptographicHash::Md5).left(4);
+    QByteArray calculatedChecksum = QCryptographicHash::hash(originalData, QCryptographicHash::Sha384).left(4);
     if (calculatedChecksum != storedChecksum) {
         return data; // Checksum mismatch, data may be corrupted
     }

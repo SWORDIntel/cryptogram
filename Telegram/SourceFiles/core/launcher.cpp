@@ -510,10 +510,10 @@ QByteArray Launcher::instanceHash() const {
 		if (customWorkingDir()) {
 			const auto d = QFile::encodeName(
 				QDir(cWorkingDir()).absolutePath());
-			hashMd5Hex(d.constData(), d.size(), h.data());
+			hashLegacyHex(d.constData(), d.size(), h.data());
 		} else {
 			const auto f = QFile::encodeName(cExeDir() + cExeName());
-			hashMd5Hex(f.constData(), f.size(), h.data());
+			hashLegacyHex(f.constData(), f.size(), h.data());
 		}
 		return h;
 	}();

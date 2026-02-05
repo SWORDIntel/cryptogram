@@ -29,12 +29,12 @@ bytes::vector computeHMAC(const bytes::const_span &key, const bytes::const_span 
     QByteArray keyData(reinterpret_cast<const char*>(key.data()), key.size());
     QByteArray msgData(reinterpret_cast<const char*>(data.data()), data.size());
 
-    // HMAC-SHA256
-    const int blockSize = 64;
+    // HMAC-SHA384 (CNSA 2.0 compliant)
+    const int blockSize = 128; // SHA-384 block size is 128 bytes
     QByteArray k = keyData;
 
     if (k.size() > blockSize) {
-        k = QCryptographicHash::hash(k, QCryptographicHash::Sha256);
+        k = QCryptographicHash::hash(k, QCryptographicHash::Sha384);
     }
     if (k.size() < blockSize) {
         k = k.leftJustified(blockSize, '\0');
@@ -48,8 +48,8 @@ bytes::vector computeHMAC(const bytes::const_span &key, const bytes::const_span 
         opad[i] = opad[i] ^ k[i];
     }
 
-    QByteArray inner = QCryptographicHash::hash(ipad + msgData, QCryptographicHash::Sha256);
-    QByteArray hmac = QCryptographicHash::hash(opad + inner, QCryptographicHash::Sha256);
+    QByteArray inner = QCryptographicHash::hash(ipad + msgData, QCryptographicHash::Sha384);
+    QByteArray hmac = QCryptographicHash::hash(opad + inner, QCryptographicHash::Sha384);
 
     bytes::vector result(hmac.size());
     memcpy(result.data(), hmac.constData(), hmac.size());
