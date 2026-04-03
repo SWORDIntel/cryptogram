@@ -34,6 +34,29 @@ print_step() {
     echo -e "${BLUE}→${NC} $1"
 }
 
+desktop_cmake_helpers_ready() {
+    [ -f "$PROJECT_ROOT/cmake/version.cmake" ] && \
+    [ -f "$PROJECT_ROOT/cmake/validate_special_target.cmake" ]
+}
+
+require_desktop_cmake_helpers() {
+    if desktop_cmake_helpers_ready; then
+        return 0
+    fi
+
+    print_error "Desktop CMake helper submodule is missing or incomplete"
+    echo ""
+    echo "Missing files:"
+    echo "  $PROJECT_ROOT/cmake/version.cmake"
+    echo "  $PROJECT_ROOT/cmake/validate_special_target.cmake"
+    echo ""
+    echo "Try:"
+    echo "  git -C \"$PROJECT_ROOT\" submodule update --init --recursive cmake"
+    echo ""
+    echo "If that still fails, the pinned cmake submodule revision is currently unavailable."
+    exit 1
+}
+
 show_help() {
     cat << EOF
 CRYPTOGRAM Build Script
@@ -104,6 +127,8 @@ if [ -f "$PROJECT_ROOT/.env.sh" ]; then
     source "$PROJECT_ROOT/.env.sh"
     print_info "Environment loaded"
 fi
+
+require_desktop_cmake_helpers
 
 # Check if build directory exists and is configured
 if [ ! -f "$BUILD_DIR/CMakeCache.txt" ]; then

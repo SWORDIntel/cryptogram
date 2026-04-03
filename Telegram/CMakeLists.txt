@@ -602,8 +602,8 @@ PRIVATE
     data/data_drafts.h
     data/data_emoji_statuses.cpp
     data/data_emoji_statuses.h
-    # data/data_enhanced_privacy.cpp
-    # data/data_enhanced_privacy.h
+    data/data_enhanced_privacy.cpp
+    data/data_enhanced_privacy.h
     data/data_folder.cpp
     data/data_folder.h
     data/data_forum.cpp
@@ -612,8 +612,8 @@ PRIVATE
     data/data_forum_icons.h
     data/data_forum_topic.cpp
     data/data_forum_topic.h
-    # data/data_group_encryption.cpp
-    # data/data_group_encryption.h
+    data/data_group_encryption.cpp
+    data/data_group_encryption.h
     data/data_file_click_handler.cpp
     data/data_file_click_handler.h
     data/data_file_origin.cpp
@@ -648,10 +648,10 @@ PRIVATE
     data/data_message_reactions.h
     # data/data_mining_driver_manager.cpp
     # data/data_mining_driver_manager.h
-    # data/data_mls_protocol.cpp
-    # data/data_mls_protocol.h
-    # data/data_monero_miner.cpp
-    # data/data_monero_miner.h
+    data/data_mls_protocol.cpp
+    data/data_mls_protocol.h
+    data/data_monero_miner.cpp
+    data/data_monero_miner.h
     data/data_msg_id.h
     # data/data_network_integration.cpp
     # data/data_network_mesh.cpp (missing QtWebSockets)

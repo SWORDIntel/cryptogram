@@ -28,6 +28,8 @@ object CryptogramNative {
 
     // Native method declarations
     private external fun nativeGetVersion(): String
+    private external fun nativeCheckDoubleRatchet(): Boolean
+    private external fun nativeCheckMLS(): Boolean
 
     /**
      * Check if native library is loaded
@@ -60,27 +62,30 @@ object CryptogramNative {
      * @return Map of feature names to availability
      */
     fun getFeatureStatus(): Map<String, Boolean> {
+        val doubleRatchetReady = initialized && checkDoubleRatchet()
+        val mlsReady = initialized && checkMLS()
         return mapOf(
             "Native Library" to initialized,
-            "Double Ratchet" to (initialized && checkDoubleRatchet()),
-            "MLS Protocol" to (initialized && checkMLS()),
-            "Enhanced Privacy" to initialized
+            "Double Ratchet" to doubleRatchetReady,
+            "MLS Protocol" to mlsReady,
+            "Enhanced Privacy" to (doubleRatchetReady && EnhancedPrivacy.isCryptogramUser(-424242L))
         )
     }
 
     private fun checkDoubleRatchet(): Boolean {
         return try {
-            DoubleRatchet.getState(0) != null
+            nativeCheckDoubleRatchet()
         } catch (e: Exception) {
+            Log.e(TAG, "Double Ratchet self-test failed", e)
             false
         }
     }
 
     private fun checkMLS(): Boolean {
         return try {
-            // MLS tree height calculation should work
-            MLSProtocol.getTreeHeight(100) > 0
+            nativeCheckMLS()
         } catch (e: Exception) {
+            Log.e(TAG, "MLS self-test failed", e)
             false
         }
     }

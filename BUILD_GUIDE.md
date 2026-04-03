@@ -17,6 +17,12 @@ Quick reference for building CRYPTOGRAM on different platforms.
 
 Build CRYPTOGRAM desktop application for Linux.
 
+Important for this repo snapshot:
+- The desktop source tree expects a populated top-level `cmake` git submodule.
+- Required helper files include `cmake/version.cmake` and `cmake/validate_special_target.cmake`.
+- If those files are missing, desktop configure cannot start.
+- The current pinned `cmake` submodule revision may be unavailable upstream, so `git submodule update --init --recursive cmake` can still fail even on a healthy machine.
+
 ### Quick Start
 ```bash
 ./build_linux.sh
@@ -44,6 +50,17 @@ JOBS=8 ./build_linux.sh
   - C++ compiler (gcc/clang)
   - CMake, Ninja
   - All dependencies (OpenAL, LZ4, FFmpeg, etc.)
+- A fetchable top-level `cmake` submodule revision
+
+### Current Desktop Limitation
+
+If `build_linux.sh`, `build_all.sh`, or `build.sh` stops with a missing `cmake/version.cmake` or `cmake/validate_special_target.cmake` error, the checkout is missing the root helper submodule contents. The intended recovery command is:
+
+```bash
+git submodule update --init --recursive cmake
+```
+
+If that command fails to fetch the pinned commit, the desktop tree cannot currently be configured from this snapshot alone.
 
 ---
 
@@ -51,47 +68,64 @@ JOBS=8 ./build_linux.sh
 
 Build CRYPTOGRAM/SWORDCOMM Android APK.
 
+Important for this repo snapshot:
+- This repository does not currently contain a self-contained Android Gradle project.
+- `build_apk.sh` builds against an external Android Gradle checkout that you provide.
+- A valid external project root must contain `gradlew` plus Gradle build files such as `build.gradle`, `build.gradle.kts`, `settings.gradle`, `settings.gradle.kts`, or `app/build.gradle`.
+- Autodiscovery in `build_apk.sh` is best-effort only; pass the external project path explicitly when possible.
+
 ### Quick Start
 ```bash
-# Auto-detect project location
-./build_apk.sh
+# Preferred: pass the external Android project explicitly
+./build_apk.sh /path/to/android/gradle/project
 
-# Specify project path
-./build_apk.sh /path/to/android/project
+# Or via environment variable
+ANDROID_PROJECT_PATH=/path/to/android/gradle/project ./build_apk.sh
 ```
 
 ### Build Variants
 ```bash
 # Debug build (default)
-./build_apk.sh
+./build_apk.sh /path/to/android/gradle/project
 
 # Release build (requires signing)
-BUILD_VARIANT=release ./build_apk.sh
+BUILD_VARIANT=release ./build_apk.sh /path/to/android/gradle/project
 
 # Clean build
-CLEAN_BUILD=1 ./build_apk.sh
+CLEAN_BUILD=1 ./build_apk.sh /path/to/android/gradle/project
 
 # Different flavor
-FLAVOR=gms BUILD_VARIANT=release ./build_apk.sh
+FLAVOR=gms BUILD_VARIANT=release ./build_apk.sh /path/to/android/gradle/project
 ```
+
+Avoid relying on `BUILD_VARIANT=release ./build_apk.sh` without a path unless you know one of the script's fallback search locations already contains the correct external Android checkout.
 
 ### Release Signing
 ```bash
 export CI_KEYSTORE_PATH=/path/to/keystore.jks
 export CI_KEYSTORE_PASSWORD=your_password
 export CI_KEYSTORE_ALIAS=your_alias
-BUILD_VARIANT=release ./build_apk.sh
+BUILD_VARIANT=release ./build_apk.sh /path/to/android/gradle/project
 ```
 
 ### Output
-- Debug APK: `app/build/outputs/apk/foss/debug/`
-- Release APK: `app/build/outputs/apk/foss/release/`
+- Typical debug APK: `<external-project>/app/build/outputs/apk/foss/debug/`
+- Typical release APK: `<external-project>/app/build/outputs/apk/foss/release/`
+- Some Android bases may instead emit under `build/outputs/apk/` or `TMessagesProj/build/outputs/apk/`
 - Build time: ~5-15 minutes
 
 ### Requirements
 - Java JDK 17+
 - Android SDK
-- Gradle (wrapper included in project)
+- An external Android Gradle project with `gradlew`
+
+### Current Repository Limitation
+
+The CRYPTOGRAM repository contains Android source modifications under `TMessagesProj/`, but it does not ship the full Gradle Android base in this snapshot. That means:
+
+- `./build_apk.sh` cannot succeed on this repo alone
+- you must point it at an external Android project checkout
+- the script will fail fast if that external path is missing `gradlew` or Gradle build files
 
 ---
 
@@ -121,16 +155,16 @@ Features:
 rm -rf build_release && ./build_linux.sh
 
 # Android
-CLEAN_BUILD=1 ./build_apk.sh
+CLEAN_BUILD=1 ./build_apk.sh /path/to/android/gradle/project
 ```
 
 ### Install APK on Device
 ```bash
 # Find APK
-find . -name "*.apk" -mmin -60
+find /path/to/android/gradle/project -name "*.apk" -mmin -60
 
 # Install
-adb install -r app/build/outputs/apk/foss/debug/app-foss-debug.apk
+adb install -r /path/to/android/gradle/project/app/build/outputs/apk/foss/debug/app-foss-debug.apk
 ```
 
 ### Run Desktop Binary
@@ -139,10 +173,12 @@ adb install -r app/build/outputs/apk/foss/debug/app-foss-debug.apk
 ./build_release/bin/Telegram
 
 # With TSM integration
-source .tsm_cryptogram_env.sh
+source /media/john/NVME_STORAGE10/CRYPTOGRAM/.tsm_cryptogram_env.sh
 python -m Telegram.lib_tsm.mock_server.server &
 ./build_release/bin/Telegram
 ```
+
+If you are not already in the repository root, use an absolute path when sourcing `.tsm_cryptogram_env.sh`.
 
 ---
 
@@ -174,8 +210,9 @@ export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
 
 **Gradle daemon issues:**
 ```bash
+cd /path/to/android/gradle/project
 ./gradlew --stop
-CLEAN_BUILD=1 ./build_apk.sh
+CLEAN_BUILD=1 /media/john/NVME_STORAGE10/CRYPTOGRAM/build_apk.sh /path/to/android/gradle/project
 ```
 
 **Java version mismatch:**
@@ -204,6 +241,8 @@ ls -lh /tmp/cryptogram_builds_root/apk_build_*.log
 tail -f /tmp/cryptogram_builds_root/*_build_*.log | tail -100
 ```
 
+`build_all.sh` may use a user-specific log directory such as `/tmp/cryptogram_builds_$USER/` or `$HOME/.cache/cryptogram_builds/` if `/tmp/cryptogram_builds_root/` is not the active location for that script.
+
 ---
 
 ## 🚀 CI/CD Integration
@@ -229,8 +268,13 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: '17'
+      - name: Checkout Android base
+        uses: actions/checkout@v3
+        with:
+          repository: your-org/your-android-base
+          path: android-base
       - name: Build APK
-        run: ./build_apk.sh
+        run: ./build_apk.sh "$GITHUB_WORKSPACE/android-base"
 ```
 
 ---

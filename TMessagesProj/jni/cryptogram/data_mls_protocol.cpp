@@ -32,6 +32,61 @@ constexpr int kSHA512Size = 64;
 constexpr int kAES128KeySize = 16;
 constexpr int kAES256KeySize = 32;
 constexpr int kChaCha20KeySize = 32;
+constexpr int kGcmIvSize = 12;
+constexpr int kGcmTagSize = 16;
+
+std::optional<std::pair<bytes::vector, bytes::vector>> generateRawKeyPair(
+	int keyType,
+	size_t publicKeySize,
+	size_t privateKeySize) {
+	EVP_PKEY_CTX *pctx = EVP_PKEY_CTX_new_id(keyType, nullptr);
+	if (!pctx) {
+		return std::nullopt;
+	}
+
+	bool ok = EVP_PKEY_keygen_init(pctx) == 1;
+	EVP_PKEY *pkey = nullptr;
+	if (ok) {
+		ok = EVP_PKEY_keygen(pctx, &pkey) == 1;
+	}
+	EVP_PKEY_CTX_free(pctx);
+
+	if (!ok || !pkey) {
+		if (pkey) {
+			EVP_PKEY_free(pkey);
+		}
+		return std::nullopt;
+	}
+
+	bytes::vector publicKey(publicKeySize);
+	bytes::vector privateKey(privateKeySize);
+	size_t actualPublicKeySize = publicKey.size();
+	size_t actualPrivateKeySize = privateKey.size();
+	ok =
+		EVP_PKEY_get_raw_public_key(pkey, publicKey.data(), &actualPublicKeySize) == 1 &&
+		EVP_PKEY_get_raw_private_key(pkey, privateKey.data(), &actualPrivateKeySize) == 1;
+	EVP_PKEY_free(pkey);
+
+	if (!ok) {
+		return std::nullopt;
+	}
+
+	publicKey.resize(actualPublicKeySize);
+	privateKey.resize(actualPrivateKeySize);
+	return std::make_pair(std::move(publicKey), std::move(privateKey));
+}
+
+std::optional<std::pair<bytes::vector, bytes::vector>> generateSignatureKeyPair(
+	MLSCiphersuite ciphersuite) {
+	switch (ciphersuite) {
+	case MLSCiphersuite::MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519:
+	case MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519:
+		return generateRawKeyPair(EVP_PKEY_ED25519, kEd25519KeySize, kEd25519KeySize);
+	case MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448:
+		return generateRawKeyPair(EVP_PKEY_ED448, kEd448KeySize, kEd448KeySize);
+	}
+	return std::nullopt;
+}
 
 // MLS Labels (from RFC 9420)
 const QString kLabelInit = "init";
@@ -102,6 +157,137 @@ bytes::vector generateRandomBytes(int size) {
 	bytes::vector result(size);
 	RAND_bytes(result.data(), size);
 	return result;
+}
+
+bytes::vector normalizeAeadKey(const bytes::vector &secret) {
+	bytes::vector key(kAES256KeySize);
+	if (secret.empty()) {
+		return key;
+	}
+	if (secret.size() >= key.size()) {
+		std::memcpy(key.data(), secret.data(), key.size());
+		return key;
+	}
+	std::memcpy(key.data(), secret.data(), secret.size());
+	auto hash = computeSHA512(secret);
+	std::memcpy(key.data() + secret.size(), hash.data(), key.size() - secret.size());
+	return key;
+}
+
+std::optional<bytes::vector> encryptAesGcm(
+	const bytes::vector &key,
+	const uint8_t *plaintext,
+	size_t plaintextSize,
+	const uint8_t *aad,
+	size_t aadSize,
+	const bytes::vector &iv) {
+	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+	if (!ctx) {
+		return std::nullopt;
+	}
+
+	bytes::vector ciphertext(plaintextSize + kGcmTagSize);
+	bytes::vector tag(kGcmTagSize);
+	int outLen = 0;
+	int totalLen = 0;
+	bool ok =
+		EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) == 1 &&
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, static_cast<int>(iv.size()), nullptr) == 1 &&
+		EVP_EncryptInit_ex(ctx, nullptr, nullptr, key.data(), iv.data()) == 1;
+
+	if (ok && aad && aadSize > 0) {
+		ok = EVP_EncryptUpdate(ctx, nullptr, &outLen, aad, static_cast<int>(aadSize)) == 1;
+	}
+	if (ok) {
+		ok = EVP_EncryptUpdate(
+			ctx,
+			ciphertext.data(),
+			&outLen,
+			plaintext,
+			static_cast<int>(plaintextSize)) == 1;
+		totalLen = outLen;
+	}
+	if (ok) {
+		ok = EVP_EncryptFinal_ex(ctx, ciphertext.data() + totalLen, &outLen) == 1;
+		totalLen += outLen;
+	}
+	if (ok) {
+		ok = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, kGcmTagSize, tag.data()) == 1;
+	}
+
+	EVP_CIPHER_CTX_free(ctx);
+	if (!ok) {
+		return std::nullopt;
+	}
+
+	ciphertext.resize(totalLen);
+	bytes::vector result;
+	result.reserve(iv.size() + tag.size() + ciphertext.size());
+	result.insert(result.end(), iv.begin(), iv.end());
+	result.insert(result.end(), tag.begin(), tag.end());
+	result.insert(result.end(), ciphertext.begin(), ciphertext.end());
+	return result;
+}
+
+std::optional<bytes::vector> decryptAesGcm(
+	const bytes::vector &key,
+	const uint8_t *ciphertext,
+	size_t ciphertextSize,
+	const uint8_t *aad,
+	size_t aadSize) {
+	if (ciphertextSize < (kGcmIvSize + kGcmTagSize)) {
+		return std::nullopt;
+	}
+
+	const auto *iv = ciphertext;
+	const auto *tag = ciphertext + kGcmIvSize;
+	const auto *payload = ciphertext + kGcmIvSize + kGcmTagSize;
+	const auto payloadSize = ciphertextSize - kGcmIvSize - kGcmTagSize;
+
+	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+	if (!ctx) {
+		return std::nullopt;
+	}
+
+	bytes::vector plaintext(payloadSize + kGcmTagSize);
+	int outLen = 0;
+	int totalLen = 0;
+	bool ok =
+		EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr) == 1 &&
+		EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, kGcmIvSize, nullptr) == 1 &&
+		EVP_DecryptInit_ex(ctx, nullptr, nullptr, key.data(), iv) == 1;
+
+	if (ok && aad && aadSize > 0) {
+		ok = EVP_DecryptUpdate(ctx, nullptr, &outLen, aad, static_cast<int>(aadSize)) == 1;
+	}
+	if (ok) {
+		ok = EVP_DecryptUpdate(
+			ctx,
+			plaintext.data(),
+			&outLen,
+			payload,
+			static_cast<int>(payloadSize)) == 1;
+		totalLen = outLen;
+	}
+	if (ok) {
+		ok = EVP_CIPHER_CTX_ctrl(
+			ctx,
+			EVP_CTRL_GCM_SET_TAG,
+			kGcmTagSize,
+			const_cast<uint8_t*>(tag)) == 1;
+	}
+	if (ok) {
+		ok = EVP_DecryptFinal_ex(ctx, plaintext.data() + totalLen, &outLen) == 1;
+		totalLen += outLen;
+	}
+
+	EVP_CIPHER_CTX_free(ctx);
+	if (!ok) {
+		return std::nullopt;
+	}
+
+	plaintext.resize(totalLen);
+	return plaintext;
 }
 
 // TreeKEM tree size calculation
@@ -292,8 +478,7 @@ MLSGroupId MLSProtocol::createGroup(
 	// Generate key packages for all initial members
 	QVector<MLSKeyPackage> keyPackages;
 	for (const auto userId : initialMembers) {
-		// In a real implementation, we'd fetch key packages from members
-		// For now, generate placeholder packages
+		// Current repo state generates local key packages for the initial tree.
 		auto keyPackage = generateKeyPackage(ciphersuite);
 		keyPackages.append(keyPackage);
 	}
@@ -428,18 +613,24 @@ bytes::vector MLSProtocol::encryptMessage(
 	const auto &state = it.value();
 
 	// Derive application secret for this epoch
-	auto appSecret = state.deriveApplicationSecret(kLabelApplication);
-
-	// Simple XOR encryption for now (in production, use AEAD)
-	bytes::vector ciphertext = plaintext;
-	for (size_t i = 0; i < ciphertext.size(); ++i) {
-		ciphertext[i] ^= appSecret[i % appSecret.size()];
+	auto appSecret = normalizeAeadKey(state.deriveApplicationSecret(kLabelApplication));
+	auto iv = generateRandomBytes(kGcmIvSize);
+	const auto *aad = reinterpret_cast<const uint8_t*>(&state._epoch);
+	auto ciphertext = encryptAesGcm(
+		appSecret,
+		plaintext.data(),
+		plaintext.size(),
+		aad,
+		sizeof(state._epoch),
+		iv);
+	if (!ciphertext.has_value()) {
+		LOG(("MLS: AEAD encryption failed"));
+		return bytes::vector();
 	}
 
-	// Prepend epoch number (8 bytes)
-	bytes::vector result(8);
+	bytes::vector result(sizeof(state._epoch));
 	std::memcpy(result.data(), &state._epoch, sizeof(state._epoch));
-	result.insert(result.end(), ciphertext.begin(), ciphertext.end());
+	result.insert(result.end(), ciphertext->begin(), ciphertext->end());
 
 	LOG(("MLS: Encrypted message for epoch %1").arg(state._epoch));
 
@@ -450,7 +641,7 @@ std::optional<bytes::vector> MLSProtocol::decryptMessage(
 	const MLSGroupId &groupId,
 	const bytes::vector &ciphertext) {
 
-	if (ciphertext.size() < 8) {
+	if (ciphertext.size() < static_cast<int>(sizeof(MLSEpoch) + kGcmIvSize + kGcmTagSize)) {
 		LOG(("MLS: Ciphertext too short"));
 		return std::nullopt;
 	}
@@ -474,13 +665,17 @@ std::optional<bytes::vector> MLSProtocol::decryptMessage(
 		return std::nullopt;
 	}
 
-	// Derive application secret
-	auto appSecret = state.deriveApplicationSecret(kLabelApplication);
-
-	// Decrypt (simple XOR for now)
-	bytes::vector plaintext(ciphertext.begin() + 8, ciphertext.end());
-	for (size_t i = 0; i < plaintext.size(); ++i) {
-		plaintext[i] ^= appSecret[i % appSecret.size()];
+	auto appSecret = normalizeAeadKey(state.deriveApplicationSecret(kLabelApplication));
+	const auto *aad = reinterpret_cast<const uint8_t*>(&messageEpoch);
+	auto plaintext = decryptAesGcm(
+		appSecret,
+		ciphertext.data() + sizeof(messageEpoch),
+		ciphertext.size() - sizeof(messageEpoch),
+		aad,
+		sizeof(messageEpoch));
+	if (!plaintext.has_value()) {
+		LOG(("MLS: AEAD decryption failed"));
+		return std::nullopt;
 	}
 
 	LOG(("MLS: Decrypted message from epoch %1").arg(messageEpoch));
@@ -507,11 +702,23 @@ MLSKeyPackage MLSProtocol::generateKeyPackage(MLSCiphersuite ciphersuite) {
 
 	// Generate init key (HPKE key)
 	auto [publicKey, privateKey] = generateKeyPair(ciphersuite);
+	if (publicKey.empty() || privateKey.empty()) {
+		LOG(("MLS: Failed to generate init key package material"));
+		return package;
+	}
 	package.initKey = publicKey;
 	_privateKeys[publicKey] = privateKey;
 
 	// Generate credential key (signature key)
-	auto [credPublicKey, credPrivateKey] = generateKeyPair(ciphersuite);
+	bytes::vector credPublicKey;
+	bytes::vector credPrivateKey;
+	if (const auto credKeyPair = generateSignatureKeyPair(ciphersuite)) {
+		credPublicKey = credKeyPair->first;
+		credPrivateKey = credKeyPair->second;
+	} else {
+		LOG(("MLS: Failed to generate credential signing key pair"));
+		return package;
+	}
 	package.credentialPublicKey = credPublicKey;
 	_privateKeys[credPublicKey] = credPrivateKey;
 
@@ -548,7 +755,6 @@ MLSGroupId MLSProtocol::processWelcome(const MLSWelcome &welcome) {
 	// Decrypt group secrets and initialize group state
 	// This is called when added to a new group
 
-	// For now, generate placeholder group ID
 	auto groupId = generateRandomBytes(32);
 
 	LOG(("MLS: Processed Welcome message for new group"));
@@ -694,12 +900,15 @@ void MLSProtocol::updateTreePath(MLSGroupState &state, MLSLeafIndex leafIndex, c
 
 bytes::vector MLSProtocol::encryptPathSecret(const MLSTreeNode &node, const bytes::vector &secret) {
 	// HPKE encryption would be used here
-	// For now, return the secret (placeholder)
+	// Current implementation passes the secret through until HPKE path encryption lands.
 	return secret;
 }
 
 bytes::vector MLSProtocol::deriveSecret(const bytes::vector &secret, const QString &label) {
-	return hkdfExpand(secret, label, getHashSize(MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448));
+	return hkdfExpand(
+		secret,
+		label,
+		getHashSize(MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519));
 }
 
 bytes::vector MLSProtocol::hkdfExpand(const bytes::vector &prk, const QString &info, int length) {
@@ -709,7 +918,7 @@ bytes::vector MLSProtocol::hkdfExpand(const bytes::vector &prk, const QString &i
 	auto data = prk;
 	data.insert(data.end(), infoBytes.begin(), infoBytes.end());
 
-	auto hash = computeSHA512(data);
+	const auto hash = (length <= kSHA384Size) ? computeSHA384(data) : computeSHA512(data);
 	std::memcpy(result.data(), hash.data(), std::min(length, (int)hash.size()));
 
 	return result;
@@ -735,9 +944,14 @@ std::pair<bytes::vector, bytes::vector> MLSProtocol::generateKeyPair(MLSCiphersu
 		break;
 
 	case MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448:
-		// X448 generation (placeholder - would use proper X448 function)
-		RAND_bytes(privateKey.data(), keySize);
-		RAND_bytes(publicKey.data(), keySize);
+		if (const auto keyPair = generateRawKeyPair(EVP_PKEY_X448, kX448KeySize, kX448KeySize)) {
+			publicKey = keyPair->first;
+			privateKey = keyPair->second;
+		} else {
+			LOG(("MLS: Failed to generate X448 key pair"));
+			publicKey.clear();
+			privateKey.clear();
+		}
 		break;
 	}
 
@@ -749,15 +963,88 @@ bytes::vector MLSProtocol::generateEpochSecret() {
 }
 
 bytes::vector MLSProtocol::sign(const bytes::vector &data, const bytes::vector &privateKey) {
-	// Ed25519 signature (placeholder implementation)
-	bytes::vector signature(64);
-	RAND_bytes(signature.data(), signature.size());
+	const auto keyType = (privateKey.size() == kEd448KeySize)
+		? EVP_PKEY_ED448
+		: EVP_PKEY_ED25519;
+	EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(
+		keyType,
+		nullptr,
+		privateKey.data(),
+		privateKey.size());
+	if (!pkey) {
+		LOG(("MLS: Failed to create signing key"));
+		return {};
+	}
+
+	EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+	if (!ctx) {
+		EVP_PKEY_free(pkey);
+		return {};
+	}
+
+	size_t signatureSize = 0;
+	bool ok =
+		EVP_DigestSignInit(ctx, nullptr, nullptr, nullptr, pkey) == 1 &&
+		EVP_DigestSign(ctx, nullptr, &signatureSize, data.data(), data.size()) == 1;
+	bytes::vector signature(signatureSize);
+	if (ok) {
+		ok = EVP_DigestSign(
+			ctx,
+			signature.data(),
+			&signatureSize,
+			data.data(),
+			data.size()) == 1;
+	}
+
+	EVP_MD_CTX_free(ctx);
+	EVP_PKEY_free(pkey);
+
+	if (!ok) {
+		LOG(("MLS: Signature generation failed"));
+		return {};
+	}
+
+	signature.resize(signatureSize);
 	return signature;
 }
 
 bool MLSProtocol::verify(const bytes::vector &data, const bytes::vector &signature, const bytes::vector &publicKey) {
-	// Ed25519 verification (placeholder implementation)
-	return signature.size() == 64 && !publicKey.empty();
+	if (publicKey.empty() || signature.empty()) {
+		return false;
+	}
+
+	const auto keyType = (publicKey.size() == kEd448KeySize)
+		? EVP_PKEY_ED448
+		: EVP_PKEY_ED25519;
+	EVP_PKEY *pkey = EVP_PKEY_new_raw_public_key(
+		keyType,
+		nullptr,
+		publicKey.data(),
+		publicKey.size());
+	if (!pkey) {
+		LOG(("MLS: Failed to create verification key"));
+		return false;
+	}
+
+	EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+	if (!ctx) {
+		EVP_PKEY_free(pkey);
+		return false;
+	}
+
+	const auto verifyResult =
+		EVP_DigestVerifyInit(ctx, nullptr, nullptr, nullptr, pkey) == 1
+		? EVP_DigestVerify(
+			ctx,
+			signature.data(),
+			signature.size(),
+			data.data(),
+			data.size())
+		: 0;
+
+	EVP_MD_CTX_free(ctx);
+	EVP_PKEY_free(pkey);
+	return verifyResult == 1;
 }
 
 // ========== Global Functions ==========

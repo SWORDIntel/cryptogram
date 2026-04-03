@@ -1,273 +1,104 @@
 # CRYPTOGRAM Android Features
 
-**Complete guide to all features available in CRYPTOGRAM for Android**
+This page describes the Android feature surface that is present in the repository today. Some items are wired into the UI and native layer, while others are still partial cryptographic implementations or runtime paths that need broader validation.
 
----
+## Core Messaging
 
-## Core Encryption Features
+### 1. Signal Protocol / Double Ratchet
+**Status**: Present in code, UI, and native self-tests
 
-### 1. Signal Protocol (Double Ratchet)
-**Status**: ✅ Implemented
+The repo contains Double Ratchet classes, native bridge code, settings toggles, and local native self-checks for 1-on-1 encrypted messaging.
 
-End-to-end encryption for 1-on-1 chats using the Signal Protocol.
+- X25519 key exchange
+- Ed25519-related protocol code
+- AES-256-GCM-related helpers
+- Forward-secrecy oriented message flow
+- Settings toggle in the CRYPTOGRAM screen
+- Native self-test hook exposed through `CryptogramNative`
 
-**Features**:
-- X25519 ECDH key exchange
-- Ed25519 digital signatures
-- AES-256-GCM encryption
-- Forward secrecy
-- Post-compromise security
-- Automatic key rotation
+**Note**: The native layer now exposes local self-tests, but the runtime path should still be treated as an active implementation rather than a finished cryptographic audit result.
 
-**How to Use**:
-1. Open Settings → 🔐 CRYPTOGRAM
-2. Enable "Double Ratchet Encryption"
-3. Send messages to other CRYPTOGRAM users
-4. Look for the 🔒 lock icon on encrypted messages
+### 2. MLS Protocol
+**Status**: Partial, with native self-test coverage
 
-**Files**: `TMessagesProj/jni/cryptogram/data_signal_protocol.cpp`
+MLS-related classes and JNI entry points are present for group encryption flows.
 
----
+- Group messaging scaffolding
+- TreeKEM-oriented data structures
+- Settings toggle in the CRYPTOGRAM screen
+- Feature status reporting in the UI
+- Native self-test hook exposed through `CryptogramNative`
 
-### 2. MLS Protocol (RFC 9420)
-**Status**: ✅ Implemented
-
-Scalable group encryption using the Message Layer Security protocol.
-
-**Features**:
-- TreeKEM algorithm for efficient key management
-- O(log n) group operations
-- Supports groups up to 10,000+ members
-- Forward secrecy for all group members
-- Post-compromise security
-
-**How to Use**:
-1. Open Settings → 🔐 CRYPTOGRAM
-2. Enable "MLS Protocol"
-3. Group chats with CRYPTOGRAM users are automatically encrypted
-4. Look for group encryption indicators
-
-**Files**: `TMessagesProj/jni/cryptogram/data_mls_protocol.cpp`
-
----
+**Note**: Some MLS cryptographic paths still use placeholder logic, so the docs should not claim full end-to-end completion.
 
 ### 3. Post-Quantum Cryptography
-**Status**: ✅ Implemented
+**Status**: Documented, not fully validated here
 
-Quantum-resistant encryption to protect against future quantum computers.
+The codebase and docs reference ML-KEM / ML-DSA naming and post-quantum oriented messaging claims.
 
-**Features**:
-- ML-KEM-1024 (Kyber) key encapsulation
-- ML-DSA-87 (Dilithium) digital signatures
-- HKDF-SHA256 key derivation
-- Hybrid classical + quantum cryptography
+- ML-KEM / Kyber references
+- ML-DSA / Dilithium references
+- HKDF-based key derivation references
 
-**Files**: `TMessagesProj/jni/cryptogram/ml_kem.h`, `ml_dsa.h`
-
----
+**Note**: Treat this as documented capability and design intent unless you have validated the relevant runtime path on a target device.
 
 ## Privacy Features
 
-### 4. Enhanced Privacy System
-**Status**: ✅ Implemented
+### 4. Enhanced Privacy
+**Status**: Present in settings and helper code
 
-Advanced privacy protection and metadata stripping.
+The Android tree exposes privacy toggles and supporting helper classes for:
 
-**Features**:
-- EXIF data removal from photos
-- GPS location stripping
-- Timestamp anonymization
-- Metadata protection
-- Hardware-backed key storage (Android KeyStore)
+- Hide online status
+- Hide typing indicator
+- Hide read receipts
+- Metadata/privacy helper flows
 
----
+Hardware-backed storage is referenced in the docs and helper code, but the repository snapshot does not provide a complete verification story for every device or build.
 
-## Premium Features Override (Testing)
-**Status**: ✅ Implemented
+## UI and Settings
 
-Enable all Telegram premium features for testing purposes.
+### 5. CRYPTOGRAM Settings Screen
+**Status**: Present
 
-**Enabled Features**:
-- ✅ Message Privacy - Limit messages from strangers
-- ✅ Advanced Chat Management - Auto-archive, folders
-- ✅ No Ads - Ad-free experience
-- ✅ Infinite Reactions - Unlimited reactions per message
-- ✅ Animated Profile Pictures - Video avatars
-- ✅ Premium Stickers - Exclusive sticker packs
-- ✅ Message Effects - 500+ animated effects
-- ✅ Checklists - Task management
-- ✅ Stories - Unlimited posting
-- ✅ Unlimited Cloud Storage - 4GB per document
-- ✅ Doubled Limits - 1000 channels, 30 folders
-- ✅ Telegram Business - Business features
-- ✅ Last Seen Times - View hidden statuses
-- ✅ Voice-to-Text - Transcription
-- ✅ Faster Downloads - No speed limits
-- ✅ Real-Time Translation - Message translation
-- ✅ Animated Emoji - Custom emoji packs
-- ✅ Emoji Statuses - Profile emoji
-- ✅ Tags for Messages - Message organization
-- ✅ Wallpapers - Custom chat wallpapers
-- ✅ Profile Badge - Premium badge
+The settings activity exists and exposes the currently documented toggles and a native-backed status view:
 
-**How to Toggle**:
-```java
-SharedConfig.toggleCryptogramPremiumOverride();
-```
+- Double Ratchet toggle
+- MLS toggle
+- Privacy toggles
+- Curated stickers toggle
+- Feature status dialog
+- Native version/status display
 
-**Note**: Server-side premium features (storage, speed) still require actual Telegram Premium subscription.
+### 6. Visual Indicators
+**Status**: Present
 
----
+The UI includes indicator helpers for encrypted message presentation:
 
-## Visual Indicators
+- Lock icon helpers
+- Badge helpers for encrypted messages
+- Chat status color helpers
 
-### Lock Icons
-**Status**: ✅ Implemented
+## Premium Override
 
-Visual feedback showing which messages are encrypted.
+### 7. Premium Features Override
+**Status**: Present as a testing hook
 
-**Indicators**:
-- 🔒 Lock icon on encrypted messages
-- Color-coded encryption status
-- Group encryption badges
-
-**Files**: `TMessagesProj/src/main/java/org/telegram/ui/Components/CryptogramIndicator.java`
-
----
-
-## Settings & Configuration
-
-### CRYPTOGRAM Settings Screen
-**Location**: Settings → 🔐 CRYPTOGRAM
-
-**Options**:
-- Double Ratchet Encryption toggle
-- MLS Protocol toggle
-- Curated Stickers (1-20 sets)
-- Premium Override toggle
-- Feature status display
-
-**Files**: `TMessagesProj/src/main/java/org/telegram/ui/CryptogramSettingsActivity.java`
-
----
+The repository includes premium-override toggles and related settings/core references. This should be described as a testing or configuration hook, not as a claim that server-side premium features are available without the upstream service.
 
 ## Installation
 
-### Download APK
-Download the latest APK from [GitHub Actions](https://github.com/SWORDOps/CRYPTOGRAM/actions/workflows/build-android.yml)
-
-### Install
-```bash
-adb install cryptogram-debug.apk
-```
-
-### First Run
-1. Launch CRYPTOGRAM
-2. Log in with your Telegram account
-3. Go to Settings → 🔐 CRYPTOGRAM
-4. Enable desired encryption features
-
----
-
-## Technical Specifications
-
-### Cryptographic Algorithms
-- **Key Exchange**: X25519, ML-KEM-1024
-- **Signatures**: Ed25519, ML-DSA-87
-- **Encryption**: AES-256-GCM
-- **Hashing**: SHA-256, SHA-512
-- **KDF**: HKDF-SHA256
-
-### Security Properties
-- Forward secrecy
-- Post-compromise security
-- Deniability
-- Quantum resistance
-- Hardware-backed keys
-
-### Performance
-- Message encryption: <1ms
-- Key generation: <10ms
-- Group operations: O(log n)
-- Memory overhead: <1MB per chat
-
----
-
-## Platform Support
-
-- **Android Version**: 5.0+ (API 21+)
-- **Architectures**: armeabi-v7a, arm64-v8a, x86, x86_64
-- **Storage**: Hardware KeyStore integration
-- **NDK**: r25c
-- **Build System**: CMake 3.22+
-
----
+Android build and installation steps are documented in the platform guides. Use the current build docs and the status page together, because the docs do not guarantee a clean build or fully tested device runtime.
 
 ## Source Code
 
-### Core Encryption
-- `TMessagesProj/jni/cryptogram/` - Native C++ encryption
+- `TMessagesProj/jni/cryptogram/` - Native bridge and protocol code
 - `TMessagesProj/src/main/java/org/telegram/messenger/cryptogram/` - Java/Kotlin API
+- `TMessagesProj/src/main/java/org/telegram/ui/CryptogramSettingsActivity.java` - Settings screen
+- `TMessagesProj/src/main/java/org/telegram/ui/Components/CryptogramIndicator.java` - UI indicators
 
-### Integration Points
-- `SendMessagesHelper.java` - Outgoing message encryption
-- `MessageObject.java` - Incoming message decryption
-- `SharedConfig.java` - Settings persistence
-- `UserConfig.java` - Premium override
-- `MessagesController.java` - Premium checks
+## Known Gaps
 
----
-
-## Security Considerations
-
-### What's Protected
-✅ Message content (end-to-end encrypted)
-✅ Metadata stripped from media
-✅ Keys stored in hardware security
-✅ Forward secrecy guaranteed
-✅ Post-quantum resistant
-
-### What's Not Protected
-❌ Contact list (server-side)
-❌ Group membership (server-side)
-❌ Message timestamps (network metadata)
-❌ Network traffic analysis
-❌ Device-level compromise
-
-### Best Practices
-1. Verify encryption status before sending sensitive messages
-2. Use CRYPTOGRAM-to-CRYPTOGRAM chats for maximum security
-3. Enable all encryption features in settings
-4. Keep the app updated
-5. Use strong device lock screen password
-6. Enable disk encryption on your device
-
----
-
-## Troubleshooting
-
-### Encryption Not Working
-1. Check both users have CRYPTOGRAM installed
-2. Ensure encryption is enabled in settings
-3. Verify lock icons appear on messages
-4. Check app permissions
-
-### Performance Issues
-1. Disable unused features
-2. Clear app cache
-3. Check device storage space
-4. Update to latest version
-
-### Build Issues
-1. Ensure NDK r25c is installed
-2. Check CMake version (3.22+)
-3. Verify BoringSSL is linked
-4. Clean and rebuild
-
----
-
-## Support
-
-- **Documentation**: https://github.com/SWORDOps/CRYPTOGRAM
-- **Issues**: https://github.com/SWORDOps/CRYPTOGRAM/issues
-- **Security**: security@cryptogram.org
+- Some JNI-backed features still depend on partial or placeholder cryptographic paths.
+- Some docs describe more complete cryptography than the current runtime paths prove.
+- Device-level and end-to-end testing is still limited in this repository snapshot.

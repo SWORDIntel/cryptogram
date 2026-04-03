@@ -212,10 +212,19 @@ public class CryptogramSettingsActivity extends BaseFragment {
                     // TextSettingsCell
                     TextSettingsCell textCell = (TextSettingsCell) holder.itemView;
                     if (position == cryptogramStatusRow) {
-                        String status = CryptogramNative.INSTANCE.isInitialized()
-                            ? "🔐 Encryption Active"
-                            : "⚠️ Not Initialized";
-                        textCell.setTextAndValue("Status", status, false);
+                        Map<String, Boolean> status = CryptogramNative.INSTANCE.getFeatureStatus();
+                        boolean nativeReady = Boolean.TRUE.equals(status.get("Native Library"));
+                        boolean ratchetReady = Boolean.TRUE.equals(status.get("Double Ratchet"));
+                        boolean mlsReady = Boolean.TRUE.equals(status.get("MLS Protocol"));
+                        String value;
+                        if (nativeReady && ratchetReady && mlsReady) {
+                            value = "🔐 Native crypto verified";
+                        } else if (nativeReady) {
+                            value = "⚠️ Partially verified";
+                        } else {
+                            value = "⚠️ Native library unavailable";
+                        }
+                        textCell.setTextAndValue("Status", value, false);
                     } else if (position == libraryVersionRow) {
                         String version = CryptogramNative.INSTANCE.getVersion();
                         textCell.setTextAndValue("Library Version", version, false);
@@ -268,11 +277,11 @@ public class CryptogramSettingsActivity extends BaseFragment {
                     // TextInfoPrivacyCell
                     TextInfoPrivacyCell cell = (TextInfoPrivacyCell) holder.itemView;
                     if (position == cryptogramShadowRow) {
-                        cell.setText("Military-grade encryption for Telegram. All features are end-to-end encrypted with forward secrecy.");
+                        cell.setText("CRYPTOGRAM adds native cryptography and privacy controls to Telegram. Feature availability below reflects local native self-checks and runtime wiring, not a full external security audit.");
                     } else if (position == encryptionInfoRow) {
                         cell.setText("• Double Ratchet: End-to-end encryption for 1-on-1 chats using Signal Protocol (X25519, Ed25519, AES-256-GCM)\n\n" +
                                     "• MLS Protocol: Scalable group encryption with TreeKEM (O(log n) operations, supports 10,000+ members)\n\n" +
-                                    "Both protocols provide forward secrecy and post-compromise security.");
+                                    "Both protocols are exposed through the CRYPTOGRAM native layer. Use Feature Status to verify the local runtime path before relying on them.");
                     } else if (position == privacyInfoRow) {
                         cell.setText("• Hide Online Status: Prevents sending your online/offline status to other users\n\n" +
                                     "• Hide Typing Indicator: Stops sending typing notifications when you compose messages\n\n" +
@@ -282,7 +291,7 @@ public class CryptogramSettingsActivity extends BaseFragment {
                         cell.setText("Curated Stickers: Show a favorites section at the top of your sticker picker with your most-used sticker sets for quick access. All stickers remain searchable.\n\n" +
                                     "Long-press any sticker to add or remove its set from your curated favorites.");
                     } else if (position == advancedInfoRow) {
-                        cell.setText("CRYPTOGRAM uses battle-tested cryptographic primitives. All encryption is performed locally on your device.\n\n" +
+                        cell.setText("CRYPTOGRAM performs cryptographic operations locally through the native library. Feature Status runs local self-checks for the current build; device-level interoperability and broader security validation still depend on your target environment.\n\n" +
                                     "For technical details, see the CRYPTOGRAM documentation.");
                     }
                     break;

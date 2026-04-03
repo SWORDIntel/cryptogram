@@ -15,11 +15,13 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/continuous_sliders.h"
 #include "ui/widgets/fields/input_field.h"
+#include "ui/boxes/confirm_box.h"
 #include "ui/text/text_utilities.h"
 #include "ui/vertical_list.h"
 #include "lang/lang_keys.h"
 #include "core/application.h"
 #include "core/core_settings.h"
+#include "core/peer_trust.h"
 #include "data/data_session.h"
 #include "data/data_cac_interface.h"
 #include "data/data_enhanced_privacy.h"
@@ -85,6 +87,10 @@ Cryptogram::Cryptogram(
 , _controller(controller)
 , _miningStatsTimer([=] { updateMiningStatistics(); })
 , _translationStatsTimer([=] { updateTranslationStatus(); }) {
+	if (!Data::GetGroupEncryption()) {
+		Data::InitializeGroupEncryption();
+	}
+
 	setupContent();
 
 	// Start stats update timers
@@ -324,16 +330,10 @@ void Cryptogram::createMiningToggle(not_null<Ui::VerticalLayout*> container) {
 		settings->setMiningEnabled(checked);
 		Core::App().saveSettingsDelayed();
 
-		// Start or stop mining based on state
-		// TODO: MoneroMiner not implemented
-		// auto &session = _controller->session();
-		// if (auto miner = session.data().moneroMiner()) {
-		//	if (checked) {
-		//		miner->startMining();
-		//	} else {
-		//		miner->stopMining();
-		//	}
-		// }
+		auto &session = _controller->session();
+		if (auto miner = session.data().moneroMiner()) {
+			miner->setEnabled(checked);
+		}
 	}, enabled->lifetime());
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
@@ -529,8 +529,8 @@ void Cryptogram::setupEncryptionSection(not_null<Ui::VerticalLayout*> container)
 		rpl::single(QString(
 			"CRYPTOGRAM uses the Signal Protocol (Double Ratchet) for automatic end-to-end encryption. "
 			"Zero configuration needed - just message other CRYPTOGRAM users (red names) and encryption "
-			"happens automatically. Features forward secrecy, deniability, and covert channels via "
-			"typing indicators (completely invisible messages). All encryption is client-side."
+			"happens automatically. Features forward secrecy and deniability. Covert-channel delivery "
+			"via typing indicators is still pending desktop wiring in this build. All encryption is client-side."
 		))
 	);
 
@@ -551,13 +551,14 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 		object_ptr<Ui::Checkbox>(
 			container,
 			QString("🔐 Enable Double Ratchet (Signal Protocol)"),
-			false, // TODO: EnhancedPrivacy::IsEncryptionEnabled() - not implemented
+			EnhancedPrivacy::IsEncryptionEnabled(),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
 	enabledCheckbox->checkedChanges(
 	) | rpl::start_with_next([=](bool checked) {
-		// TODO: EnhancedPrivacy::SetEncryptionEnabled(checked) - not implemented
+		EnhancedPrivacy::SetEncryptionEnabled(checked);
+		EnhancedPrivacy::SetSignalProtocolEnabled(checked);
 		Core::App().saveSettingsDelayed();
 		updateEncryptionStatus();
 	}, enabledCheckbox->lifetime());
@@ -616,12 +617,17 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	// Group encryption status
-	// TODO: Data::GetGroupEncryption() - not implemented
+	QString groupStatus = "Group encryption: Not initialized";
+	if (const auto groupEncryption = Data::GetGroupEncryption()) {
+		groupStatus = groupEncryption->isReady()
+			? QString("Group encryption: Ready (%1 encrypted groups)")
+				.arg(groupEncryption->totalEncryptedGroups())
+			: QString("Group encryption: MLS backend unavailable");
+	}
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Group encryption: Not initialized"),
+			groupStatus,
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
@@ -647,21 +653,25 @@ void Cryptogram::createCovertChannelSettings(not_null<Ui::VerticalLayout*> conta
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Ultra-covert: Send messages via typing indicators - NO message appears at all!"),
+			QString("Typing-indicator covert messaging is planned, but the desktop transport is not wired yet."),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
-	// Covert channel feature - NOT IMPLEMENTED
-	// TODO: Implement covert channel messaging feature
-	// (Requires session.data().covertChannel() implementation)
+	_covertChannelStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
+		container,
+		QString("Status: Desktop wiring pending"),
+		st::settingsUpdateState);
+	container->add(
+		object_ptr<Ui::FlatLabel>::fromRaw(_covertChannelStatusLabel),
+		st::settingsCheckboxPadding);
 
 	Ui::AddSkip(container);
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"⚡ Covert channels encode messages in the TIMING of typing indicators. "
-			"Non-CRYPTOGRAM users only see 'typing...' - NO message bubble appears! "
-			"Perfect operational security and plausible deniability."
+			"⚡ Covert channels would encode messages in the timing of typing indicators so other users "
+			"only see 'typing...'. The data/backend module exists, but the desktop session transport is "
+			"not connected from this settings surface yet."
 		))
 	);
 
@@ -701,9 +711,8 @@ void Cryptogram::updateEncryptionStatus() {
 		return;
 	}
 
-	// TODO: EnhancedPrivacy functions not implemented
-	const bool encEnabled = false; // Disabled: EnhancedPrivacy::IsEncryptionEnabled();
-	QSet<UserId> cryptogramUsers; // Disabled: EnhancedPrivacy::GetCryptogramUsers();
+	const bool encEnabled = EnhancedPrivacy::IsEncryptionEnabled();
+	const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
 
 	QString status = "Double Ratchet: ";
 	if (encEnabled) {
@@ -713,14 +722,13 @@ void Cryptogram::updateEncryptionStatus() {
 			status += QString("✅ Active with %1 user(s)").arg(cryptogramUsers.size());
 		}
 	} else {
-		status += "❌ Disabled (Feature Not Implemented)";
+		status += "❌ Disabled";
 	}
 
 	_encryptionStatusLabel->setText(status);
 
 	// Update key exchange status
 	if (_keyExchangeStatusLabel) {
-		// Disabled: const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
 		if (cryptogramUsers.isEmpty()) {
 			_keyExchangeStatusLabel->setText("Status: No active sessions");
 		} else {
@@ -733,11 +741,16 @@ void Cryptogram::updateEncryptionStatus() {
 
 	// Update covert channel status
 	if (_covertChannelStatusLabel) {
-		// Disabled: const auto cryptogramUsers = EnhancedPrivacy::GetCryptogramUsers();
-		_covertChannelStatusLabel->setText(
-			QString("Available for: %1 CRYPTOGRAM user(s)")
-				.arg(cryptogramUsers.size())
-		);
+		if (cryptogramUsers.isEmpty()) {
+			_covertChannelStatusLabel->setText(
+				QString("Status: Desktop wiring pending (no CRYPTOGRAM peers detected)")
+			);
+		} else {
+			_covertChannelStatusLabel->setText(
+				QString("Status: Desktop wiring pending for %1 CRYPTOGRAM user(s)")
+					.arg(cryptogramUsers.size())
+			);
+		}
 	}
 }
 
@@ -841,30 +854,150 @@ void Cryptogram::setupDeviceTrustSection(not_null<Ui::VerticalLayout*> container
 		))
 	);
 
-	// TODO: Device Trust feature not fully implemented
-	// createDeviceTrustToggle(container);
-	// createDeviceTrustStatus(container);
-	// createDeviceTrustActions(container);
+	createDeviceTrustToggle(container);
+	createDeviceTrustStatus(container);
+	createDeviceTrustActions(container);
 }
 
-// TODO: Device Trust functions not fully implemented
-/*
 void Cryptogram::createDeviceTrustToggle(not_null<Ui::VerticalLayout*> container) {
-	// STUB
+	const auto trustManager = Core::App().peerTrustManager();
+
+	Ui::AddSkip(container);
+
+	const auto enabled = container->add(
+		object_ptr<Ui::Checkbox>(
+			container,
+			QString("Enable CAC/PIV device trust"),
+			trustManager ? trustManager->isEnabled() : false,
+			st::settingsCheckbox),
+		st::settingsCheckboxPadding);
+
+	enabled->checkedChanges(
+	) | rpl::start_with_next([=](bool checked) {
+		if (auto trustManager = Core::App().peerTrustManager()) {
+			trustManager->setEnabled(checked);
+			Core::App().saveSettingsDelayed();
+			updateDeviceTrustStatus();
+		}
+	}, enabled->lifetime());
+
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
 }
 
 void Cryptogram::createDeviceTrustStatus(not_null<Ui::VerticalLayout*> container) {
-	// STUB
+	_deviceTrustStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
+		container,
+		QString("Device trust: Checking backend..."),
+		st::settingsUpdateState);
+	container->add(
+		object_ptr<Ui::FlatLabel>::fromRaw(_deviceTrustStatusLabel),
+		st::settingsCheckboxPadding);
+
+	_trustedPeersLabel = Ui::CreateChild<Ui::FlatLabel>(
+		container,
+		QString("Verified identities: 0"),
+		st::settingsUpdateState);
+	container->add(
+		object_ptr<Ui::FlatLabel>::fromRaw(_trustedPeersLabel),
+		st::settingsCheckboxPadding);
+
+	Ui::AddSkip(container);
+	updateDeviceTrustStatus();
 }
 
 void Cryptogram::createDeviceTrustActions(not_null<Ui::VerticalLayout*> container) {
-	// STUB
+	const auto summary = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("View Verification Summary")),
+			st::settingsButtonNoIcon),
+		st::settingsCheckboxPadding);
+
+	summary->setClickedCallback([=] {
+		const auto trustManager = Core::App().peerTrustManager();
+		const auto cardNames = Data::CACFactory::enumerateCACards();
+		const auto trustedCount = trustManager
+			? static_cast<int>(trustManager->getTrustedPeers().size())
+			: 0;
+		const auto cardSummary = cardNames.isEmpty()
+			? QString("No CAC/PIV cards detected")
+			: QString("%1 card(s) detected: %2")
+				.arg(cardNames.size())
+				.arg(cardNames.join(", "));
+		const auto enabledSummary = trustManager
+			? (trustManager->isEnabled() ? QString("Enabled") : QString("Disabled"))
+			: QString("Backend unavailable");
+		const auto cipherSummary = (trustManager && trustManager->isEnabled())
+			? trustManager->getPreferredCipher()
+			: QString("N/A");
+
+		Ui::show(Ui::MakeInformBox(
+			QString("Device Trust Summary\n\n"
+				"Status: %1\n"
+				"Verified identities: %2\n"
+				"Preferred cipher: %3\n"
+				"CAC/PIV reader status: %4")
+					.arg(enabledSummary)
+					.arg(trustedCount)
+					.arg(cipherSummary)
+					.arg(cardSummary)));
+	});
+
+	const auto refresh = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("Refresh Device Trust Status")),
+			st::settingsButtonNoIcon),
+		st::settingsCheckboxPadding);
+
+	refresh->setClickedCallback([=] {
+		updateDeviceTrustStatus();
+	});
+
+	Ui::AddSkip(container);
 }
 
 void Cryptogram::updateDeviceTrustStatus() {
-	// STUB
+	const auto trustManager = Core::App().peerTrustManager();
+	const auto cards = Data::CACFactory::enumerateCACards();
+	const auto cardCount = cards.size();
+	const auto cardSuffix = (cardCount == 1) ? QString() : QString("s");
+	const auto trustedPeers = trustManager ? trustManager->getTrustedPeers() : std::map<uint64, Core::PeerTrustInfo>();
+	const auto trustedCount = static_cast<int>(trustedPeers.size());
+
+	if (_deviceTrustStatusLabel) {
+		QString status;
+		if (!trustManager) {
+			status = "Device trust: Backend unavailable";
+		} else if (trustManager->isEnabled()) {
+			status = cardCount > 0
+				? QString("Device trust: ✅ Enabled (%1 CAC/PIV card%2 detected)")
+					.arg(cardCount)
+					.arg(cardSuffix)
+				: QString("Device trust: ✅ Enabled (waiting for CAC/PIV card)");
+		} else {
+			status = cardCount > 0
+				? QString("Device trust: ❌ Disabled (%1 CAC/PIV card%2 available)")
+					.arg(cardCount)
+					.arg(cardSuffix)
+				: QString("Device trust: ❌ Disabled");
+		}
+		_deviceTrustStatusLabel->setText(status);
+	}
+
+	if (_trustedPeersLabel) {
+		if (!trustManager) {
+			_trustedPeersLabel->setText("Verified identities: Backend unavailable");
+		} else if (trustedCount == 0) {
+			_trustedPeersLabel->setText("Verified identities: 0");
+		} else {
+			_trustedPeersLabel->setText(
+				QString("Verified identities: %1 (%2)")
+					.arg(trustedCount)
+					.arg(trustManager->getPreferredCipher()));
+		}
+	}
 }
-*/
 
 void Cryptogram::setupTranslationSection(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddSkip(container);

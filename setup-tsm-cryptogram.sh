@@ -129,6 +129,8 @@ if [ ! -d "$PROJECT_ROOT" ]; then
     fail "Project not found at $PROJECT_ROOT"
 fi
 
+cd "$PROJECT_ROOT" || fail "Cannot enter project root: $PROJECT_ROOT"
+
 # ============================================================================
 # STEP 0: GIT SUBMODULE INITIALIZATION
 # ============================================================================
@@ -138,24 +140,24 @@ print_major_step "Initializing Git Submodules"
 print_step "Checking git submodules..."
 if [ ! -f "$TSM_PATH/.git" ]; then
     print_warning "TSM submodule not initialized, initializing..."
-    git submodule update --init --recursive Telegram/lib_tsm 2>&1 | grep -E "Cloning|Submodule|checked" || true
+    git -C "$PROJECT_ROOT" submodule update --init --recursive Telegram/lib_tsm 2>&1 | grep -E "Cloning|Submodule|checked" || true
     print_info "TSM submodule initialized"
 fi
 
 if [ ! -f "cmake/.git" ]; then
     print_warning "cmake submodule not initialized, initializing..."
-    git submodule update --init --recursive cmake 2>&1 | grep -E "Cloning|Submodule|checked" || true
+    git -C "$PROJECT_ROOT" submodule update --init --recursive cmake 2>&1 | grep -E "Cloning|Submodule|checked" || true
     print_info "cmake submodule initialized"
 fi
 
 print_step "Updating all submodules..."
-git submodule update --init --recursive cmake 2>&1 | tail -5 || true
+git -C "$PROJECT_ROOT" submodule update --init --recursive cmake 2>&1 | tail -5 || true
 print_info "cmake submodule initialized"
 
 # Verify cmake files exist and retry if needed
 if [ ! -f "cmake/version.cmake" ] || [ ! -f "cmake/validate_special_target.cmake" ]; then
     print_warning "cmake submodule files not found, retrying full init..."
-    git submodule update --init --recursive 2>&1 | tail -10 || true
+    git -C "$PROJECT_ROOT" submodule update --init --recursive 2>&1 | tail -10 || true
 
     # Final check
     if [ ! -f "cmake/version.cmake" ] || [ ! -f "cmake/validate_special_target.cmake" ]; then
@@ -377,7 +379,7 @@ if [ $SKIP_CRYPTOGRAM -eq 0 ]; then
         echo "Checking for missing dependencies..."
         if ! dpkg -l | grep -q qt6-base-dev; then
             fail "Qt6 not installed. The script should have installed it. Try: sudo apt-get install qt6-base-dev qt6-base-private-dev"
-        elif ! [ -f "cmake/version.cmake" ]; then
+        elif ! [ -f "$PROJECT_ROOT/cmake/version.cmake" ]; then
             fail "cmake/version.cmake not found. cmake submodule not properly initialized. Try: git submodule update --init --recursive cmake"
         else
             fail "CMake configuration failed. Check the errors above."

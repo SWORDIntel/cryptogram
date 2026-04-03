@@ -196,6 +196,54 @@ ensure_submodules() {
     ) || fail "Failed to initialize git submodules"
 }
 
+desktop_cmake_helpers_ready() {
+    [ -f "$CRYPTOGRAM_ROOT/cmake/version.cmake" ] && \
+    [ -f "$CRYPTOGRAM_ROOT/cmake/validate_special_target.cmake" ]
+}
+
+ensure_desktop_cmake_helpers() {
+    if desktop_cmake_helpers_ready; then
+        print_info "Desktop CMake helper submodule is populated"
+        log "SUBMODULE" "Root cmake helper files are present"
+        return 0
+    fi
+
+    print_warning "Root CMake helper files are missing, retrying cmake submodule init"
+    log "SUBMODULE" "Missing root cmake helper files; retrying cmake submodule init"
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        print_info "[DRY RUN] Would run: git submodule update --init --recursive cmake"
+        return 0
+    fi
+
+    (
+        cd "$CRYPTOGRAM_ROOT" || exit 1
+        git submodule update --init --recursive cmake
+    ) >> "$LOG_FILE" 2>&1 || true
+
+    if desktop_cmake_helpers_ready; then
+        print_info "Desktop CMake helper submodule initialized successfully"
+        log "SUBMODULE" "Root cmake helper files present after retry"
+        return 0
+    fi
+
+    echo ""
+    print_error "Desktop build prerequisites are incomplete"
+    echo "Missing required root CMake helper files:"
+    echo "  $CRYPTOGRAM_ROOT/cmake/version.cmake"
+    echo "  $CRYPTOGRAM_ROOT/cmake/validate_special_target.cmake"
+    echo ""
+    echo "This checkout expects a populated top-level 'cmake' git submodule."
+    echo "Attempted recovery:"
+    echo "  git -C \"$CRYPTOGRAM_ROOT\" submodule update --init --recursive cmake"
+    echo ""
+    echo "If that command cannot fetch the pinned revision, the desktop source tree"
+    echo "is not currently self-contained enough to configure."
+    echo ""
+    log "ERROR" "Root cmake helper files missing after retry"
+    fail "Desktop CMake helper submodule is missing or incomplete"
+}
+
 ensure_system_dependencies() {
     print_progress "Ensuring system libraries and Qt dependencies are present..."
     if [ -r /etc/os-release ]; then
@@ -1376,6 +1424,8 @@ check_submodules() {
         fi
     ) || print_warning "Submodule initialization had issues, continuing anyway"
 
+    ensure_desktop_cmake_helpers
+
     BUILD_STATE["submodules_initialized"]=1
     save_state
 
@@ -1836,6 +1886,7 @@ configure_cryptogram() {
 
     print_progress "Running CMake configuration..."
     log "BUILD" "Running CMake with Release configuration"
+    ensure_desktop_cmake_helpers
 
     # Set PKG_CONFIG_PATH to help find installed libraries
     export PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:${INSTALL_PREFIX}/lib64/pkgconfig:${PKG_CONFIG_PATH:-}"

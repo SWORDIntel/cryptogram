@@ -700,7 +700,10 @@ bytes::vector MLSProtocol::encryptPathSecret(const MLSTreeNode &node, const byte
 }
 
 bytes::vector MLSProtocol::deriveSecret(const bytes::vector &secret, const QString &label) {
-	return hkdfExpand(secret, label, getHashSize(MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448));
+	return hkdfExpand(
+		secret,
+		label,
+		getHashSize(MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519));
 }
 
 bytes::vector MLSProtocol::hkdfExpand(const bytes::vector &prk, const QString &info, int length) {
@@ -710,7 +713,7 @@ bytes::vector MLSProtocol::hkdfExpand(const bytes::vector &prk, const QString &i
 	auto data = prk;
 	data.insert(data.end(), infoBytes.begin(), infoBytes.end());
 
-	auto hash = computeSHA512(data);
+	const auto hash = (length <= kSHA384Size) ? computeSHA384(data) : computeSHA512(data);
 	std::memcpy(result.data(), hash.data(), std::min(length, (int)hash.size()));
 
 	return result;

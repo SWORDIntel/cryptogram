@@ -43,7 +43,7 @@ enum class MLSCiphersuite : uint16 {
 	// High security ciphersuite
 	MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519 = 0x0003,
 
-	// Maximum security (default for CRYPTOGRAM)
+	// Maximum security (available, but not the default runtime path)
 	MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448 = 0x0007,
 };
 
@@ -87,7 +87,7 @@ enum class MLSProposalType : uint8 {
 // Contains member's public keys and identity
 struct MLSKeyPackage {
 	uint16 version = kMLSProtocolVersion;
-	MLSCiphersuite ciphersuite = MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448;
+	MLSCiphersuite ciphersuite = MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519;
 
 	bytes::vector initKey;           // HPKE init key (public)
 	bytes::vector credentialPublicKey; // Signature public key
@@ -243,7 +243,7 @@ public:
 	// Group creation
 	MLSGroupId createGroup(
 		const QVector<UserId> &initialMembers,
-		MLSCiphersuite ciphersuite = MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448);
+		MLSCiphersuite ciphersuite = MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519);
 
 	// Group operations
 	bool addMember(const MLSGroupId &groupId, UserId newMember);

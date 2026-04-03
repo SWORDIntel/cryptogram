@@ -5,16 +5,26 @@
 # Focused build script for CRYPTOGRAM Qt/C++ Desktop application
 ################################################################################
 
-set -e
+set -Eeuo pipefail
 
 # Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-NC='\033[0m'
+if [ -t 1 ] && [ "${TERM:-}" != "dumb" ] && [ -z "${NO_COLOR:-}" ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    CYAN='\033[0;36m'
+    MAGENTA='\033[0;35m'
+    NC='\033[0m'
+else
+    RED=''
+    GREEN=''
+    YELLOW=''
+    BLUE=''
+    CYAN=''
+    MAGENTA=''
+    NC=''
+fi
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -59,6 +69,32 @@ print_progress() {
     echo -e "${BLUE}→${NC} $1"
 }
 
+desktop_cmake_helpers_ready() {
+    [ -f "$CRYPTOGRAM_ROOT/cmake/version.cmake" ] && \
+    [ -f "$CRYPTOGRAM_ROOT/cmake/validate_special_target.cmake" ]
+}
+
+require_desktop_cmake_helpers() {
+    if desktop_cmake_helpers_ready; then
+        return 0
+    fi
+
+    echo ""
+    print_error "Desktop build prerequisites are incomplete"
+    echo "Missing required root CMake helper files:"
+    echo "  $CRYPTOGRAM_ROOT/cmake/version.cmake"
+    echo "  $CRYPTOGRAM_ROOT/cmake/validate_special_target.cmake"
+    echo ""
+    echo "This checkout expects a populated top-level 'cmake' git submodule."
+    echo "Try:"
+    echo "  git -C \"$CRYPTOGRAM_ROOT\" submodule update --init --recursive cmake"
+    echo ""
+    echo "If that still fails, the pinned cmake submodule revision may no longer be fetchable."
+    echo "In that case the desktop source tree is not currently self-contained enough to configure."
+    echo ""
+    fail "Desktop CMake helper submodule is missing or incomplete"
+}
+
 fail() {
     print_error "$1"
     echo ""
@@ -74,7 +110,9 @@ fail() {
 {
 START_TIME=$(date +%s)
 
-clear
+if [ -t 1 ] && [ -n "${TERM:-}" ] && command -v clear >/dev/null 2>&1; then
+    clear || true
+fi
 print_header "CRYPTOGRAM Desktop Build (Linux)"
 
 echo "Configuration:"
@@ -91,6 +129,7 @@ if [ ! -f "$CRYPTOGRAM_ROOT/CMakeLists.txt" ]; then
 fi
 
 print_section "Pre-Build Checks"
+require_desktop_cmake_helpers
 
 # Check for build script
 if [ -f "$CRYPTOGRAM_ROOT/build_all.sh" ]; then
@@ -172,7 +211,7 @@ echo "Run CRYPTOGRAM:"
 echo "  $BUILD_DIR/bin/Telegram"
 echo ""
 echo "Or with TSM integration:"
-echo "  1. source .tsm_cryptogram_env.sh"
+echo "  1. source \"$CRYPTOGRAM_ROOT/.tsm_cryptogram_env.sh\""
 echo "  2. python -m Telegram.lib_tsm.mock_server.server &"
 echo "  3. $BUILD_DIR/bin/Telegram"
 echo ""

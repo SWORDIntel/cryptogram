@@ -5,16 +5,26 @@
 # Focused build script for Android APK generation
 ################################################################################
 
-set -e
+set -euo pipefail
 
 # Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-NC='\033[0m'
+if [ -t 1 ] && [ "${TERM:-}" != "dumb" ] && [ -z "${NO_COLOR:-}" ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    CYAN='\033[0;36m'
+    MAGENTA='\033[0;35m'
+    NC='\033[0m'
+else
+    RED=''
+    GREEN=''
+    YELLOW=''
+    BLUE=''
+    CYAN=''
+    MAGENTA=''
+    NC=''
+fi
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,6 +38,7 @@ mkdir -p "$LOG_DIR"
 # Build variants
 BUILD_VARIANT="${BUILD_VARIANT:-debug}"
 FLAVOR="${FLAVOR:-foss}"
+ANDROID_PROJECT_PATH="${ANDROID_PROJECT_PATH:-}"
 
 # Functions
 print_header() {
@@ -66,20 +77,59 @@ fail() {
     exit 1
 }
 
+usage() {
+    cat <<EOF
+Usage:
+  ./build_apk.sh /path/to/android/gradle/project
+
+Environment:
+  ANDROID_PROJECT_PATH   Explicit path to an external Android Gradle project
+  BUILD_VARIANT          debug | release   (default: debug)
+  FLAVOR                 Gradle flavor     (default: foss)
+  CLEAN_BUILD            1 to run gradle clean first
+
+Notes:
+  - This repository snapshot does not include a self-contained Android Gradle project.
+  - You must point this script at an external checkout containing gradlew and build.gradle(.kts).
+  - The external project is expected to contain the Android Telegram base that CRYPTOGRAM changes are applied to.
+EOF
+}
+
+is_gradle_project_root() {
+    local path="$1"
+    [ -d "$path" ] || return 1
+
+    if [ -f "$path/gradlew" ] && \
+       { [ -f "$path/build.gradle" ] || [ -f "$path/build.gradle.kts" ] || \
+         [ -f "$path/settings.gradle" ] || [ -f "$path/settings.gradle.kts" ] || \
+         [ -f "$path/app/build.gradle" ] || [ -f "$path/app/build.gradle.kts" ]; }; then
+        return 0
+    fi
+
+    return 1
+}
+
 find_android_project() {
-    # Try to find Android project directory
+    # Try to find Android project directory. This repo does not ship one,
+    # so any successful match should be an external Gradle checkout.
     local search_paths=(
         "$1"
-        "$SCRIPT_DIR/TMessagesProj"
-        "$SCRIPT_DIR"
-        "/home/user/SWORDCOMM"
-        "/home/user/Documents/SWORDCOMM"
+        "$ANDROID_PROJECT_PATH"
+        "$PWD"
+        "$PWD/telegram-android"
+        "$HOME/telegram-android"
+        "$HOME/Telegram-Android"
+        "$HOME/SWORDCOMM"
+        "$HOME/Documents/SWORDCOMM"
+        "$HOME/CRYPTOGRAM-android"
+        "$HOME/AndroidProjects/telegram-android"
         "$HOME/molly"
         "/molly"
     )
 
     for path in "${search_paths[@]}"; do
-        if [ -d "$path" ] && ([ -f "$path/build.gradle.kts" ] || [ -f "$path/build.gradle" ] || [ -f "$path/app/build.gradle" ]); then
+        [ -n "$path" ] || continue
+        if is_gradle_project_root "$path"; then
             echo "$path"
             return 0
         fi
@@ -95,7 +145,9 @@ find_android_project() {
 {
 START_TIME=$(date +%s)
 
-clear
+if [ -t 1 ] && [ -n "${TERM:-}" ] && command -v clear >/dev/null 2>&1; then
+    clear || true
+fi
 print_header "CRYPTOGRAM/SWORDCOMM Android APK Build"
 
 echo "Configuration:"
@@ -108,30 +160,67 @@ print_section "Locating Android Project"
 
 # Find Android project
 ANDROID_ROOT=""
-if [ -n "$1" ]; then
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    usage
+    exit 0
+elif [ -n "${1:-}" ]; then
     print_progress "Using provided path: $1"
     ANDROID_ROOT="$1"
 elif ANDROID_ROOT=$(find_android_project ""); then
     print_info "Found Android project at: $ANDROID_ROOT"
 else
-    print_error "Android project not found"
+    print_error "Android Gradle project not found"
+    echo ""
+    echo "This repository snapshot does not contain gradlew or build.gradle files."
+    echo "You need to provide an external Android Gradle project path."
+    echo ""
+    echo "Accepted forms:"
+    echo "  • ./build_apk.sh /path/to/android/project"
+    echo "  • ANDROID_PROJECT_PATH=/path/to/android/project ./build_apk.sh"
+    echo ""
+    echo "A valid project root must contain:"
+    echo "  • gradlew"
+    echo "  • build.gradle(.kts) or settings.gradle(.kts)"
+    echo "    and/or app/build.gradle(.kts)"
     echo ""
     echo "Searched locations:"
-    echo "  • $SCRIPT_DIR/TMessagesProj"
-    echo "  • /home/user/SWORDCOMM"
-    echo "  • /home/user/Documents/SWORDCOMM"
+    echo "  • $PWD"
+    echo "  • $PWD/telegram-android"
+    echo "  • $HOME/telegram-android"
+    echo "  • $HOME/Telegram-Android"
+    echo "  • $HOME/SWORDCOMM"
+    echo "  • $HOME/Documents/SWORDCOMM"
+    echo "  • $HOME/CRYPTOGRAM-android"
+    echo "  • $HOME/AndroidProjects/telegram-android"
     echo "  • $HOME/molly"
+    echo "  • /molly"
     echo ""
-    echo "Usage: $0 [path/to/android/project]"
-    echo ""
-    fail "Please provide Android project path"
+    usage
+    fail "No external Android Gradle project was provided or discovered"
 fi
 
 # Verify Android project
+if [ ! -e "$ANDROID_ROOT" ]; then
+    echo ""
+    echo "Path checked: $ANDROID_ROOT"
+    fail "Provided Android project path does not exist"
+elif [ ! -d "$ANDROID_ROOT" ]; then
+    echo ""
+    echo "Path checked: $ANDROID_ROOT"
+    fail "Provided Android project path is not a directory"
+fi
+
 cd "$ANDROID_ROOT" || fail "Cannot access: $ANDROID_ROOT"
 
-if [ ! -f "build.gradle" ] && [ ! -f "build.gradle.kts" ] && [ ! -f "app/build.gradle" ]; then
-    fail "Not a valid Android/Gradle project: $ANDROID_ROOT"
+if ! is_gradle_project_root "$ANDROID_ROOT"; then
+    echo ""
+    echo "Path checked: $ANDROID_ROOT"
+    echo "Missing required Gradle project markers."
+    echo "Expected at least:"
+    echo "  • gradlew"
+    echo "  • build.gradle(.kts) or settings.gradle(.kts)"
+    echo "    and/or app/build.gradle(.kts)"
+    fail "Not a valid Android Gradle project root"
 fi
 
 print_info "Working directory: $ANDROID_ROOT"
@@ -164,9 +253,9 @@ else
 fi
 
 # Check Android SDK
-if [ -n "$ANDROID_HOME" ]; then
+if [ -n "${ANDROID_HOME:-}" ]; then
     print_info "Android SDK: $ANDROID_HOME"
-elif [ -n "$ANDROID_SDK_ROOT" ]; then
+elif [ -n "${ANDROID_SDK_ROOT:-}" ]; then
     print_info "Android SDK: $ANDROID_SDK_ROOT"
     export ANDROID_HOME="$ANDROID_SDK_ROOT"
 else
@@ -188,13 +277,14 @@ print_section "Build Configuration"
 # Determine build task
 GRADLE_TASK="assemble${FLAVOR^}${BUILD_VARIANT^}"
 print_info "Gradle task: $GRADLE_TASK"
+print_info "Using external Android project: $ANDROID_ROOT"
 
 # Check for signing configuration (release builds)
 if [ "$BUILD_VARIANT" = "release" ]; then
     echo ""
     print_progress "Release build requires signing configuration"
 
-    if [ -n "$CI_KEYSTORE_PATH" ] && [ -f "$CI_KEYSTORE_PATH" ]; then
+    if [ -n "${CI_KEYSTORE_PATH:-}" ] && [ -f "$CI_KEYSTORE_PATH" ]; then
         print_info "Using keystore: $CI_KEYSTORE_PATH"
     else
         print_warning "No keystore configured"
@@ -273,7 +363,8 @@ done
 if [ $APK_FOUND -eq 0 ]; then
     print_warning "No recent APK files found in standard locations"
     echo ""
-    echo "Check the Gradle output above for APK location"
+    echo "Check the Gradle output above for the actual output location."
+    echo "This script only scans common APK directories under the external project root."
 fi
 
 echo "═══════════════════════════════════════════════════════════════════"
@@ -291,10 +382,13 @@ echo "  • debug   - Debuggable, unsigned"
 echo "  • release - Optimized, requires signing"
 echo ""
 echo "Build different variant:"
-echo "  BUILD_VARIANT=release $0"
+echo "  BUILD_VARIANT=release $0 /path/to/android/project"
+echo ""
+echo "Use an explicit external project:"
+echo "  ANDROID_PROJECT_PATH=/path/to/android/project $0"
 echo ""
 echo "Clean build:"
-echo "  CLEAN_BUILD=1 $0"
+echo "  CLEAN_BUILD=1 $0 /path/to/android/project"
 echo ""
 echo "═══════════════════════════════════════════════════════════════════"
 echo ""

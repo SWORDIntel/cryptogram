@@ -59,7 +59,7 @@ bool GroupEncryption::createEncryptedGroup(not_null<PeerData*> group) {
 	// Create MLS group
 	auto mlsGroupId = _mlsProtocol->createGroup(
 		members,
-		MLSCiphersuite::MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448);
+		MLSCiphersuite::MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519);
 
 	// Store mapping
 	_groupToMLS[group->id] = mlsGroupId;

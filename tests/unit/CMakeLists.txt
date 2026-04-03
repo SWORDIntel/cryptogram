@@ -25,3 +25,14 @@ target_link_libraries(test_double_ratchet
     desktop-app::lib_base
     # Add other necessary libraries
 )
+
+add_executable(test_mls_protocol
+    test_mls_protocol.cpp
+)
+
+target_link_libraries(test_mls_protocol
+    PRIVATE
+    Catch2::Catch2WithMain
+    desktop-app::lib_base
+    desktop-app::lib_crl
+)
