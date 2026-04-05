@@ -111,7 +111,7 @@ ListController::ListController(
 , _selected(selected) {
 	Data::AmPremiumValue(
 		&selected->session()
-	) | rpl::skip(1) | rpl::start_with_next([=] {
+	) | rpl::skip(1) | rpl::on_next([=] {
 		const auto count = delegate()->peerListFullRowsCount();
 		for (auto i = 0; i != count; ++i) {
 			delegate()->peerListUpdateRow(
@@ -197,7 +197,7 @@ void ChooseSendAsBox(
 		nullptr);
 
 	controller->clicked(
-	) | rpl::start_with_next([=](not_null<PeerData*> peer) {
+	) | rpl::on_next([=](not_null<PeerData*> peer) {
 		const auto weak = base::make_weak(box);
 		if (done(peer) && weak) {
 			box->closeBox();
@@ -289,7 +289,7 @@ void SetupSendAsButton(
 
 	std::move(
 		userpic
-	) | rpl::start_with_next([=](QImage &&userpic) {
+	) | rpl::on_next([=](QImage &&userpic) {
 		button->setUserpic(std::move(userpic));
 	}, button->lifetime());
 }

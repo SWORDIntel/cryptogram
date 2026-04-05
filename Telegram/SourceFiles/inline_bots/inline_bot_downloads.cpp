@@ -411,7 +411,7 @@ void DownloadFileBox(not_null<Ui::GenericBox*> box, DownloadBoxArgs args) {
 	box->addButton(tr::lng_cancel(), [=] {
 		box->closeBox();
 	});
-	box->boxClosing() | rpl::start_with_next([=] {
+	box->boxClosing() | rpl::on_next([=] {
 		if (!*chosen) {
 			done(QString());
 		}

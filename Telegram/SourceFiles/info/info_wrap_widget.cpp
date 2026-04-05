@@ -123,12 +123,12 @@ WrapWidget::WrapWidget(
 		) | rpl::flatten_latest() | rpl::distinct_until_changed());
 
 	_wrap.changes(
-	) | rpl::start_with_next([this] {
+	) | rpl::on_next([this] {
 		setupTop();
 		finishShowContent();
 	}, lifetime());
 	selectedListValue(
-	) | rpl::start_with_next([this](SelectedItems &&items) {
+	) | rpl::on_next([this](SelectedItems &&items) {
 		InvokeQueued(this, [this, items = std::move(items)]() mutable {
 			if (_topBar) {
 				_topBar->setSelectedItems(std::move(items));
@@ -139,7 +139,7 @@ WrapWidget::WrapWidget(
 
 	if (const auto topic = _controller->topic()) {
 		topic->destroyed(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			if (_wrap.current() == Wrap::Layer) {
 				_controller->parentController()->hideSpecialLayer();
 			} else if (_wrap.current() == Wrap::Narrow) {
@@ -160,7 +160,7 @@ void WrapWidget::setupShortcuts() {
 		return requireTopBarSearch()
 			&& (Core::App().activeWindow()
 				== &_controller->parentController()->window());
-	}) | rpl::start_with_next([=](not_null<Shortcuts::Request*> request) {
+	}) | rpl::on_next([=](not_null<Shortcuts::Request*> request) {
 		using Command = Shortcuts::Command;
 		request->check(Command::Search) && request->handle([=] {
 			_topBar->showSearch();
@@ -199,7 +199,7 @@ void WrapWidget::startInjectingActivePeerProfiles() {
 		(_1 == Wrap::Side) && _2
 	) | rpl::map(
 		_2
-	) | rpl::start_with_next([this](Dialogs::Key key) {
+	) | rpl::on_next([this](Dialogs::Key key) {
 		injectActiveProfile(key);
 	}, lifetime());
 
@@ -340,14 +340,14 @@ void WrapWidget::createTopBar() {
 		TopBarStyle(wrapValue),
 		std::move(selectedItems));
 	_topBar->selectionActionRequests(
-	) | rpl::start_with_next([=](SelectionAction action) {
+	) | rpl::on_next([=](SelectionAction action) {
 		_content->selectionAction(action);
 	}, _topBar->lifetime());
 
 	if (hasBackButton()) {
 		_topBar->enableBackButton();
 		_topBar->backRequest(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			checkBeforeClose([=] { _controller->showBackFromStack(); });
 		}, _topBar->lifetime());
 	} else if (wrapValue == Wrap::Side) {
@@ -359,7 +359,7 @@ void WrapWidget::createTopBar() {
 			_controller->parentController()->closeThirdSection();
 		});
 	}
-	_topBar->storyClicks() | rpl::start_with_next([=] {
+	_topBar->storyClicks() | rpl::on_next([=] {
 		if (const auto peer = _controller->key().peer()) {
 			_controller->parentController()->openPeerStories(peer->id);
 		}
@@ -438,7 +438,7 @@ void WrapWidget::setupTopBarMenuToggle() {
 			manager.loadingListChanges() | rpl::map_to(false),
 			manager.loadedAdded() | rpl::map_to(true),
 			manager.loadedRemoved() | rpl::map_to(false)
-		) | rpl::start_with_next([=, &manager](bool definitelyHas) {
+		) | rpl::on_next([=, &manager](bool definitelyHas) {
 			const auto has = [&] {
 				for ([[maybe_unused]] const auto id : manager.loadingList()) {
 					return true;
@@ -505,7 +505,7 @@ void WrapWidget::addTopBarMenuButton() {
 	Shortcuts::Requests(
 	) | rpl::filter([=] {
 		return (_controller->section().type() == Section::Type::Profile);
-	}) | rpl::start_with_next([=](not_null<Shortcuts::Request*> request) {
+	}) | rpl::on_next([=](not_null<Shortcuts::Request*> request) {
 		using Command = Shortcuts::Command;
 
 		request->check(Command::ShowChatMenu, 1) && request->handle([=] {
@@ -536,7 +536,7 @@ void WrapWidget::addProfileCallsButton() {
 		return user->hasCalls();
 	}) | rpl::take(
 		1
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_topBar->addButton(
 			base::make_unique_q<Ui::IconButton>(
 				_topBar,
@@ -684,7 +684,7 @@ void WrapWidget::finishShowContent() {
 	_contentChanges.fire({});
 
 	_content->scrollBottomSkipValue(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		updateContentGeometry();
 	}, _content->lifetime());
 }

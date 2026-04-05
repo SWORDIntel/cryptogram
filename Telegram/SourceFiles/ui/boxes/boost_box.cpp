@@ -81,7 +81,7 @@ namespace {
 		rpl::duplicate(title),
 		state->repeated->shownValue(),
 		state->repeated->widthValue()
-	) | rpl::start_with_next([=](int outer, auto&&, bool shown, int badge) {
+	) | rpl::on_next([=](int outer, auto&&, bool shown, int badge) {
 		const auto repeated = shown ? badge : 0;
 		const auto skip = st::boostTitleBadgeSkip;
 		const auto available = outer - repeated - skip;
@@ -97,7 +97,7 @@ namespace {
 	}, result->lifetime());
 
 	const auto badge = state->repeated;
-	badge->paintRequest() | rpl::start_with_next([=] {
+	badge->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(badge);
 		auto hq = PainterHighQualityEnabler(p);
 		const auto radius = std::min(badge->width(), badge->height()) / 2;
@@ -265,7 +265,7 @@ void StartFireworks(not_null<QWidget*> parent) {
 	const auto animation = lifetime.make_state<FireworksAnimation>([=] {
 		result->update();
 	});
-	result->paintRequest() | rpl::start_with_next([=] {
+	result->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(result);
 		if (!animation->paint(p, result->rect())) {
 			crl::on_main(result, [=] { delete result; });
@@ -386,7 +386,7 @@ void BoostBox(
 	}) | rpl::flatten_latest();
 	if (wasLifting) {
 		state->data.value(
-		) | rpl::start_with_next([=](BoostCounters counters) {
+		) | rpl::on_next([=](BoostCounters counters) {
 			if (counters.mine - wasMine >= wasLifting) {
 				box->closeBox();
 			}
@@ -562,7 +562,7 @@ object_ptr<Ui::RpWidget> MakeLinkLabel(
 	rpl::combine(
 		raw->widthValue(),
 		std::move(text)
-	) | rpl::start_with_next([=](int outer, const auto&) {
+	) | rpl::on_next([=](int outer, const auto&) {
 		const auto textWidth = state->label.textMaxWidth();
 		const auto skipLeft = st::giveawayGiftCodeLink.margin.left();
 		const auto skipRight = rawRight
@@ -580,7 +580,7 @@ object_ptr<Ui::RpWidget> MakeLinkLabel(
 		state->label.moveToLeft(x, st::giveawayGiftCodeLink.margin.top());
 	}, raw->lifetime());
 
-	raw->paintRequest() | rpl::start_with_next([=] {
+	raw->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		state->bg.paint(p, raw->rect());
 	}, raw->lifetime());
@@ -589,7 +589,7 @@ object_ptr<Ui::RpWidget> MakeLinkLabel(
 
 	raw->resize(raw->width(), st::giveawayGiftCodeLinkHeight);
 	if (rawRight) {
-		raw->widthValue() | rpl::start_with_next([=](int width) {
+		raw->widthValue() | rpl::on_next([=](int width) {
 			rawRight->move(width - rawRight->width(), 0);
 		}, raw->lifetime());
 	}
@@ -897,7 +897,7 @@ object_ptr<Ui::FlatLabel> MakeBoostFeaturesBadge(
 	const auto label = result.data();
 
 	label->show();
-	label->paintRequest() | rpl::start_with_next([=] {
+	label->paintRequest() | rpl::on_next([=] {
 		const auto size = label->textMaxWidth();
 		const auto rect = QRect(
 			(label->width() - size) / 2,

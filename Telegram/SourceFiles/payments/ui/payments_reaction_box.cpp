@@ -161,11 +161,11 @@ void AddArrowDown(not_null<RpWidget*> widget) {
 	const auto skip = st::lineWidth * 4;
 	const auto size = icon->width() + skip * 2;
 	arrow->resize(size, size);
-	widget->widthValue() | rpl::start_with_next([=](int width) {
+	widget->widthValue() | rpl::on_next([=](int width) {
 		const auto left = (width - st::paidReactTopUserpic) / 2;
 		arrow->moveToRight(left - skip, -st::lineWidth, width);
 	}, widget->lifetime());
-	arrow->paintRequest() | rpl::start_with_next([=] {
+	arrow->paintRequest() | rpl::on_next([=] {
 		Painter p(arrow);
 		auto hq = PainterHighQualityEnabler(p);
 		p.setBrush(st::activeButtonBg);
@@ -207,10 +207,10 @@ void AddArrowDown(not_null<RpWidget*> widget) {
 		result->update();
 	});
 	style::PaletteChanged(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		state->badge = QImage();
 	}, result->lifetime());
-	result->paintRequest() | rpl::start_with_next([=] {
+	result->paintRequest() | rpl::on_next([=] {
 		auto p = Painter(result);
 		const auto left = (result->width() - st::paidReactTopUserpic) / 2;
 		p.drawImage(left, 0, photo->image(st::paidReactTopUserpic));
@@ -317,7 +317,7 @@ void FillTopReactors(
 	rpl::combine(
 		std::move(chosen),
 		std::move(shownPeer)
-	) | rpl::start_with_next([=](int chosen, uint64 barePeerId) {
+	) | rpl::on_next([=](int chosen, uint64 barePeerId) {
 		if (!state->initialChosen) {
 			state->initialChosen = chosen;
 		} else if (*state->initialChosen != chosen) {
@@ -391,7 +391,7 @@ void FillTopReactors(
 	rpl::combine(
 		state->updated.events_starting_with({}),
 		wrap->widthValue()
-	) | rpl::start_with_next([=](auto, int width) {
+	) | rpl::on_next([=](auto, int width) {
 		const auto single = width / 4;
 		if (single <= st::paidReactTopUserpic) {
 			return;
@@ -500,10 +500,10 @@ void PaidReactionsBox(
 				rpl::single(Text::Bold(args.channel)),
 				Text::RichLangValue)),
 		st::boostText);
-	labelWrap->widthValue() | rpl::start_with_next([=](int width) {
+	labelWrap->widthValue() | rpl::on_next([=](int width) {
 		label->resizeToWidth(width);
 	}, label->lifetime());
-	label->heightValue() | rpl::start_with_next([=](int height) {
+	label->heightValue() | rpl::on_next([=](int height) {
 		const auto min = 2 * st::normalFont->height;
 		const auto skip = std::max((min - height) / 2, 0);
 		labelWrap->resize(labelWrap->width(), 2 * skip + height);
@@ -526,7 +526,7 @@ void PaidReactionsBox(
 			state->shownPeer.current() != 0),
 		style::al_top);
 	named->checkedValue(
-	) | rpl::start_with_next([=](bool show) {
+	) | rpl::on_next([=](bool show) {
 		state->shownPeer = show ? state->savedShownPeer : 0;
 	}, named->lifetime());
 
@@ -536,7 +536,7 @@ void PaidReactionsBox(
 
 	box->boxClosing() | rpl::filter([=] {
 		return state->shownPeer.current() != initialShownPeer;
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		args.send(0, state->shownPeer.current());
 	}, box->lifetime());
 
@@ -547,13 +547,13 @@ void PaidReactionsBox(
 			st::creditsBoxButtonLabel);
 		args.submit(
 			state->chosen.value()
-		) | rpl::start_with_next([=](const TextWithEntities &text) {
+		) | rpl::on_next([=](const TextWithEntities &text) {
 			buttonLabel->setMarkedText(text);
 		}, buttonLabel->lifetime());
 		buttonLabel->setTextColorOverride(
 			box->getDelegate()->style().button.textFg->c);
 		button->sizeValue(
-		) | rpl::start_with_next([=](const QSize &size) {
+		) | rpl::on_next([=](const QSize &size) {
 			buttonLabel->moveToLeft(
 				(size.width() - buttonLabel->width()) / 2,
 				(size.height() - buttonLabel->height()) / 2);
@@ -562,7 +562,7 @@ void PaidReactionsBox(
 	}
 
 	box->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto &padding = st::paidReactBox.buttonPadding;
 		button->resizeToWidth(width
 			- padding.left()
@@ -579,7 +579,7 @@ void PaidReactionsBox(
 		rpl::combine(
 			balance->sizeValue(),
 			box->widthValue()
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			balance->moveToLeft(
 				st::creditsHistoryRightSkip * 2,
 				st::creditsHistoryRightSkip);

@@ -49,10 +49,68 @@ object MLSProtocol {
 
     // Native method declarations
     private external fun nativeCreateGroup(groupId: Long, memberIds: LongArray): Boolean
+    private external fun nativeGenerateKeyPackage(): ByteArray?
+    private external fun nativeCommitGroupChanges(groupId: Long): ByteArray?
+    private external fun nativeProcessWelcome(welcome: ByteArray): Long
     private external fun nativeEncryptGroupMessage(groupId: Long, plaintext: String): ByteArray?
     private external fun nativeDecryptGroupMessage(groupId: Long, ciphertext: ByteArray): String?
     private external fun nativeAddMember(groupId: Long, userId: Long): Boolean
     private external fun nativeRemoveMember(groupId: Long, userId: Long): Boolean
+
+    /**
+     * Generate a local MLS KeyPackage.
+     *
+     * To be uploaded to the server so others can invite the user to groups.
+     *
+     * @return Serialized KeyPackage byte array
+     */
+    fun generateKeyPackage(): ByteArray? {
+        return try {
+            nativeGenerateKeyPackage()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to generate KeyPackage", e)
+            null
+        }
+    }
+
+    /**
+     * Commit pending membership or key changes in a group.
+     *
+     * After adding/removing members, a Commit must be broadcast.
+     *
+     * @param groupId Telegram group/chat ID
+     * @return Serialized Commit message to be sent to the group
+     */
+    fun commitGroupChanges(groupId: Long): ByteArray? {
+        return try {
+            val result = nativeCommitGroupChanges(groupId)
+            Log.d(TAG, "Committed group changes for $groupId")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to commit group changes for $groupId", e)
+            null
+        }
+    }
+
+    /**
+     * Join an MLS group from a Welcome message.
+     *
+     * Processes a group invite and initializes the group ratchet state.
+     *
+     * @param welcome Serialized Welcome message
+     * @return Group ID of the joined group, or 0 on failure
+     */
+    fun processWelcome(welcome: ByteArray): Long {
+        if (welcome.isEmpty()) return 0
+        return try {
+            val groupId = nativeProcessWelcome(welcome)
+            Log.d(TAG, "Joined MLS group from welcome: $groupId")
+            groupId
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to process welcome", e)
+            0
+        }
+    }
 
     /**
      * Create an encrypted group using MLS

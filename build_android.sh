@@ -364,12 +364,13 @@ check_system() {
     print_info "Available disk: ${available_gb}GB"
     log "SYSTEM" "Available disk space: ${available_gb}GB"
 
-    if [ "$available_gb" -lt 10 ]; then
-        print_error "Insufficient disk space: ${available_gb}GB (minimum 10GB required for Android build)"
+    if [ "${available_gb}" -lt 5 ]; then
+        print_error "Insufficient disk space: ${available_gb}GB (minimum 5GB required for Android build)"
         fail "Not enough disk space"
-    elif [ "$available_gb" -lt 20 ]; then
-        print_warning "Low disk space: ${available_gb}GB (20GB+ recommended)"
+    elif [ "${available_gb}" -lt 10 ]; then
+        print_warning "Low disk space: ${available_gb}GB (10GB+ recommended)"
     fi
+
 
     local elapsed=$(($(date +%s) - start_time))
     COMPONENT_TIMES["system"]=$elapsed

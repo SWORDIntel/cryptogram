@@ -46,7 +46,7 @@ PromoSuggestions::PromoSuggestions(not_null<Main::Session*> session)
 : _session(session)
 , _topPromotionTimer([=] { refreshTopPromotion(); }) {
 	Core::App().settings().proxy().connectionTypeValue(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		refreshTopPromotion();
 	}, _lifetime);
 }

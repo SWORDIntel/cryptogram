@@ -128,7 +128,7 @@ QImage Sibling::LoaderPhoto::good() {
 		return image->original();
 	} else if (!_waitingLoading) {
 		_photo->session().downloaderTaskFinished(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			if (_media->loaded()) {
 				_update();
 			}
@@ -219,7 +219,7 @@ void Sibling::LoaderVideo::waitForGoodThumbnail() {
 			if (const auto strong = weak.get()) {
 				if (!strong->updateAfterGoodCheck()) {
 					strong->_video->session().downloaderTaskFinished(
-					) | rpl::start_with_next([=] {
+					) | rpl::on_next([=] {
 						strong->updateAfterGoodCheck();
 					}, strong->_waitingGoodGeneration);
 				}

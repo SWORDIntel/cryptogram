@@ -27,7 +27,7 @@ TrustFlag::TrustFlag(
     label->resizeToWidth(size);
 
     _widget->paintRequest(
-    ) | rpl::start_with_next([=](QRect clip) {
+    ) | rpl::on_next([=](QRect clip) {
         Painter p(_widget.data());
         label->paintEvent(nullptr);
     }, _widget->lifetime());

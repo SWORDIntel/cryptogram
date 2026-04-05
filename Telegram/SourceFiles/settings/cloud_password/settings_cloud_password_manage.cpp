@@ -110,7 +110,7 @@ void Manage::setupContent() {
 		return;
 	}
 	cloudPassword().state(
-	) | rpl::start_with_next([=](const Core::CloudPasswordState &state) {
+	) | rpl::on_next([=](const Core::CloudPasswordState &state) {
 		if (!_requestLifetime && !state.hasPassword) {
 			quit();
 		}
@@ -172,12 +172,12 @@ void Manage::setupContent() {
 	rpl::combine(
 		about->geometryValue(),
 		content->widthValue()
-	) | rpl::start_with_next([=](QRect r, int w) {
+	) | rpl::on_next([=](QRect r, int w) {
 		r.setWidth(w);
 		divider->setGeometry(r);
 	}, divider->lifetime());
 	_isBottomFillerShown.value(
-	) | rpl::start_with_next([=](bool shown) {
+	) | rpl::on_next([=](bool shown) {
 		divider->skipEdge(Qt::BottomEdge, shown);
 	}, divider->lifetime());
 

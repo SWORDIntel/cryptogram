@@ -1034,7 +1034,7 @@ rpl::producer<bool> ChannelData::unrestrictedByBoostsValue() const {
 	return mgInfo
 		? mgInfo->unrestrictedByBoostsChanges.events_starting_with(
 			unrestrictedByBoosts())
-		: (rpl::single(false) | rpl::type_erased());
+		: (rpl::single(false) | rpl::type_erased);
 }
 
 void ChannelData::setBoostsUnrestrict(int applied, int unrestrict) {
@@ -1488,7 +1488,7 @@ void ApplyChannelUpdate(
 			}
 			creditsLoadLifetime->destroy();
 		});
-		base::timer_once(kTimeout) | rpl::start_with_next([=] {
+		base::timer_once(kTimeout) | rpl::on_next([=] {
 			creditsLoadLifetime->destroy();
 		}, *creditsLoadLifetime);
 		const auto currencyLoadLifetime = std::make_shared<rpl::lifetime>();
@@ -1506,7 +1506,7 @@ void ApplyChannelUpdate(
 			},
 			[=] { apply(currencyLoad->data().currentBalance); },
 			*currencyLoadLifetime);
-		base::timer_once(kTimeout) | rpl::start_with_next([=] {
+		base::timer_once(kTimeout) | rpl::on_next([=] {
 			currencyLoadLifetime->destroy();
 		}, *currencyLoadLifetime);
 	}

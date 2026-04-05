@@ -364,15 +364,17 @@ include(${CMAKE_HOME_DIRECTORY}/voip/CMakeLists.txt)
 #==============================================================================
 # CRYPTOGRAM - Military-Grade Encryption Library
 #==============================================================================
-add_library(cryptogram STATIC
+add_library(cryptogram SHARED
         cryptogram/CryptogramWrapper.cpp
-        cryptogram/data_signal_protocol.cpp
-        cryptogram/data_mls_protocol.cpp
-        cryptogram/data_group_encryption.cpp
-        cryptogram/data_enhanced_privacy.cpp
+        cryptogram/data/data_signal_protocol.cpp
+        cryptogram/data/data_mls_protocol.cpp
+        cryptogram/data/data_group_encryption.cpp
+        cryptogram/data/data_enhanced_privacy.cpp
 )
 
+
 target_include_directories(cryptogram PUBLIC
+        .
         cryptogram
         boringssl/include
 )

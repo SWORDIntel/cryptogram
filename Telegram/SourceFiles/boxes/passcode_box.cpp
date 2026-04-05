@@ -47,7 +47,7 @@ void SetCloudPassword(
 		not_null<Ui::GenericBox*> box,
 		not_null<Main::Session*> session) {
 	session->api().cloudPassword().state(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		using namespace Settings;
 		const auto weak = base::make_weak(box);
 		if (CheckEditCloudPassword(session)) {
@@ -309,11 +309,11 @@ void PasscodeBox::prepare() {
 	connect(_newPasscode, &Ui::MaskedInputField::changed, [=] { newChanged(); });
 	connect(_reenterPasscode, &Ui::MaskedInputField::changed, [=] { newChanged(); });
 	_passwordHint->changes(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		newChanged();
 	}, _passwordHint->lifetime());
 	_recoverEmail->changes(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (!_emailError.isEmpty()) {
 			_emailError = QString();
 			update();
@@ -325,9 +325,9 @@ void PasscodeBox::prepare() {
 	connect(_newPasscode, &Ui::MaskedInputField::submitted, fieldSubmit);
 	connect(_reenterPasscode, &Ui::MaskedInputField::submitted, fieldSubmit);
 	_passwordHint->submits(
-	) | rpl::start_with_next(fieldSubmit, _passwordHint->lifetime());
+	) | rpl::on_next(fieldSubmit, _passwordHint->lifetime());
 	_recoverEmail->submits(
-	) | rpl::start_with_next(fieldSubmit, _recoverEmail->lifetime());
+	) | rpl::on_next(fieldSubmit, _recoverEmail->lifetime());
 
 	_recover->addClickHandler([=] { recoverByEmail(); });
 
@@ -1117,7 +1117,7 @@ void PasscodeBox::recover() {
 	) | rpl::start_to_stream(_newPasswordSet, lifetime());
 
 	box->recoveryExpired(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		recoverExpired();
 	}, lifetime());
 
@@ -1207,11 +1207,11 @@ void RecoverBox::prepare() {
 	updateHeight();
 
 	_recoverCode->changes(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		codeChanged();
 	}, _recoverCode->lifetime());
 	_recoverCode->submits(
-	) | rpl::start_with_next([=] { submit(); }, _recoverCode->lifetime());
+	) | rpl::on_next([=] { submit(); }, _recoverCode->lifetime());
 }
 
 void RecoverBox::paintEvent(QPaintEvent *e) {
@@ -1342,7 +1342,7 @@ void RecoverBox::proceedToChange(const QString &code) {
 	auto box = Box<PasscodeBox>(_session, fields);
 
 	box->boxClosing(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		const auto weak = base::make_weak(this);
 		if (const auto onstack = _closeParent) {
 			onstack();
@@ -1353,7 +1353,7 @@ void RecoverBox::proceedToChange(const QString &code) {
 	}, lifetime());
 
 	box->newPasswordSet(
-	) | rpl::start_with_next([=](QByteArray &&password) {
+	) | rpl::on_next([=](QByteArray &&password) {
 		_newPasswordSet.fire(std::move(password));
 	}, lifetime());
 

@@ -113,7 +113,7 @@ KeyboardStyle::KeyboardStyle(
 : ReplyKeyboard::Style(st)
 , _repaint(std::move(repaint)) {
 	style::PaletteChanged(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_cachedBg = {};
 		_cachedOutline = {};
 	}, _lifetime);

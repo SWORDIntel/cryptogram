@@ -161,7 +161,7 @@ struct Feature {
 	const auto inner = result->entity();
 	inner->resize(size);
 	inner->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(inner);
 		auto hq = PainterHighQualityEnabler(p);
 		p.setBrush(st::storiesComposeBlue);
@@ -226,7 +226,7 @@ struct Feature {
 	title->show();
 	about->show();
 	widget->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto left = st::storiesStealthFeatureLabelLeft;
 		const auto available = width - left;
 		title->resizeToWidth(available);
@@ -261,7 +261,7 @@ struct Feature {
 				tr::now,
 				lt_left,
 				TimeLeftText(left));
-		}) | rpl::type_erased();
+		}) | rpl::type_erased;
 	}) | rpl::flatten_latest();
 
 	auto result = object_ptr<Ui::RoundButton>(
@@ -281,7 +281,7 @@ struct Feature {
 	lock->setAttribute(Qt::WA_TransparentForMouseEvents);
 	lock->resize(st::storiesStealthLockIcon.size());
 	lock->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(lock);
 		st::storiesStealthLockIcon.paintInCenter(p, lock->rect());
 	}, lock->lifetime());
@@ -301,7 +301,7 @@ struct Feature {
 		lock->move(right + lockLeft, top + lockTop);
 	};
 
-	std::move(state) | rpl::start_with_next([=](const State &state) {
+	std::move(state) | rpl::on_next([=](const State &state) {
 		const auto cooldown = state.premium
 			&& (state.mode.cooldownTill > state.now);
 		label->setOpacity(cooldown ? kCooldownButtonLabelOpacity : 1.);
@@ -310,7 +310,7 @@ struct Feature {
 	}, label->lifetime());
 
 	raw->widthValue(
-	) | rpl::start_with_next(updateLabelLockGeometry, label->lifetime());
+	) | rpl::on_next(updateLabelLockGeometry, label->lifetime());
 
 	return result;
 }
@@ -365,7 +365,7 @@ struct Feature {
 		});
 		data->state.value() | rpl::filter([](const State &state) {
 			return state.mode.enabledTill > state.now;
-		}) | rpl::start_with_next([=] {
+		}) | rpl::on_next([=] {
 			box->closeBox();
 			show->showToast(ToastActivated());
 		}, box->lifetime());

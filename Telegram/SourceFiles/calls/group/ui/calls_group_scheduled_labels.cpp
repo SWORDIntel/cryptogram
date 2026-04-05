@@ -42,7 +42,7 @@ rpl::producer<QString> StartsWhenText(rpl::producer<TimeId> date) {
 			rpl::single(langDayOfMonthFull(dateDay.date())),
 			lt_time,
 			rpl::single(time)
-		) | rpl::type_erased();
+		) | rpl::type_erased;
 		auto tomorrow = tr::lng_group_call_starts_short_tomorrow(
 			lt_time,
 			rpl::single(time));
@@ -54,26 +54,25 @@ rpl::producer<QString> StartsWhenText(rpl::producer<TimeId> date) {
 			std::move(today)
 		) | rpl::then(base::timer_once(
 			std::min(tillAfter, kDay) * crl::time(1000)
-		) | rpl::map([=] {
-			return rpl::duplicate(exact);
-		})) | rpl::flatten_latest() | rpl::type_erased();
+		) | rpl::map([=](auto&&) {
+		        return rpl::duplicate(exact);
+		})) | rpl::flatten_latest() | rpl::type_erased;
 
 		auto tomorrowAndAfter = rpl::single(
-			std::move(tomorrow)
+		        std::move(tomorrow)
 		) | rpl::then(base::timer_once(
-			std::min(tillToday, kDay) * crl::time(1000)
-		) | rpl::map([=] {
-			return rpl::duplicate(todayAndAfter);
-		})) | rpl::flatten_latest() | rpl::type_erased();
+		        std::min(tillToday, kDay) * crl::time(1000)
+		) | rpl::map([=](auto&&) {
+		        return rpl::duplicate(todayAndAfter);
+		})) | rpl::flatten_latest() | rpl::type_erased;
 
 		auto full = rpl::single(
-			rpl::duplicate(exact)
+		        rpl::duplicate(exact)
 		) | rpl::then(base::timer_once(
-			tillTomorrow * crl::time(1000)
-		) | rpl::map([=] {
-			return rpl::duplicate(tomorrowAndAfter);
-		})) | rpl::flatten_latest() | rpl::type_erased();
-
+		        tillTomorrow * crl::time(1000)
+		) | rpl::map([=](auto&&) {
+		        return rpl::duplicate(tomorrowAndAfter);
+		})) | rpl::flatten_latest() | rpl::type_erased;
 		if (tillTomorrow > 0) {
 			return full;
 		} else if (tillToday > 0) {
@@ -99,7 +98,7 @@ object_ptr<Ui::RpWidget> CreateGradientLabel(
 
 	std::move(
 		text
-	) | rpl::start_with_next([=](const QString &text) {
+	) | rpl::on_next([=](const QString &text) {
 		state->path = QPainterPath();
 		const auto &font = st::groupCallCountdownFont;
 		state->path.addText(0, font->ascent, font->f, text);
@@ -116,7 +115,7 @@ object_ptr<Ui::RpWidget> CreateGradientLabel(
 	}, raw->lifetime());
 
 	raw->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		auto hq = PainterHighQualityEnabler(p);
 		const auto skip = st::groupCallWidth / 20;

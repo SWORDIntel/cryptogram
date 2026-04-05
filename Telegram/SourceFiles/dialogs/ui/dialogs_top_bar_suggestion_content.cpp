@@ -53,7 +53,7 @@ not_null<Ui::SlideWrap<Ui::VerticalLayout>*> CreateUnconfirmedAuthContent(
 		parent,
 		object_ptr<Ui::VerticalLayout>(parent));
 	const auto content = wrap->entity();
-	content->paintRequest() | rpl::start_with_next([=] {
+	content->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(content);
 		p.fillRect(content->rect(), st::dialogsBg);
 	}, content->lifetime());
@@ -140,7 +140,7 @@ not_null<Ui::SlideWrap<Ui::VerticalLayout>*> CreateUnconfirmedAuthContent(
 	});
 	buttons->sizeValue(
 	) | rpl::filter_size(
-	) | rpl::start_with_next([=](const QSize &s) {
+	) | rpl::on_next([=](const QSize &s) {
 		const auto halfWidth = (s.width() - rect::m::sum::h(padding)) / 2;
 		yes->moveToLeft(
 			padding.left() + (halfWidth - yes->width()) / 2,
@@ -176,7 +176,7 @@ void TopBarSuggestionContent::setRightIcon(RightIcon icon) {
 			st::dialogsCancelSearchInPeer);
 		const auto rightHide = _rightHide.get();
 		sizeValue() | rpl::filter_size(
-		) | rpl::start_with_next([=](const QSize &s) {
+		) | rpl::on_next([=](const QSize &s) {
 			rightHide->moveToRight(st::buttonRadius, st::lineWidth);
 		}, rightHide->lifetime());
 		rightHide->show();
@@ -190,7 +190,7 @@ void TopBarSuggestionContent::setRightIcon(RightIcon icon) {
 			&st::settingsPremiumArrowOver);
 		arrow->setAttribute(Qt::WA_TransparentForMouseEvents);
 		sizeValue() | rpl::filter_size(
-		) | rpl::start_with_next([=](const QSize &s) {
+		) | rpl::on_next([=](const QSize &s) {
 			const auto &point = st::settingsPremiumArrowShift;
 			arrow->moveToLeft(
 				s.width() - arrow->width(),
@@ -330,7 +330,7 @@ void TopBarSuggestionContent::setHideCallback(Fn<void()> hideCallback) {
 }
 
 void TopBarSuggestionContent::setLeftPadding(rpl::producer<int> value) {
-	std::move(value) | rpl::start_with_next([=](int padding) {
+	std::move(value) | rpl::on_next([=](int padding) {
 		_leftPadding = padding;
 		update();
 	}, lifetime());

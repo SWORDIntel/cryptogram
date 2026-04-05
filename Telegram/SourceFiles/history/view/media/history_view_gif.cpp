@@ -168,7 +168,7 @@ Gif::Gif(
 		_parent->data()->removeFromSharedMediaIndex();
 		setDocumentLinks(_data, realParent, [=] {
 			auto lifetime = std::make_shared<rpl::lifetime>();
-			TTLVoiceStops(fullId) | rpl::start_with_next([=]() mutable {
+			TTLVoiceStops(fullId) | rpl::on_next([=]() mutable {
 				if (lifetime) {
 					base::take(lifetime)->destroy();
 				}
@@ -2042,7 +2042,7 @@ void Gif::createStreamedPlayer() {
 	}, _streamed->instance.lifetime());
 
 	_streamed->instance.switchQualityRequests(
-	) | rpl::start_with_next([=](int quality) {
+	) | rpl::on_next([=](int quality) {
 		auto now = Core::App().settings().videoQuality();
 		if (now.manual || now.height == quality) {
 			return;

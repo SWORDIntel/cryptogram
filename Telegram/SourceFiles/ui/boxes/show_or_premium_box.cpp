@@ -36,7 +36,7 @@ constexpr auto kShowOrLineOpacity = 0.3;
 
 	raw->resize(st::boxWideWidth, full);
 	raw->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		auto hq = PainterHighQualityEnabler(p);
 		const auto width = raw->width();
@@ -64,7 +64,7 @@ object_ptr<RpWidget> MakeShowOrLabel(
 	const auto raw = result.data();
 
 	raw->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(raw);
 
 		const auto full = st::showOrLineWidth;
@@ -201,7 +201,7 @@ void ShowOrPremiumBox(
 	rpl::combine(
 		premium->widthValue(),
 		label->widthValue()
-	) | rpl::start_with_next([=](int outer, int width) {
+	) | rpl::on_next([=](int outer, int width) {
 		label->moveToLeft(
 			(outer - width) / 2,
 			st::premiumPreviewBox.button.textTop,

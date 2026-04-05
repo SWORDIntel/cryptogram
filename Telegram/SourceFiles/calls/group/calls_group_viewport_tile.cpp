@@ -43,7 +43,7 @@ Viewport::VideoTile::VideoTile(
 	_track.track->stateValue(
 	) | rpl::filter(
 		_1 == Webrtc::VideoState::Paused
-	) | rpl::take(1) | rpl::start_with_next([=] {
+	) | rpl::take(1) | rpl::on_next([=] {
 		_wasPaused = true;
 	}, _lifetime);
 
@@ -259,7 +259,7 @@ void Viewport::VideoTile::setup(rpl::producer<bool> pinned) {
 		pinned
 	) | rpl::filter([=](bool pinned) {
 		return (_pinned != pinned);
-	}) | rpl::start_with_next([=](bool pinned) {
+	}) | rpl::on_next([=](bool pinned) {
 		_pinned = pinned;
 		updateTopControlsSize();
 		if (!_hidden) {
@@ -269,7 +269,7 @@ void Viewport::VideoTile::setup(rpl::producer<bool> pinned) {
 	}, _lifetime);
 
 	_track.track->renderNextFrame(
-	) | rpl::start_with_next(_update, _lifetime);
+	) | rpl::on_next(_update, _lifetime);
 
 	updateTopControlsSize();
 }

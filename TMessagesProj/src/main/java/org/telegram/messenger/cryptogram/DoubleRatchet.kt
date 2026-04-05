@@ -42,12 +42,84 @@ object DoubleRatchet {
 
     // Native method declarations
     private external fun nativeInitializeSession(userId: Long): Boolean
+    private external fun nativeInitializeWithRemoteBundle(userId: Long, bundle: ByteArray): Boolean
     private external fun nativeEncrypt(userId: Long, plaintext: String): ByteArray?
     private external fun nativeDecrypt(userId: Long, ciphertext: ByteArray): String?
+    private external fun nativeRotateSession(userId: Long): Boolean
+    private external fun nativeGetFingerprint(userId: Long): String?
+    private external fun nativeGenerateKeyBundle(): ByteArray?
     private external fun nativeGetState(userId: Long): String?
 
     /**
-     * Initialize a Double Ratchet session with a user
+     * Generate a local key bundle (Identity + Signed PreKey + One-time PreKeys)
+     * for X3DH key agreement.
+     *
+     * @return Byte array containing the serialized key bundle
+     */
+    fun generateKeyBundle(): ByteArray? {
+        return try {
+            nativeGenerateKeyBundle()
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to generate key bundle", e)
+            null
+        }
+    }
+
+    /**
+     * Initialize a Double Ratchet session using a peer's key bundle (X3DH)
+     *
+     * @param userId Telegram user ID
+     * @param bundle Serialized remote key bundle
+     * @return true if session initialized successfuly
+     */
+    fun initializeWithRemoteBundle(userId: Long, bundle: ByteArray): Boolean {
+        if (bundle.isEmpty()) {
+            Log.w(TAG, "Empty remote bundle for user $userId")
+            return false
+        }
+        return try {
+            val result = nativeInitializeWithRemoteBundle(userId, bundle)
+            Log.d(TAG, "Session initialized with bundle for user $userId: $result")
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize session with bundle for user $userId", e)
+            false
+        }
+    }
+
+    /**
+     * Manually trigger a key rotation for a session
+     *
+     * @param userId Telegram user ID
+     * @return true if rotation successful
+     */
+    fun rotateSession(userId: Long): Boolean {
+        return try {
+            nativeRotateSession(userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to rotate session for user $userId", e)
+            false
+        }
+    }
+
+    /**
+     * Get the "Safety Number" fingerprint for a user's session
+     * for out-of-band verification.
+     *
+     * @param userId Telegram user ID
+     * @return Fingerprint string, or null on failure
+     */
+    fun getFingerprint(userId: Long): String? {
+        return try {
+            nativeGetFingerprint(userId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get fingerprint for user $userId", e)
+            null
+        }
+    }
+
+    /**
+     * Initialize a Double Ratchet session with a user (basic)
      *
      * @param userId Telegram user ID
      * @return true if initialization successful

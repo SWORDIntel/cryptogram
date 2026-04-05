@@ -715,7 +715,7 @@ void Player::start() {
 	_stage = Stage::Started;
 	const auto guard = base::make_weak(&_sessionGuard);
 
-	_file->speedEstimate() | rpl::start_with_next([=](SpeedEstimate value) {
+	_file->speedEstimate() | rpl::on_next([=](SpeedEstimate value) {
 		_updates.fire({ value });
 	}, _sessionLifetime);
 
@@ -724,7 +724,7 @@ void Player::start() {
 		_video ? _video->waitingForData() : nullptr
 	) | rpl::filter([=] {
 		return !bothReceivedEnough(kBufferFor);
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		_pausedByWaitingForData = true;
 		updatePausedState();
 		_updates.fire({ WaitingForData{ true } });
@@ -760,7 +760,7 @@ void Player::start() {
 		crl::on_main_update_requests(
 		) | rpl::filter([=] {
 			return !_videoFinished;
-		}) | rpl::start_with_next([=] {
+		}) | rpl::on_next([=] {
 			checkVideoStep();
 		}, _sessionLifetime);
 	}

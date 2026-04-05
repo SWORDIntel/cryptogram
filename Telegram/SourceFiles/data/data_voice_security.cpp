@@ -235,7 +235,7 @@ VoiceSecurityManager::VoiceSecurityManager(
     
     // Initialize with hardware detection results
     _hardwareCheck->detectionComplete(
-    ) | rpl::start_with_next([=] {
+    ) | rpl::on_next([=] {
         // Auto-select best available processor
         _settings.processor = _hardwareCheck->recommendedProcessor();
         

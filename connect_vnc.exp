@@ -1,0 +1,18 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+set pass "pcEGrVRA"
+set host "205.209.111.190"
+set port "6090"
+
+spawn vncviewer $host::$port
+
+expect {
+    "Password:" {
+        send "$pass\r"
+        exp_continue
+    }
+    eof {
+        exit
+    }
+}

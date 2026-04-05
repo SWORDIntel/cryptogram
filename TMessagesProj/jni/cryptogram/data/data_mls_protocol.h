@@ -271,6 +271,7 @@ public:
 	MLSGroupId processWelcome(const MLSWelcome &welcome);
 
 	// Commit processing
+	std::optional<MLSCommit> commitGroupChanges(const MLSGroupId &groupId);
 	bool processCommit(const MLSGroupId &groupId, const MLSCommit &commit);
 
 	// Proposal processing

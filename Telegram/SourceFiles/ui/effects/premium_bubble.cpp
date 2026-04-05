@@ -278,19 +278,19 @@ BubbleWidget::BubbleWidget(
 
 	resizeTo(_bubble.width(), _bubble.height());
 	_bubble.widthChanges(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		resizeTo(_bubble.width(), _bubble.height());
 	}, lifetime());
 
 	std::move(
 		showFinishes
-	) | rpl::take(1) | rpl::start_with_next([=] {
+	) | rpl::take(1) | rpl::on_next([=] {
 		_state.value(
-		) | rpl::start_with_next([=](BubbleRowState state) {
+		) | rpl::on_next([=](BubbleRowState state) {
 			animateTo(state);
 		}, lifetime());
 
-		parent->widthValue() | rpl::start_with_next([=](int w) {
+		parent->widthValue() | rpl::on_next([=](int w) {
 			if (!_appearanceAnimation.animating()) {
 				const auto x = base::SafeRound(
 					w * _state.current().ratio - width() / 2);
@@ -526,7 +526,7 @@ void AddBubbleRow(
 	rpl::combine(
 		container->sizeValue(),
 		bubble->sizeValue()
-	) | rpl::start_with_next([=](const QSize &parentSize, const QSize &size) {
+	) | rpl::on_next([=](const QSize &parentSize, const QSize &size) {
 		container->resize(parentSize.width(), size.height());
 	}, bubble->lifetime());
 	bubble->show();

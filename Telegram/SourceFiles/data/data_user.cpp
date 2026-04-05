@@ -908,7 +908,7 @@ void ApplyUserUpdate(not_null<UserData*> user, const MTPDuserFull &update) {
 				}
 				creditsLoadLifetime->destroy();
 			});
-			base::timer_once(kTimeout) | rpl::start_with_next([=] {
+			base::timer_once(kTimeout) | rpl::on_next([=] {
 				creditsLoadLifetime->destroy();
 			}, *creditsLoadLifetime);
 			const auto currencyLoadLifetime
@@ -927,7 +927,7 @@ void ApplyUserUpdate(not_null<UserData*> user, const MTPDuserFull &update) {
 				},
 				[=] { apply(currencyLoad->data().currentBalance); },
 				*currencyLoadLifetime);
-			base::timer_once(kTimeout) | rpl::start_with_next([=] {
+			base::timer_once(kTimeout) | rpl::on_next([=] {
 				currencyLoadLifetime->destroy();
 			}, *currencyLoadLifetime);
 		}

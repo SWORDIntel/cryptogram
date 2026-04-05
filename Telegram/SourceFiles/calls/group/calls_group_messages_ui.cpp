@@ -186,7 +186,7 @@ void MessagesUi::setupList(
 	rpl::combine(
 		std::move(messages),
 		std::move(shown)
-	) | rpl::start_with_next([=](std::vector<Message> &&list, bool shown) {
+	) | rpl::on_next([=](std::vector<Message> &&list, bool shown) {
 		if (!shown) {
 			list.clear();
 		}
@@ -472,7 +472,7 @@ void MessagesUi::startReactionAnimation(MessageView &entry) {
 		rpl::combine(
 			_scroll->scrollTopValue(),
 			_scroll->RpWidget::positionValue()
-		) | rpl::start_with_next([=](int yshift, QPoint point) {
+		) | rpl::on_next([=](int yshift, QPoint point) {
 			_reactionBasePosition = point - QPoint(0, yshift);
 			for (auto &view : _views) {
 				updateReactionPosition(view);
@@ -493,7 +493,7 @@ void MessagesUi::startReactionAnimation(MessageView &entry) {
 	const auto effectSize = st::reactionInlineImage * 2;
 	const auto animation = entry.reactionAnimation.get();
 	raw->resize(effectSize, effectSize);
-	raw->paintRequest() | rpl::start_with_next([=] {
+	raw->paintRequest() | rpl::on_next([=] {
 		if (animation->finished()) {
 			crl::on_main(raw, [=] {
 				removeReaction(raw);
@@ -594,7 +594,7 @@ void MessagesUi::setupMessagesWidget() {
 		scroll->scrollTopValue(),
 		scroll->heightValue(),
 		_messages->heightValue()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		updateTopFade();
 		updateBottomFade();
 	}, scroll->lifetime());
@@ -634,7 +634,7 @@ void MessagesUi::setupMessagesWidget() {
 		return false;
 	});
 
-	_messages->paintRequest() | rpl::start_with_next([=](QRect clip) {
+	_messages->paintRequest() | rpl::on_next([=](QRect clip) {
 		const auto start = scroll->scrollTop();
 		const auto end = start + scroll->height();
 		const auto ratio = style::DevicePixelRatio();

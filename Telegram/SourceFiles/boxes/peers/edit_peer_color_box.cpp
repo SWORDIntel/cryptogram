@@ -197,7 +197,7 @@ ColorSample::ColorSample(
 	rpl::combine(
 		std::move(colorIndex),
 		std::move(collectible)
-	) | rpl::start_with_next([=](
+	) | rpl::on_next([=](
 			uint8 index,
 			std::shared_ptr<Ui::ColorCollectible> collectible) {
 		_index = index;
@@ -405,17 +405,17 @@ PreviewWrap::PreviewWrap(
 	_style->apply(_theme.get());
 
 	_fake->setName(peer->name(), QString());
-	std::move(colorIndexValue) | rpl::start_with_next([=](uint8 index) {
+	std::move(colorIndexValue) | rpl::on_next([=](uint8 index) {
 		if (index != kUnsetColorIndex) {
 			_fake->changeColorIndex(index);
 			update();
 		}
 	}, lifetime());
-	std::move(backgroundEmojiId) | rpl::start_with_next([=](DocumentId id) {
+	std::move(backgroundEmojiId) | rpl::on_next([=](DocumentId id) {
 		_fake->changeBackgroundEmojiId(id);
 		update();
 	}, lifetime());
-	std::move(colorCollectible) | rpl::start_with_next([=](
+	std::move(colorCollectible) | rpl::on_next([=](
 			std::optional<Ui::ColorCollectible> &&collectible) {
 		if (collectible) {
 			_fake->changeColorCollectible(std::move(*collectible));
@@ -427,7 +427,7 @@ PreviewWrap::PreviewWrap(
 
 	const auto session = &_history->session();
 	session->data().viewRepaintRequest(
-	) | rpl::start_with_next([=](not_null<const Element*> view) {
+	) | rpl::on_next([=](not_null<const Element*> view) {
 		if (view == _element.get()) {
 			update();
 		}
@@ -483,7 +483,7 @@ void PreviewWrap::initElements() {
 	widthValue(
 	) | rpl::filter([=](int width) {
 		return width > st::msgMinWidth;
-	}) | rpl::start_with_next([=](int width) {
+	}) | rpl::on_next([=](int width) {
 		const auto height = _position.y()
 			+ _element->resizeGetHeight(width)
 			+ st::msgMargin.top();
@@ -781,7 +781,7 @@ ColorSelector::ColorSelector(
 , _index(std::move(index)) {
 	std::move(
 		indices
-	) | rpl::start_with_next([=](std::vector<uint8> indices) {
+	) | rpl::on_next([=](std::vector<uint8> indices) {
 		fillFrom(std::move(indices));
 	}, lifetime());
 }
@@ -819,7 +819,7 @@ void ColorSelector::fillFrom(std::vector<uint8> indices) {
 
 	_index.value(
 	) | rpl::combine_previous(
-	) | rpl::start_with_next([=](uint8 was, uint8 now) {
+	) | rpl::on_next([=](uint8 was, uint8 now) {
 		const auto i = ranges::find(_samples, was, &ColorSample::index);
 		if (i != end(_samples)) {
 			i->get()->setSelected(false);
@@ -894,11 +894,11 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	};
 	const auto state = right->lifetime().make_state<State>();
 	state->panel.someCustomChosen(
-	) | rpl::start_with_next([=](EmojiStatusPanel::CustomChosen chosen) {
+	) | rpl::on_next([=](EmojiStatusPanel::CustomChosen chosen) {
 		emojiIdChosen(chosen.id.documentId);
 	}, raw->lifetime());
 
-	std::move(colorIndexValue) | rpl::start_with_next([=](uint8 index) {
+	std::move(colorIndexValue) | rpl::on_next([=](uint8 index) {
 		state->index = index;
 		if (state->emoji) {
 			right->update();
@@ -907,7 +907,7 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 
 	const auto session = &show->session();
 	const auto added = st::normalFont->spacew;
-	std::move(emojiIdValue) | rpl::start_with_next([=](DocumentId emojiId) {
+	std::move(emojiIdValue) | rpl::on_next([=](DocumentId emojiId) {
 		state->emojiId = emojiId;
 		state->emoji = emojiId
 			? session->data().customEmojiManager().create(
@@ -923,14 +923,14 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	rpl::combine(
 		raw->sizeValue(),
 		right->widthValue()
-	) | rpl::start_with_next([=](QSize outer, int width) {
+	) | rpl::on_next([=](QSize outer, int width) {
 		right->resize(width, outer.height());
 		const auto skip = st::settingsButton.padding.right();
 		right->moveToRight(skip - button.added, 0, outer.width());
 	}, right->lifetime());
 
 	right->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (state->panel.paintBadgeFrame(right)) {
 			return;
 		}
@@ -1015,12 +1015,12 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	};
 	const auto state = right->lifetime().make_state<State>();
 	state->panel.someCustomChosen(
-	) | rpl::start_with_next([=](EmojiStatusPanel::CustomChosen chosen) {
+	) | rpl::on_next([=](EmojiStatusPanel::CustomChosen chosen) {
 		statusIdChosen({ chosen.id }, chosen.until);
 	}, raw->lifetime());
 
 	const auto session = &show->session();
-	std::move(statusIdValue) | rpl::start_with_next([=](EmojiStatusId id) {
+	std::move(statusIdValue) | rpl::on_next([=](EmojiStatusId id) {
 		state->statusId = id;
 		state->emoji = id
 			? session->data().customEmojiManager().create(
@@ -1036,14 +1036,14 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	rpl::combine(
 		raw->sizeValue(),
 		right->widthValue()
-	) | rpl::start_with_next([=](QSize outer, int width) {
+	) | rpl::on_next([=](QSize outer, int width) {
 		right->resize(width, outer.height());
 		const auto skip = st::settingsButton.padding.right();
 		right->moveToRight(skip - button.added, 0, outer.width());
 	}, right->lifetime());
 
 	right->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (state->panel.paintBadgeFrame(right)) {
 			return;
 		}
@@ -1129,7 +1129,7 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	rpl::combine(
 		raw->sizeValue(),
 		right->widthValue()
-	) | rpl::start_with_next([=](QSize outer, int width) {
+	) | rpl::on_next([=](QSize outer, int width) {
 		right->resize(width, outer.height());
 		const auto skip = st::settingsButton.padding.right();
 		right->moveToRight(skip - button.added, 0, outer.width());
@@ -1138,7 +1138,7 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	right->paintRequest(
 	) | rpl::filter([=] {
 		return state->icon != nullptr;
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		auto p = QPainter(right);
 		const auto x = button.added;
 		const auto y = (right->height() - button.emojiWidth) / 2;
@@ -1198,7 +1198,7 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 			return wrapLoaded(sets->find(id));
 		}));
 	}) | rpl::flatten_latest(
-	) | rpl::start_with_next([=](DocumentData *icon) {
+	) | rpl::on_next([=](DocumentData *icon) {
 		if (state->icon != icon) {
 			state->icon = icon;
 			state->custom = nullptr;
@@ -1232,7 +1232,7 @@ void AddColorGiftTabs(
 	GiftsStars(
 		session,
 		session->user()
-	) | rpl::start_with_next([=](const std::vector<GiftTypeStars> &list) {
+	) | rpl::on_next([=](const std::vector<GiftTypeStars> &list) {
 		auto filtered = std::vector<Data::StarGift>();
 		for (const auto &gift : list) {
 			if (gift.info.peerColorAvailable && gift.resale) {
@@ -1243,7 +1243,7 @@ void AddColorGiftTabs(
 	}, container->lifetime());
 
 	state->list.value(
-	) | rpl::start_with_next([=](const std::vector<Data::StarGift> &list) {
+	) | rpl::on_next([=](const std::vector<Data::StarGift> &list) {
 		auto tabs = std::vector<Ui::SubTabs::Tab>();
 		tabs.push_back({
 			.id = u"my"_q,
@@ -1273,7 +1273,7 @@ void AddColorGiftTabs(
 					context));
 
 			state->tabs->activated(
-			) | rpl::start_with_next([=](const QString &id) {
+			) | rpl::on_next([=](const QString &id) {
 				state->tabs->setActiveTab(id);
 				chosen(id.toULongLong());
 			}, state->tabs->lifetime());
@@ -1333,7 +1333,7 @@ void AddGiftSelector(
 				shownGiftId,
 				{},
 				state->current->offset
-			) | rpl::start_with_next([=](Data::ResaleGiftsDescriptor slice) {
+			) | rpl::on_next([=](Data::ResaleGiftsDescriptor slice) {
 				auto &entry = state->lists[shownGiftId];
 				entry.loading.destroy();
 				entry.offset = slice.offset;
@@ -1359,7 +1359,7 @@ void AddGiftSelector(
 				session,
 				Data::MyUniqueType::OwnedAndHosted,
 				state->current->offset
-			) | rpl::start_with_next([=](Data::MyGiftsDescriptor slice) {
+			) | rpl::on_next([=](Data::MyGiftsDescriptor slice) {
 				auto &entry = state->lists[shownGiftId];
 				entry.loading.destroy();
 				entry.offset = slice.offset;
@@ -1480,7 +1480,7 @@ void AddGiftSelector(
 		}
 
 		state->selected.value(
-		) | rpl::combine_previous() | rpl::start_with_next([=](
+		) | rpl::combine_previous() | rpl::on_next([=](
 				const std::optional<Ui::ColorCollectible> &was,
 				const std::optional<Ui::ColorCollectible> &now) {
 			const auto wasId = was ? was->collectibleId : 0;
@@ -1533,7 +1533,7 @@ void AddGiftSelector(
 	};
 
 	state->showingGiftId.value(
-	) | rpl::start_with_next([=](uint64 showingId) {
+	) | rpl::on_next([=](uint64 showingId) {
 		state->current = &state->lists[showingId];
 		state->buttons.clear();
 		state->delegate.emplace(session, showingId
@@ -1544,7 +1544,7 @@ void AddGiftSelector(
 
 	state->visibleRange = raw->visibleRange();
 	state->visibleRange.value(
-	) | rpl::start_with_next(state->rebuild, raw->lifetime());
+	) | rpl::on_next(state->rebuild, raw->lifetime());
 }
 
 } // namespace
@@ -1569,7 +1569,7 @@ void AddLevelBadge(
 	rpl::combine(
 		button->sizeValue(),
 		std::move(text)
-	) | rpl::start_with_next([=](const QSize &s, const QString &) {
+	) | rpl::on_next([=](const QSize &s, const QString &) {
 		if (s.isNull()) {
 			return;
 		}
@@ -1842,7 +1842,7 @@ void EditPeerColorBox(
 		}));
 	});
 	state->collectible.value(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		const auto buy = state->buyCollectible.get();
 		while (!button->children().isEmpty()) {
 			delete button->children().first();
@@ -1917,7 +1917,7 @@ void SetupPeerColorSample(
 		button->widthValue(),
 		rpl::duplicate(label),
 		rpl::duplicate(colorIndexValue)
-	) | rpl::start_with_next([=](
+	) | rpl::on_next([=](
 			int width,
 			const QString &button,
 			int colorIndex) {
@@ -1944,7 +1944,7 @@ void SetupPeerColorSample(
 		button->sizeValue(),
 		sample->sizeValue(),
 		std::move(colorIndexValue)
-	) | rpl::start_with_next([=](QSize outer, QSize inner, int colorIndex) {
+	) | rpl::on_next([=](QSize outer, QSize inner, int colorIndex) {
 		const auto right = st::settingsColorButton.padding.right()
 			- st::settingsColorSampleSkip
 			- st::settingsColorSampleSize

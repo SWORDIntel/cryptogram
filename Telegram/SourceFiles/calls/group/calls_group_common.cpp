@@ -83,7 +83,7 @@ object_ptr<Ui::RpWidget> MakeJoinCallLogo(not_null<QWidget*> parent) {
 	auto result = object_ptr<Ui::RpWidget>(parent);
 	const auto logo = result.data();
 	logo->resize(logo->width(), logoOuter.height());
-	logo->paintRequest() | rpl::start_with_next([=] {
+	logo->paintRequest() | rpl::on_next([=] {
 		if (logo->width() < logoOuter.width()) {
 			return;
 		}
@@ -146,7 +146,7 @@ void ConferenceCallJoinConfirm(
 			object_ptr<Ui::RpWidget>(box),
 			st::boxRowPadding + st::confcallJoinSepPadding);
 		sep->resize(sep->width(), st::normalFont->height);
-		sep->paintRequest() | rpl::start_with_next([=] {
+		sep->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(sep);
 			const auto line = st::lineWidth;
 			const auto top = st::confcallLinkFooterOrLineTop;
@@ -312,7 +312,7 @@ void ShowConferenceCallLinkBox(
 			});
 
 			close->geometryValue(
-			) | rpl::start_with_next([=](QRect geometry) {
+			) | rpl::on_next([=](QRect geometry) {
 				toggle->moveToLeft(
 					geometry.x() - toggle->width(),
 					geometry.y());
@@ -369,7 +369,7 @@ void ShowConferenceCallLinkBox(
 			box->widthValue(),
 			copy->widthValue(),
 			share->widthValue()
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			const auto width = st::boxWideWidth;
 			const auto padding = st::confcallLinkBox.buttonPadding;
 			const auto available = width - 2 * padding.right();
@@ -388,7 +388,7 @@ void ShowConferenceCallLinkBox(
 			copy->parentWidget(),
 			tr::lng_confcall_link_or(),
 			st::confcallLinkFooterOr);
-		sep->paintRequest() | rpl::start_with_next([=] {
+		sep->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(sep);
 			const auto text = sep->textMaxWidth();
 			const auto white = (sep->width() - 2 * text) / 2;
@@ -422,7 +422,7 @@ void ShowConferenceCallLinkBox(
 			}
 			return false;
 		});
-		copy->geometryValue() | rpl::start_with_next([=](QRect geometry) {
+		copy->geometryValue() | rpl::on_next([=](QRect geometry) {
 			const auto width = st::boxWideWidth
 				- st::boxRowPadding.left()
 				- st::boxRowPadding.right();

@@ -30,6 +30,23 @@ object CryptogramNative {
     private external fun nativeGetVersion(): String
     private external fun nativeCheckDoubleRatchet(): Boolean
     private external fun nativeCheckMLS(): Boolean
+    private external fun nativeInitializeStorage(path: String)
+
+    /**
+     * Initialize the native library with application storage path.
+     *
+     * @param filesDir Absolute path to internal app files directory
+     */
+    fun initialize(filesDir: String) {
+        try {
+            if (initialized) {
+                nativeInitializeStorage(filesDir)
+                Log.i(TAG, "Storage initialized at $filesDir")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to initialize storage", e)
+        }
+    }
 
     /**
      * Check if native library is loaded

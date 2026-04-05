@@ -526,6 +526,11 @@ public class SharedConfig {
             if (configLoaded || ApplicationLoader.applicationContext == null) {
                 return;
             }
+            
+            // Initialize CRYPTOGRAM storage hardening
+            org.telegram.messenger.cryptogram.CryptogramNative.INSTANCE.initialize(
+                ApplicationLoader.applicationContext.getFilesDir().getAbsolutePath()
+            );
 
             BackgroundActivityPrefs.prefs = ApplicationLoader.applicationContext.getSharedPreferences("background_activity", Context.MODE_PRIVATE);
 

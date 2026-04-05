@@ -131,7 +131,7 @@ UsernamesList::Row::Row(
 
 	_rightAction->setVisible(data.active);
 	sizeValue(
-	) | rpl::start_with_next([=](const QSize &s) {
+	) | rpl::on_next([=](const QSize &s) {
 		_rightAction->moveToLeft(
 			s.width() - _rightAction->width() - st::inviteLinkThreeDotsSkip,
 			(s.height() - _rightAction->height()) / 2);
@@ -219,7 +219,7 @@ UsernamesList::UsernamesList(
 		peer->session().changes().peerFlagsValue(
 			peer,
 			Data::PeerUpdate::Flag::Usernames)
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		load();
 	}, lifetime());
 }
@@ -227,7 +227,7 @@ UsernamesList::UsernamesList(
 void UsernamesList::load() {
 	_loadLifetime = _peer->session().api().usernames().loadUsernames(
 		_peer
-	) | rpl::start_with_next([=](const Data::Usernames &usernames) {
+	) | rpl::on_next([=](const Data::Usernames &usernames) {
 		if (usernames.empty()) {
 			_container = nullptr;
 			resize(0, 0);
@@ -378,7 +378,7 @@ void UsernamesList::rebuild(const Data::Usernames &usernames) {
 	_reorder->start();
 
 	_reorder->updates(
-	) | rpl::start_with_next([=](Ui::VerticalLayoutReorder::Single data) {
+	) | rpl::on_next([=](Ui::VerticalLayoutReorder::Single data) {
 		using State = Ui::VerticalLayoutReorder::State;
 		if (data.state == State::Started) {
 			++_reordering;

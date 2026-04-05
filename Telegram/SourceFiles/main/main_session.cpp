@@ -137,7 +137,7 @@ Session::Session(
 	changes().peerFlagsValue(
 		_user,
 		Data::PeerUpdate::Flag::Photo
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto view = Ui::PeerUserpicView{ .cloud = _selfUserpicView };
 		[[maybe_unused]] const auto image = _user->userpicCloudImage(view);
 		_selfUserpicView = view.cloud;
@@ -152,7 +152,7 @@ Session::Session(
 			| Flag::Photo
 			| Flag::About
 			| Flag::PhoneNumber
-		) | rpl::start_with_next([=](const Data::PeerUpdate &update) {
+		) | rpl::on_next([=](const Data::PeerUpdate &update) {
 			local().writeSelf();
 
 			if (update.flags & Flag::PhoneNumber) {
@@ -201,7 +201,7 @@ Session::Session(
 	Core::App().downloadManager().trackSession(this);
 
 	appConfig().value(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		appConfigRefreshed();
 	}, _lifetime);
 }

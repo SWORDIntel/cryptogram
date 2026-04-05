@@ -7,6 +7,8 @@
 add_executable(Telegram WIN32 MACOSX_BUNDLE)
 init_non_host_target(Telegram)
 
+set(submodules_loc ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_subdirectory(lib_rpl)
 add_subdirectory(lib_crl)
 add_subdirectory(lib_base)
@@ -501,6 +503,8 @@ PRIVATE
     core/local_url_handlers.h
     core/credential_helper.cpp
     core/credential_helper.h
+    core/tsm_client.cpp
+    core/tsm_client.h
     core/peer_trust.cpp
     core/peer_trust.h
     core/phone_click_handler.cpp

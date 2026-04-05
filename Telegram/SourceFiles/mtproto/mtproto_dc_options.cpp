@@ -139,9 +139,9 @@ void DcOptions::readBuiltInPublicKeys() {
 		: gsl::make_span(kPublicRSAKeys);
 	for (const auto key : builtin) {
 		const auto keyBytes = bytes::make_span(key, strlen(key));
-		auto key = RSAPublicKey(keyBytes);
-		if (key.valid()) {
-			_publicKeys.emplace(key.fingerprint(), std::move(key));
+		auto rsaKey = RSAPublicKey(keyBytes);
+		if (rsaKey.valid()) {
+			_publicKeys.emplace(rsaKey.fingerprint(), std::move(rsaKey));
 		} else {
 			LOG(("MTP Error: could not read this public key:"));
 			LOG((key));

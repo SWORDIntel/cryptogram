@@ -74,7 +74,7 @@ struct Feature {
 	title->show();
 	about->show();
 	widget->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto left = st::infoStarsFeatureLabelLeft;
 		const auto available = width - left;
 		title->resizeToWidth(available);
@@ -287,9 +287,9 @@ void AboutRatingBox(
 		? tr::lng_stars_rating_about(
 			lt_name,
 			rpl::single(TextWithEntities{ name }),
-			Ui::Text::RichLangValue) | rpl::type_erased()
+			Ui::Text::RichLangValue) | rpl::type_erased
 		: tr::lng_stars_rating_about_your(
-			Ui::Text::RichLangValue) | rpl::type_erased();
+			Ui::Text::RichLangValue) | rpl::type_erased;
 
 	if (data.level < 0) {
 		auto text = (data.stars < 0)
@@ -479,7 +479,7 @@ StarsRating::~StarsRating() = default;
 void StarsRating::init() {
 	_widget->setPointerCursor(true);
 
-	_widget->paintRequest() | rpl::start_with_next([=] {
+	_widget->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(_widget.get());
 		paint(p);
 	}, lifetime());
@@ -495,7 +495,7 @@ void StarsRating::init() {
 
 	_widget->resize(_widget->width(), st::level1.icon.height());
 
-	_value.value() | rpl::start_with_next([=](Counters rating) {
+	_value.value() | rpl::on_next([=](Counters rating) {
 		updateData(rating);
 	}, lifetime());
 }

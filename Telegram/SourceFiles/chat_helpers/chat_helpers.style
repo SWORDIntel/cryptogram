@@ -408,7 +408,8 @@ emojiTabs: defaultTabsSlider;
 emojiCategoryIconTop: 6px;
 emojiPanAnimation: PanelAnimation(defaultPanelAnimation) {
 	fadeBg: emojiPanBg;
-	shadow: boxRoundShadow;
+	shadow: roundShadowRadius8px;
+	boxShadow: boxRoundShadow;
 }
 emojiPanWidth: 345px;
 emojiPanMinHeight: 278px;

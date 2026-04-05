@@ -91,7 +91,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 	});
 
 	state->date.value(
-	) | rpl::start_with_next([=](QDate date) {
+	) | rpl::on_next([=](QDate date) {
 		state->day->setText(DayString(date));
 		state->time->setFocusFast();
 	}, state->day->lifetime());
@@ -126,7 +126,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 	});
 
 	content->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto paddings = width
 			- state->at->width()
 			- 2 * st::scheduleAtSkip
@@ -150,7 +150,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 		= content->lifetime().make_state<base::weak_qptr<CalendarBox>>();
 	const auto calendarStyle = args.style.calendarStyle;
 	state->day->focusedChanges(
-	) | rpl::start_with_next([=](bool focused) {
+	) | rpl::on_next([=](bool focused) {
 		if (*calendar || !focused) {
 			return;
 		}
@@ -167,7 +167,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 				.stColors = *calendarStyle,
 			}));
 		(*calendar)->boxClosing(
-		) | rpl::start_with_next(crl::guard(state->time, [=] {
+		) | rpl::on_next(crl::guard(state->time, [=] {
 			state->time->setFocusFast();
 		}), (*calendar)->lifetime());
 	}, state->day->lifetime());
@@ -196,7 +196,7 @@ ChooseDateTimeBoxDescriptor ChooseDateTimeBox(
 		}
 	};
 	state->time->submitRequests(
-	) | rpl::start_with_next(save, state->time->lifetime());
+	) | rpl::on_next(save, state->time->lifetime());
 
 	auto result = ChooseDateTimeBoxDescriptor();
 	box->setFocusCallback([=] { state->time->setFocusFast(); });

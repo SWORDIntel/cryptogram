@@ -129,7 +129,7 @@ void ShowInfoTooltip(
 		tooltip->pointAt(geometry, RectPart::Top, countPosition);
 	};
 	parent->widthValue(
-	) | rpl::start_with_next(update, tooltip->lifetime());
+	) | rpl::on_next(update, tooltip->lifetime());
 
 	update();
 	tooltip->toggleAnimated(true);
@@ -137,7 +137,7 @@ void ShowInfoTooltip(
 	data->raw = tooltip;
 	tooltip->shownValue() | rpl::filter(
 		!rpl::mappers::_1
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		crl::on_main(tooltip, [=] {
 			if (tooltip->isHidden()) {
 				if (data->raw == tooltip) {
@@ -150,7 +150,7 @@ void ShowInfoTooltip(
 
 	base::timer_once(
 		duration
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		tooltip->toggleAnimated(false);
 	}, tooltip->lifetime());
 }
@@ -219,7 +219,7 @@ void ShowInfoTooltip(
 	auto result = object_ptr<Ui::RpWidget>(parent);
 	const auto raw = result.data();
 
-	raw->paintRequest() | rpl::start_with_next([=] {
+	raw->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		const auto &icon = st::giveawayGiftCodeLinkCopy;
 		const auto left = (raw->width() - icon.width()) / 2;
@@ -295,7 +295,7 @@ void ShowInfoTooltip(
 		raw->widthValue(),
 		button->widthValue(),
 		value->naturalWidthValue()
-	) | rpl::start_with_next([=](int width, int buttonWidth, int) {
+	) | rpl::on_next([=](int width, int buttonWidth, int) {
 		const auto buttonSkip = st::normalFont->spacew + buttonWidth;
 		value->resizeToNaturalWidth(width - buttonSkip);
 		value->moveToLeft(0, 0, width);
@@ -307,7 +307,7 @@ void ShowInfoTooltip(
 			width);
 	}, value->lifetime());
 
-	value->heightValue() | rpl::start_with_next([=](int height) {
+	value->heightValue() | rpl::on_next([=](int height) {
 		const auto bottom = st::giveawayGiftCodePeerMargin.bottom();
 		raw->resize(raw->width(), height + bottom);
 	}, raw->lifetime());
@@ -334,7 +334,7 @@ void ShowInfoTooltip(
 		(button && handler) ? peer->shortName() : peer->name(),
 		table->st().defaultValue);
 
-	raw->widthValue() | rpl::start_with_next([=](int width) {
+	raw->widthValue() | rpl::on_next([=](int width) {
 		const auto position = st::giveawayGiftCodeNamePosition;
 		label->resizeToNaturalWidth(width - position.x());
 		label->moveToLeft(position.x(), position.y(), width);
@@ -342,7 +342,7 @@ void ShowInfoTooltip(
 		userpic->moveToLeft(0, top, width);
 	}, label->lifetime());
 
-	label->naturalWidthValue() | rpl::start_with_next([=](int width) {
+	label->naturalWidthValue() | rpl::on_next([=](int width) {
 		raw->setNaturalWidth(st::giveawayGiftCodeNamePosition.x() + width);
 	}, label->lifetime());
 	userpic->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -404,7 +404,7 @@ void ShowInfoTooltip(
 		nullptr,
 		[=] { return show->paused(ChatHelpers::PauseReason::Layer); });
 	state->content.value(
-	) | rpl::start_with_next([=](const Badge::Content &content) {
+	) | rpl::on_next([=](const Badge::Content &content) {
 		if (const auto widget = badge->widget()) {
 			pushStatusId(widget, content.emojiStatusId);
 		}
@@ -413,7 +413,7 @@ void ShowInfoTooltip(
 	rpl::combine(
 		raw->widthValue(),
 		rpl::single(rpl::empty) | rpl::then(badge->updated())
-	) | rpl::start_with_next([=](int width, const auto &) {
+	) | rpl::on_next([=](int width, const auto &) {
 		const auto badgeWidget = badge->widget();
 		const auto badgeSkip = badgeWidget
 			? (st::normalFont->spacew + badgeWidget->width())
@@ -442,7 +442,7 @@ void ShowInfoTooltip(
 	const auto userpic = Ui::CreateChild<Ui::RpWidget>(raw);
 	const auto usize = st.photoSize;
 	userpic->resize(usize, usize);
-	userpic->paintRequest() | rpl::start_with_next([=] {
+	userpic->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(userpic);
 		Ui::EmptyUserpic::PaintHiddenAuthor(p, 0, 0, usize, usize);
 	}, userpic->lifetime());
@@ -452,7 +452,7 @@ void ShowInfoTooltip(
 		tr::lng_gift_from_hidden(),
 		table->st().defaultValue);
 	raw->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto position = st::giveawayGiftCodeNamePosition;
 		label->resizeToNaturalWidth(width - position.x());
 		label->moveToLeft(position.x(), position.y(), width);
@@ -794,7 +794,7 @@ void AddTable(
 					? tr::lng_gift_link_reason_giveaway
 					: tr::lng_gift_link_reason_unclaimed)(
 						Ui::Text::WithEntities
-					) | rpl::type_erased())
+					) | rpl::type_erased)
 				: tr::lng_gift_link_reason_chosen(Ui::Text::WithEntities)));
 		reason->setClickHandlerFilter([=](const auto &...) {
 			if (const auto window = show->resolveWindow()) {
@@ -970,7 +970,7 @@ void GiftCodeBox(
 		box->closeBox();
 	});
 	box->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		close->moveToRight(0, 0);
 	}, box->lifetime());
 
@@ -1057,7 +1057,7 @@ void GiftCodePendingBox(
 			spoiler->update();
 		})->start();
 		linkLabel->sizeValue(
-		) | rpl::start_with_next([=](const QSize &s) {
+		) | rpl::on_next([=](const QSize &s) {
 			spoiler->setGeometry(Rect(s));
 		}, spoiler->lifetime());
 		const auto spoilerCached = Ui::SpoilerMessCached(
@@ -1065,7 +1065,7 @@ void GiftCodePendingBox(
 			st::giveawayGiftCodeLink.textFg->c);
 		const auto textHeight = st::giveawayGiftCodeLink.style.font->height;
 		spoiler->paintRequest(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			auto p = QPainter(spoiler);
 			const auto rect = spoiler->rect();
 			const auto r = rect
@@ -1099,7 +1099,7 @@ void GiftCodePendingBox(
 	const auto closeCallback = [=] { box->closeBox(); };
 	close->setClickedCallback(closeCallback);
 	box->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		close->moveToRight(0, 0);
 	}, box->lifetime());
 
@@ -1192,7 +1192,7 @@ void GiveawayInfoBox(
 				std::move(label),
 				QMargins(0, skip, 0, skip)),
 			style::al_justify);
-		result->paintRequest() | rpl::start_with_next([=] {
+		result->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(result);
 			p.setPen(Qt::NoPen);
 			p.setBrush(st::boxDividerBg);
@@ -1389,7 +1389,7 @@ void GiveawayInfoBox(
 		const auto bg = wrap->lifetime().make_state<Ui::RoundRect>(
 			st::boxRadius,
 			st::attentionBoxButton.textBgOver);
-		wrap->paintRequest() | rpl::start_with_next([=] {
+		wrap->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(wrap);
 			bg->paint(p, wrap->rect());
 		}, wrap->lifetime());
@@ -1471,7 +1471,7 @@ struct AddedUniqueDetails {
 	const auto icon = Ui::CreateChild<Ui::IconButton>(
 		raw,
 		st::giveawayGiftMessageRemove);
-	raw->widthValue() | rpl::start_with_next([=](int outer) {
+	raw->widthValue() | rpl::on_next([=](int outer) {
 		label->resizeToWidth(outer - icon->width());
 		const auto height = std::max(label->height(), icon->height());
 

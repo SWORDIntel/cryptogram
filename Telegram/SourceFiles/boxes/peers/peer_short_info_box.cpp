@@ -115,18 +115,18 @@ PeerShortInfoCover::PeerShortInfoCover(
 
 	std::move(
 		userpic
-	) | rpl::start_with_next([=](PeerShortInfoUserpic &&value) {
+	) | rpl::on_next([=](PeerShortInfoUserpic &&value) {
 		applyUserpic(std::move(value));
 		applyAdditionalStatus(value.additionalStatus);
 	}, lifetime());
 
 	style::PaletteChanged(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		refreshBarImages();
 	}, lifetime());
 
 	_widget->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(_widget.get());
 		paint(p);
 	}, lifetime());
@@ -685,7 +685,7 @@ PeerShortInfoBox::PeerShortInfoBox(
 	_rows->add(_cover.takeOwned());
 
 	_scroll->scrolls(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_cover.setScrollTop(_scroll->scrollTop());
 	}, _cover.lifetime());
 }
@@ -720,7 +720,7 @@ void PeerShortInfoBox::prepare() {
 
 	_topRoundBackground->resize(st::shortInfoWidth, st::boxRadius);
 	_topRoundBackground->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (const auto use = fillRoundedTopHeight()) {
 			const auto width = _topRoundBackground->width();
 			const auto top = _topRoundBackground->height() - use;
@@ -763,7 +763,7 @@ void PeerShortInfoBox::prepareRows() {
 		rpl::combine(
 			std::move(label),
 			std::move(text)
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			_rows->resizeToWidth(st::shortInfoWidth);
 		}, _rows->lifetime());
 

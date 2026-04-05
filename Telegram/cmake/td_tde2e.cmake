@@ -17,6 +17,7 @@ PRIVATE
 target_include_directories(td_tde2e
 PUBLIC
     ${src_loc}
+    ${submodules_loc}/td/tde2e
 )
 
 target_link_libraries(td_tde2e

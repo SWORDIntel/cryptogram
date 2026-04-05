@@ -32,7 +32,7 @@ void SetButtonTwoLabels(
 	if (textFg) {
 		buttonTitle->setTextColorOverride((*textFg)->c);
 		buttonSubtitle->setTextColorOverride((*textFg)->c);
-		style::PaletteChanged() | rpl::start_with_next([=] {
+		style::PaletteChanged() | rpl::on_next([=] {
 			buttonTitle->setTextColorOverride((*textFg)->c);
 			buttonSubtitle->setTextColorOverride((*textFg)->c);
 		}, buttonTitle->lifetime());
@@ -41,7 +41,7 @@ void SetButtonTwoLabels(
 		button->sizeValue(),
 		buttonTitle->sizeValue(),
 		buttonSubtitle->sizeValue()
-	) | rpl::start_with_next([=](QSize outer, QSize title, QSize subtitle) {
+	) | rpl::on_next([=](QSize outer, QSize title, QSize subtitle) {
 		const auto two = title.height() + subtitle.height();
 		const auto titleTop = (outer.height() - two) / 2;
 		const auto subtitleTop = titleTop + title.height();

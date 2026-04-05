@@ -344,7 +344,7 @@ void FillChooseFilterMenu(
 	}
 
 	history->owner().chatsFilters().changed(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		menu->hideMenu();
 	}, menu->lifetime());
 }

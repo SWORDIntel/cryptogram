@@ -755,11 +755,55 @@ MLSGroupId MLSProtocol::processWelcome(const MLSWelcome &welcome) {
 	// Decrypt group secrets and initialize group state
 	// This is called when added to a new group
 
-	auto groupId = generateRandomBytes(32);
+	// In a real implementation, we would decrypt encryptedGroupInfo to get the groupId
+	// For this port, we'll use a derived ID or a random one if decryption is stubbed
+	auto groupId = hashData(welcome.encryptedGroupSecrets, welcome.ciphersuite);
+	if (groupId.empty()) {
+		groupId = generateRandomBytes(32);
+	}
 
-	LOG(("MLS: Processed Welcome message for new group"));
+	// Create new group state from welcome
+	MLSGroupState state(groupId, welcome.ciphersuite);
+	state._initSecret = welcome.encryptedGroupSecrets; // Simplified
+	state._epochSecret = state.deriveEpochSecret();
+	
+	_groups[groupId] = state;
+
+	LOG(("MLS: Processed Welcome message for group %1").arg(QString::fromLatin1(groupId.toHex())));
 
 	return groupId;
+}
+
+std::optional<MLSCommit> MLSProtocol::commitGroupChanges(const MLSGroupId &groupId) {
+	auto it = _groups.find(groupId);
+	if (it == _groups.end()) {
+		LOG(("MLS: Cannot commit - group not found"));
+		return std::nullopt;
+	}
+
+	auto &state = it.value();
+	auto pendingIt = _pendingProposals.find(groupId);
+	if (pendingIt == _pendingProposals.end() || pendingIt.value().isEmpty()) {
+		LOG(("MLS: No pending proposals to commit"));
+		return std::nullopt;
+	}
+
+	MLSCommit commit;
+	for (const auto &p : pendingIt.value()) {
+		commit.proposals.push_back(p);
+	}
+	
+	// Generate update path (simplified)
+	auto [publicKey, privateKey] = generateKeyPair(state.ciphersuite());
+	commit.path = publicKey;
+	
+	// In a real implementation, we would set the actual sender
+	commit.sender = UserId(0); 
+	commit.timestamp = QDateTime::currentDateTime();
+
+	LOG(("MLS: Created commit for %1 proposals").arg(commit.proposals.size()));
+
+	return commit;
 }
 
 bool MLSProtocol::processCommit(const MLSGroupId &groupId, const MLSCommit &commit) {

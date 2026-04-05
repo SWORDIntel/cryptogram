@@ -123,7 +123,7 @@ void StartRtmpProcess::start(
 			.done = std::move(done),
 		});
 	session->account().sessionChanges(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_request = nullptr;
 	}, _request->lifetime);
 
@@ -196,7 +196,7 @@ void StartRtmpProcess::createBox() {
 		_request->show,
 		_request->data.value());
 	object->boxClosing(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_request = nullptr;
 	}, _request->lifetime);
 	_request->box = base::make_weak(object.data());
@@ -257,7 +257,7 @@ void StartRtmpProcess::FillRtmpRows(
 		const auto weak = container->add(std::move(wrap), rowPadding);
 		Ui::AddSkip(container, st::groupCallRtmpCopyButtonBottomSkip);
 		button->heightValue(
-		) | rpl::start_with_next([=](int height) {
+		) | rpl::on_next([=](int height) {
 			weak->resize(weak->width(), height);
 		}, container->lifetime());
 		return weak;
@@ -321,7 +321,7 @@ void StartRtmpProcess::FillRtmpRows(
 		*showButtonStyle);
 
 	streamKeyLabel->topValue(
-	) | rpl::start_with_next([=, right = rowPadding.right()](int top) {
+	) | rpl::on_next([=, right = rowPadding.right()](int top) {
 		streamKeyButton->moveToRight(
 			st::groupCallRtmpShowButtonPosition.x(),
 			top + st::groupCallRtmpShowButtonPosition.y());

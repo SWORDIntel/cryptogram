@@ -41,14 +41,14 @@ void Manager::start(
 	session->account().sessionChanges(
 	) | rpl::filter([=](Main::Session *value) {
 		return (value != session);
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		stop();
 	}, _panel->lifetime());
 
 	_viewChanges.fire(_panel.get());
 
 	_panel->stopRequests(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		LOG(("Export Info: Stop requested."));
 		stop();
 	}, _controller->lifetime());

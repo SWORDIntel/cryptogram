@@ -90,7 +90,7 @@ Icon CreateInteractiveLottieIcon(
 	raw->lifetime().add([kept = std::move(owned)]{});
 
 	raw->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		const auto left = (raw->width() - width) / 2;
 		icon->paint(p, left, padding.top());
@@ -110,7 +110,7 @@ Icon CreateInteractiveLottieIcon(
 	rpl::merge(
 		content->geometryValue(),
 		input->geometryValue()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		const auto topLeft = input->mapTo(content, input->pos());
 		button->moveToLeft(
 			input->pos().x(),
@@ -280,12 +280,12 @@ void Input::setupContent() {
 		rpl::combine(
 			error->geometryValue(),
 			newInput->geometryValue()
-		) | rpl::start_with_next([=](QRect r, QRect input) {
+		) | rpl::on_next([=](QRect r, QRect input) {
 			hintInfo->setGeometry(
 				{ input.x(), r.y(), input.width(), r.height() });
 		}, hintInfo->lifetime());
 		error->shownValue(
-		) | rpl::start_with_next([=](bool shown) {
+		) | rpl::on_next([=](bool shown) {
 			if (shown) {
 				hintInfo->hide();
 			} else {
@@ -361,7 +361,7 @@ void Input::setupContent() {
 			QString(),
 			st::boxDividerLabel);
 		recover->geometryValue(
-		) | rpl::start_with_next([=](const QRect &r) {
+		) | rpl::on_next([=](const QRect &r) {
 			resetInfo->moveToLeft(r.x(), r.y() + st::passcodeTextLine);
 		}, resetInfo->lifetime());
 
@@ -436,7 +436,7 @@ void Input::setupContent() {
 				if (state->pendingResetDate > 0) {
 					auto lifetime = rpl::lifetime();
 					lifetime = cloudPassword().cancelResetPassword(
-					) | rpl::start_with_next([] {});
+					) | rpl::on_next([] {});
 				}
 			}
 
@@ -491,7 +491,7 @@ void Input::setupContent() {
 		) | rpl::map([=] {
 			return newInput->text().isEmpty();
 		}) | rpl::distinct_until_changed(
-		) | rpl::start_with_next([=](bool empty) {
+		) | rpl::on_next([=](bool empty) {
 			const auto from = icon.icon->frameIndex();
 			const auto to = empty ? 0 : (icon.icon->framesCount() / 2 - 1);
 			icon.icon->animate(icon.update, from, to);
@@ -564,7 +564,7 @@ void Input::setupRecoverButton(
 	updateStatus();
 
 	state->status.value(
-	) | rpl::start_with_next([=](const Status &status) {
+	) | rpl::on_next([=](const Status &status) {
 		switch (status.suggest) {
 		case Status::SuggestAction::Recover: {
 			info->setText(QString());
@@ -587,7 +587,7 @@ void Input::setupRecoverButton(
 	}, container->lifetime());
 
 	cloudPassword().state(
-	) | rpl::start_with_next([=](const Core::CloudPasswordState &passState) {
+	) | rpl::on_next([=](const Core::CloudPasswordState &passState) {
 		updateStatus();
 		state->timer.cancel();
 		if (passState.pendingResetDate) {
@@ -648,7 +648,7 @@ void Input::setupRecoverButton(
 					return !s.hasPassword;
 				}) | rpl::take(
 					1
-				) | rpl::start_with_next([=](const PasswordState &s) {
+				) | rpl::on_next([=](const PasswordState &s) {
 					_requestLifetime.destroy();
 					controller()->show(Ui::MakeInformBox(
 						tr::lng_cloud_password_removed()));

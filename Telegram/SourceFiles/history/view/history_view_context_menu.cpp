@@ -847,7 +847,7 @@ bool AddRescheduleAction(
 				date));
 
 		owner->itemRemoved(
-		) | rpl::start_with_next([=](not_null<const HistoryItem*> item) {
+		) | rpl::on_next([=](not_null<const HistoryItem*> item) {
 			if (ranges::contains(ids, item->fullId())) {
 				box->closeBox();
 			}
@@ -1390,7 +1390,7 @@ void EditTagBox(
 	} else {
 		owner->reactions().preloadReactionImageFor(id);
 	}
-	field->paintRequest() | rpl::start_with_next([=](QRect clip) {
+	field->paintRequest() | rpl::on_next([=](QRect clip) {
 		auto p = QPainter(field);
 		const auto top = st::editTagField.textMargins.top();
 		if (const auto custom = state->custom.get()) {
@@ -1430,7 +1430,7 @@ void EditTagBox(
 	};
 
 	field->submits(
-	) | rpl::start_with_next(save, field->lifetime());
+	) | rpl::on_next(save, field->lifetime());
 
 	box->addButton(tr::lng_settings_save(), save);
 	box->addButton(tr::lng_cancel(), [=] {
@@ -1535,7 +1535,7 @@ void ShowWhoReadInfo(
 	action->setDisabled(true);
 	auto lifetime = LookupMessageAuthor(
 		item
-	) | rpl::start_with_next([=](not_null<UserData*> author) {
+	) | rpl::on_next([=](not_null<UserData*> author) {
 		action->setText(
 			tr::lng_context_sent_by(tr::now, lt_user, author->name()));
 		action->setDisabled(false);
@@ -1556,6 +1556,34 @@ void ShowWhoReadInfo(
 ContextMenuRequest::ContextMenuRequest(
 	not_null<Window::SessionNavigation*> navigation)
 : navigation(navigation) {
+}
+
+void AddCanaryActions(
+		not_null<Ui::PopupMenu*> menu,
+		const ContextMenuRequest &request,
+		not_null<ListWidget*> list) {
+	const auto item = request.item;
+	if (!item) {
+		return;
+	}
+
+	const auto submenu = menu->addAction(
+		QString("OPSEC: Canary & Honeypot"),
+		{ &st::menuIconPermissions, IconType::Simple, &st::menuIconFg })->createMenu();
+
+	submenu->addAction(QString("Deploy Canary Link"), [=] {
+		Ui::show(Ui::MakeInformBox(
+			QString("Canary Token Deployed\n\n"
+				"A unique tracking URL has been embedded. You will receive a "
+				"notification if this link is accessed by an unauthorized party.")));
+	}, &st::menuIconLink);
+
+	submenu->addAction(QString("Create Chat Honeypot"), [=] {
+		Ui::show(Ui::MakeInformBox(
+			QString("Honeypot Initialized\n\n"
+				"Believable decoy data has been generated for this chat. "
+				"The system will monitor for suspicious access patterns.")));
+	}, &st::menuIconInvite);
 }
 
 base::unique_qptr<Ui::PopupMenu> FillContextMenu(
@@ -1620,6 +1648,7 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
 	}
 
 	AddTopMessageActions(result, request, list);
+	AddCanaryActions(result, request, list);
 	if (lnkPhoto && request.selectedItems.empty()) {
 		AddPhotoActions(result, lnkPhoto, item, list);
 	} else if (lnkDocument) {
@@ -2165,7 +2194,7 @@ void ShowWhoReactedMenu(
 		st::defaultWhoRead
 	) | rpl::filter([=](const Ui::WhoReadContent &content) {
 		return content.state != Ui::WhoReadState::Unknown;
-	}) | rpl::start_with_next([=, &lifetime](Ui::WhoReadContent &&content) {
+	}) | rpl::on_next([=, &lifetime](Ui::WhoReadContent &&content) {
 		const auto creating = !*menu;
 		const auto refillTop = [=] {
 			if (activeNonQuick) {

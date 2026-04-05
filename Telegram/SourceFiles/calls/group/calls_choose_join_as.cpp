@@ -351,7 +351,7 @@ void ChooseJoinAsProcess::start(
 
 	createRequest();
 	session->account().sessionChanges(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_request = nullptr;
 	}, _request->lifetime);
 
@@ -475,7 +475,7 @@ void ChooseJoinAsProcess::processList(
 			.labelFilter = filter,
 		});
 		box->boxClosing(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			_request = nullptr;
 		}, _request->lifetime);
 
@@ -489,7 +489,7 @@ void ChooseJoinAsProcess::processList(
 		std::move(info),
 		crl::guard(&_request->guard, [=](auto info) { finish(info); }));
 	box->boxClosing(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		_request = nullptr;
 	}, _request->lifetime);
 

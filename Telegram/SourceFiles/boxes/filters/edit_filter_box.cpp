@@ -86,7 +86,7 @@ not_null<FilterChatsPreview*> SetupChatsPreview(
 		(rules.*peers)()));
 
 	preview->flagRemoved(
-	) | rpl::start_with_next([=](Flag flag) {
+	) | rpl::on_next([=](Flag flag) {
 		const auto rules = data->current();
 		auto computed = Data::ChatFilter(
 			rules.id(),
@@ -102,7 +102,7 @@ not_null<FilterChatsPreview*> SetupChatsPreview(
 	}, preview->lifetime());
 
 	preview->peerRemoved(
-	) | rpl::start_with_next([=](not_null<History*> history) {
+	) | rpl::on_next([=](not_null<History*> history) {
 		const auto rules = data->current();
 		auto always = rules.always();
 		auto pinned = rules.pinned();
@@ -212,13 +212,13 @@ void CreateIconSelector(
 	data->value(
 	) | rpl::map([=](const Data::ChatFilter &filter) {
 		return Ui::ComputeFilterIcon(filter);
-	}) | rpl::start_with_next([=](Ui::FilterIcon icon) {
+	}) | rpl::on_next([=](Ui::FilterIcon icon) {
 		*type = icon;
 		toggle->update();
 	}, toggle->lifetime());
 
 	input->geometryValue(
-	) | rpl::start_with_next([=](QRect geometry) {
+	) | rpl::on_next([=](QRect geometry) {
 		const auto left = geometry.x() + geometry.width() - toggle->width();
 		const auto position = st::windowFilterIconTogglePosition;
 		toggle->move(
@@ -227,7 +227,7 @@ void CreateIconSelector(
 	}, toggle->lifetime());
 
 	toggle->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(toggle);
 		const auto icons = Ui::LookupFilterIcon(*type);
 		icons.normal->paintInCenter(
@@ -245,7 +245,7 @@ void CreateIconSelector(
 	panel->chosen(
 	) | rpl::filter([=](Ui::FilterIcon icon) {
 		return icon != Ui::ComputeFilterIcon(data->current());
-	}) | rpl::start_with_next([=](Ui::FilterIcon icon) {
+	}) | rpl::on_next([=](Ui::FilterIcon icon) {
 		panel->hideAnimated();
 		const auto rules = data->current();
 		*data = Data::ChatFilter(
@@ -373,7 +373,7 @@ void EditFilterBox(
 	});
 	state->hasLinks.value() | rpl::filter(
 		_1
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		state->chatlist = true;
 	}, box->lifetime());
 
@@ -382,7 +382,7 @@ void EditFilterBox(
 	owner->chatsFilters().isChatlistChanged(
 	) | rpl::filter([=](FilterId id) {
 		return (id == data->current().id());
-	}) | rpl::start_with_next([=](FilterId id) {
+	}) | rpl::on_next([=](FilterId id) {
 		const auto filters = &owner->chatsFilters();
 		const auto &list = filters->list();
 		const auto i = ranges::find(list, id, &Data::ChatFilter::id);
@@ -405,7 +405,7 @@ void EditFilterBox(
 	const auto session = &window->session();
 	Data::AmPremiumValue(
 		session
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		box->closeBox();
 	}, box->lifetime());
 
@@ -434,7 +434,7 @@ void EditFilterBox(
 	staticTitle->setClickedCallback([=] {
 		state->staticTitle = !state->staticTitle.current();
 	});
-	state->staticTitle.value() | rpl::start_with_next([=](bool value) {
+	state->staticTitle.value() | rpl::on_next([=](bool value) {
 		staticTitle->setText(value
 			? tr::lng_filters_enable_animations(tr::now)
 			: tr::lng_filters_disable_animations(tr::now));
@@ -456,7 +456,7 @@ void EditFilterBox(
 	rpl::combine(
 		staticTitle->widthValue(),
 		name->widthValue()
-	) | rpl::start_with_next([=](int inner, int outer) {
+	) | rpl::on_next([=](int inner, int outer) {
 		staticTitle->moveToRight(
 			st::windowFilterStaticTitlePosition.x(),
 			st::windowFilterStaticTitlePosition.y(),
@@ -464,12 +464,12 @@ void EditFilterBox(
 	}, staticTitle->lifetime());
 
 	state->creating.value(
-	) | rpl::filter(!_1) | rpl::start_with_next([=] {
+	) | rpl::filter(!_1) | rpl::on_next([=] {
 		nameEditing->custom = true;
 	}, box->lifetime());
 
 	name->changes(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (!nameEditing->settingDefault) {
 			nameEditing->custom = true;
 		}
@@ -493,7 +493,7 @@ void EditFilterBox(
 	};
 
 	state->title.value(
-	) | rpl::start_with_next([=](const TextWithEntities &value) {
+	) | rpl::on_next([=](const TextWithEntities &value) {
 		staticTitle->setVisible(!value.entities.isEmpty());
 	}, staticTitle->lifetime());
 
@@ -591,7 +591,7 @@ void EditFilterBox(
 			tr::lng_filters_tag_color_subtitle());
 		const auto preview = Ui::CreateChild<Ui::RpWidget>(colors);
 		title->geometryValue(
-		) | rpl::start_with_next([=](const QRect &r) {
+		) | rpl::on_next([=](const QRect &r) {
 			const auto h = st::normalFont->height;
 			preview->setGeometry(
 				rect::right(colors) - st::settingsFilterTagPreviewSkip,
@@ -608,7 +608,7 @@ void EditFilterBox(
 		};
 		const auto tag = preview->lifetime().make_state<TagState>();
 		tag->context.textContext = Core::TextContext({ .session = session });
-		preview->paintRequest() | rpl::start_with_next([=] {
+		preview->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(preview);
 			p.setOpacity(tag->alpha);
 			const auto size = tag->frame.size() / style::DevicePixelRatio();
@@ -643,7 +643,7 @@ void EditFilterBox(
 			return value;
 		};
 		state->title.changes(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			tag->context.color = palette(state->colorIndex.current())->c;
 			tag->frame = Ui::ChatsFilterTag(
 				upperTitle(),
@@ -703,7 +703,7 @@ void EditFilterBox(
 				});
 			}
 		}
-		line->sizeValue() | rpl::start_with_next([=](const QSize &size) {
+		line->sizeValue() | rpl::on_next([=](const QSize &size) {
 			const auto totalWidth = buttons.size() * side;
 			const auto spacing = (size.width() - totalWidth)
 				/ (buttons.size() - 1);
@@ -717,7 +717,7 @@ void EditFilterBox(
 			const auto last = buttons.back();
 			const auto icon = Ui::CreateChild<Ui::RpWidget>(last);
 			icon->resize(side, side);
-			icon->paintRequest() | rpl::start_with_next([=] {
+			icon->paintRequest() | rpl::on_next([=] {
 				auto p = QPainter(icon);
 				(session->premium()
 					? st::windowFilterSmallRemove.icon
@@ -770,7 +770,7 @@ void EditFilterBox(
 			tr::lng_filters_link_has(),
 			tr::lng_filters_link()));
 
-	state->hasLinks.changes() | rpl::start_with_next([=] {
+	state->hasLinks.changes() | rpl::on_next([=] {
 		content->resizeToWidth(content->widthNoMargins());
 	}, content->lifetime());
 
@@ -803,7 +803,7 @@ void EditFilterBox(
 		addLink->clicks()
 	) | rpl::filter(
 		(rpl::mappers::_1 == Qt::LeftButton)
-	) | rpl::start_with_next([=](Qt::MouseButton button) {
+	) | rpl::on_next([=](Qt::MouseButton button) {
 		const auto result = collect();
 		if (!result || !GoodForExportFilterLink(window, *result)) {
 			return;

@@ -92,7 +92,7 @@ ItemSingleMediaPreview::ItemSingleMediaPreview(
 
 	rpl::single(rpl::empty) | rpl::then(
 		session->downloaderTaskFinished()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		const auto computed = computeThumbInfo();
 		if (!computed.image) {
 			if (_documentMedia && !_documentMedia->owner()->hasThumbnail()) {

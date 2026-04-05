@@ -526,7 +526,7 @@ EmojiStatusTopBar::EmojiStatusTopBar(
 
 	rpl::single() | rpl::then(
 		document->owner().session().downloaderTaskFinished()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		if (!_media->loaded()) {
 			return;
 		}
@@ -696,7 +696,7 @@ TopBarWithSticker::TopBarWithSticker(
 
 	rpl::single() | rpl::then(
 		style::PaletteChanged()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		TopBarAbstract::computeIsDark();
 		update();
 	}, lifetime());
@@ -711,7 +711,7 @@ TopBarWithSticker::TopBarWithSticker(
 		(args.aboutValue
 			? std::move(args.aboutValue)
 			: rpl::single(TextWithEntities()))
-	) | rpl::start_with_next([=](
+	) | rpl::on_next([=](
 			DocumentData *document,
 			const QString &name,
 			const TextWithEntities &about) {
@@ -734,11 +734,11 @@ TopBarWithSticker::TopBarWithSticker(
 		update();
 	}, lifetime());
 
-	_title->naturalWidthValue() | rpl::start_with_next([=] {
+	_title->naturalWidthValue() | rpl::on_next([=] {
 		_title->resizeToNaturalWidth(st::settingsPremiumUserTitle.minWidth);
 	}, _title->lifetime());
 
-	_about->naturalWidthValue() | rpl::start_with_next([=] {
+	_about->naturalWidthValue() | rpl::on_next([=] {
 		_about->resizeToNaturalWidth(st::userPremiumCover.about.minWidth);
 	}, _about->lifetime());
 
@@ -746,7 +746,7 @@ TopBarWithSticker::TopBarWithSticker(
 		_title->sizeValue(),
 		_about->sizeValue(),
 		_content->sizeValue()
-	) | rpl::start_with_next([=](
+	) | rpl::on_next([=](
 			const QSize &titleSize,
 			const QSize &aboutSize,
 			const QSize &size) {
@@ -785,7 +785,7 @@ TopBarWithSticker::TopBarWithSticker(
 			false
 		) | rpl::then(std::move(showFinished) | rpl::map_to(true)),
 		sizeValue()
-	) | rpl::start_with_next([=](bool showFinished, const QSize &size) {
+	) | rpl::on_next([=](bool showFinished, const QSize &size) {
 		_content->resize(size.width(), maximumHeight());
 		const auto skip = TopTransitionSkip();
 		_content->moveToLeft(0, size.height() - _content->height() - skip);
@@ -813,7 +813,7 @@ TopBarWithSticker::TopBarWithSticker(
 	}, lifetime());
 
 	_smallTop.widget->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		Painter p(_smallTop.widget);
 
 		p.setOpacity(_smallTop.animation.value(_smallTop.shown ? 1. : 0.));
@@ -829,7 +829,7 @@ TopBarWithSticker::TopBarWithSticker(
 	}, lifetime());
 
 	_content->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(_content);
 
 		_ministars.paint(p);
@@ -904,7 +904,7 @@ void TopBarWithSticker::updateTitle(
 			Data::StickersType::Emoji));
 
 		box->boxClosing(
-		) | rpl::start_with_next(crl::guard(this, [=] {
+		) | rpl::on_next(crl::guard(this, [=] {
 			setPaused(false);
 		}), box->lifetime());
 	});
@@ -1261,7 +1261,7 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToTop(
 	};
 
 	_wrap.value(
-	) | rpl::start_with_next([=](Info::Wrap wrap) {
+	) | rpl::on_next([=](Info::Wrap wrap) {
 		content->setRoundEdges(wrap == Info::Wrap::Layer);
 	}, content->lifetime());
 
@@ -1276,7 +1276,7 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToTop(
 
 	content->resize(content->width(), content->maximumHeight());
 	content->additionalHeight(
-	) | rpl::start_with_next([=](int additionalHeight) {
+	) | rpl::on_next([=](int additionalHeight) {
 		const auto wasMax = (content->height() == content->maximumHeight());
 		content->setMaximumHeight(calculateMaximumHeight()
 			+ additionalHeight);
@@ -1286,7 +1286,7 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToTop(
 	}, content->lifetime());
 
 	_wrap.value(
-	) | rpl::start_with_next([=](Info::Wrap wrap) {
+	) | rpl::on_next([=](Info::Wrap wrap) {
 		const auto isLayer = (wrap == Info::Wrap::Layer);
 		_back = base::make_unique_q<Ui::FadeWrap<Ui::IconButton>>(
 			content,
@@ -1300,13 +1300,13 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToTop(
 			st::infoTopBarScale);
 		_back->setDuration(0);
 		_back->toggleOn(isLayer
-			? _backToggles.value() | rpl::type_erased()
+			? _backToggles.value() | rpl::type_erased
 			: rpl::single(true));
 		_back->entity()->addClickHandler([=] {
 			_showBack.fire({});
 		});
 		_back->toggledValue(
-		) | rpl::start_with_next([=](bool toggled) {
+		) | rpl::on_next([=](bool toggled) {
 			const auto &st = isLayer ? st::infoLayerTopBar : st::infoTopBar;
 			content->setTextPosition(
 				toggled ? st.back.width : st.titlePosition.x(),
@@ -1326,7 +1326,7 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToTop(
 				_controller->parentController()->hideSpecialLayer();
 			});
 			content->widthValue(
-			) | rpl::start_with_next([=] {
+			) | rpl::on_next([=] {
 				_close->moveToRight(0, 0);
 			}, _close->lifetime());
 		}
@@ -1413,12 +1413,12 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToBottom(
 	}
 
 	_showFinished.events(
-	) | rpl::take(1) | rpl::start_with_next([=] {
+	) | rpl::take(1) | rpl::on_next([=] {
 		_subscribe->startGlareAnimation();
 	}, _subscribe->lifetime());
 
 	content->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto padding = st::settingsPremiumButtonPadding;
 		_subscribe->resizeToWidth(width - padding.left() - padding.right());
 	}, _subscribe->lifetime());
@@ -1427,7 +1427,7 @@ base::weak_qptr<Ui::RpWidget> Premium::createPinnedToBottom(
 		_subscribe->heightValue(),
 		Data::AmPremiumValue(session),
 		session->premiumPossibleValue()
-	) | rpl::start_with_next([=](
+	) | rpl::on_next([=](
 			int buttonHeight,
 			bool premium,
 			bool premiumPossible) {
@@ -1623,7 +1623,7 @@ not_null<Ui::RoundButton*> CreateLockedButton(
 	const auto icon = Ui::CreateChild<Ui::RpWidget>(result);
 	icon->setAttribute(Qt::WA_TransparentForMouseEvents);
 	icon->resize(st::stickersPremiumLock.size());
-	icon->paintRequest() | rpl::start_with_next([=] {
+	icon->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(icon);
 		st::stickersPremiumLock.paint(p, 0, 0, icon->width());
 	}, icon->lifetime());
@@ -1632,7 +1632,7 @@ not_null<Ui::RoundButton*> CreateLockedButton(
 		result->widthValue(),
 		label->widthValue(),
 		std::move(locked)
-	) | rpl::start_with_next([=](int outer, int inner, bool locked) {
+	) | rpl::on_next([=](int outer, int inner, bool locked) {
 		if (locked) {
 			icon->show();
 			inner += icon->width();
@@ -1738,7 +1738,7 @@ not_null<Ui::GradientButton*> CreateSubscribeButton(
 	rpl::combine(
 		result->widthValue(),
 		label->widthValue()
-	) | rpl::start_with_next([=](int outer, int width) {
+	) | rpl::on_next([=](int outer, int width) {
 		label->moveToLeft(
 			(outer - width) / 2,
 			st::premiumPreviewBox.button.textTop,
@@ -1842,12 +1842,12 @@ void AddSummaryPremium(
 		dummy->setAttribute(Qt::WA_TransparentForMouseEvents);
 
 		content->sizeValue(
-		) | rpl::start_with_next([=](const QSize &s) {
+		) | rpl::on_next([=](const QSize &s) {
 			dummy->resize(s.width(), iconSize.height());
 		}, dummy->lifetime());
 
 		label->geometryValue(
-		) | rpl::start_with_next([=](const QRect &r) {
+		) | rpl::on_next([=](const QRect &r) {
 			dummy->moveToLeft(0, r.y() + (r.height() - labelAscent));
 		}, dummy->lifetime());
 
@@ -1855,7 +1855,7 @@ void AddSummaryPremium(
 			content->widthValue(),
 			label->heightValue(),
 			description->heightValue()
-		) | rpl::start_with_next([=,
+		) | rpl::on_next([=,
 			topPadding = titlePadding,
 			bottomPadding = descriptionPadding](
 				int width,
@@ -1871,7 +1871,7 @@ void AddSummaryPremium(
 					+ bottomPadding.bottom());
 		}, button->lifetime());
 		label->topValue(
-		) | rpl::start_with_next([=, padding = titlePadding.top()](int top) {
+		) | rpl::on_next([=, padding = titlePadding.top()](int top) {
 			button->moveToLeft(0, top - padding);
 		}, button->lifetime());
 		const auto arrow = Ui::CreateChild<Ui::IconButton>(
@@ -1882,7 +1882,7 @@ void AddSummaryPremium(
 			&st::settingsPremiumArrowOver);
 		arrow->setAttribute(Qt::WA_TransparentForMouseEvents);
 		button->sizeValue(
-		) | rpl::start_with_next([=](const QSize &s) {
+		) | rpl::on_next([=](const QSize &s) {
 			const auto &point = st::settingsPremiumArrowShift;
 			arrow->moveToRight(
 				-point.x(),
@@ -1966,12 +1966,12 @@ std::unique_ptr<Ui::RpWidget> MakeEmojiStatusPreview(
 		document,
 		[=](QRect r) { raw->update(std::move(r)); },
 		size);
-	raw->paintRequest() | rpl::start_with_next([=] {
+	raw->paintRequest() | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		emoji->paint(p);
 	}, raw->lifetime());
 
-	raw->sizeValue() | rpl::start_with_next([=](QSize size) {
+	raw->sizeValue() | rpl::on_next([=](QSize size) {
 		emoji->setCenter(QPointF(size.width() / 2., size.height() / 2.));
 	}, raw->lifetime());
 

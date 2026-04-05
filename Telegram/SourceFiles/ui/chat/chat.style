@@ -1145,9 +1145,11 @@ previewMenu: PopupMenu(defaultPopupMenu) {
 	}
 	maxHeight: 420px;
 	radius: boxRadius;
-	shadow: boxRoundShadow;
+	shadow: roundShadowRadius8px;
+	boxShadow: boxRoundShadow;
 	animation: PanelAnimation(defaultPanelAnimation) {
-		shadow: boxRoundShadow;
+		shadow: roundShadowRadius8px;
+	boxShadow: boxRoundShadow;
 	}
 }
 previewTop: PeerListItem(defaultPeerListItem) {

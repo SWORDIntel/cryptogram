@@ -306,7 +306,7 @@ void GiftButton::setDescriptor(const GiftDescriptor &descriptor, Mode mode) {
 	_resolvedDocument = nullptr;
 	_documentLifetime = _delegate->sticker(
 		descriptor
-	) | rpl::start_with_next([=](not_null<DocumentData*> document) {
+	) | rpl::on_next([=](not_null<DocumentData*> document) {
 		_documentLifetime.destroy();
 		setDocument(document);
 	});
@@ -377,7 +377,7 @@ void GiftButton::setDocument(not_null<DocumentData*> document) {
 		document->owner().session().downloaderTaskFinished()
 	) | rpl::filter([=] {
 		return media->loaded();
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		_mediaLifetime.destroy();
 
 		auto result = std::unique_ptr<HistoryView::StickerPlayer>();
@@ -1132,7 +1132,7 @@ rpl::producer<not_null<DocumentData*>> GiftStickerValue(
 		packs.load();
 		if (const auto result = packs.lookup(months)) {
 			return result->sticker()
-				? (rpl::single(not_null(result)) | rpl::type_erased())
+				? (rpl::single(not_null(result)) | rpl::type_erased)
 				: rpl::never<not_null<DocumentData*>>();
 		}
 		return packs.updated(
@@ -1142,9 +1142,9 @@ rpl::producer<not_null<DocumentData*>> GiftStickerValue(
 			return document && document->sticker();
 		}) | rpl::take(1) | rpl::map([=](DocumentData *document) {
 			return not_null(document);
-		}) | rpl::type_erased();
+		}) | rpl::type_erased;
 	}, [&](GiftTypeStars data) {
-		return rpl::single(data.info.document) | rpl::type_erased();
+		return rpl::single(data.info.document) | rpl::type_erased;
 	});
 }
 
@@ -1293,12 +1293,12 @@ void SelectGiftToUnpin(
 
 		state->selected.value(
 		) | rpl::combine_previous(
-		) | rpl::start_with_next([=](int old, int now) {
+		) | rpl::on_next([=](int old, int now) {
 			if (old >= 0) state->buttons[old]->toggleSelected(false);
 			if (now >= 0) state->buttons[now]->toggleSelected(true);
 		}, gifts->lifetime());
 
-		gifts->widthValue() | rpl::start_with_next([=](int width) {
+		gifts->widthValue() | rpl::on_next([=](int width) {
 			const auto singleMin = state->delegate.buttonSize();
 			if (width < singleMin.width()) {
 				return;
@@ -1352,7 +1352,7 @@ void SelectGiftToUnpin(
 			st::creditsBoxButtonLabel,
 			&st::giftTooManyPinnedBox.button.textFg);
 
-		state->selected.value() | rpl::start_with_next([=](int value) {
+		state->selected.value() | rpl::on_next([=](int value) {
 			const auto has = (value >= 0);
 			label->setOpacity(has ? 1. : 0.5);
 			button->setAttribute(Qt::WA_TransparentForMouseEvents, !has);
@@ -1363,7 +1363,7 @@ void SelectGiftToUnpin(
 			- buttonPadding.left()
 			- buttonPadding.right();
 		button->resizeToWidth(buttonWidth);
-		button->widthValue() | rpl::start_with_next([=](int width) {
+		button->widthValue() | rpl::on_next([=](int width) {
 			if (width != buttonWidth) {
 				button->resizeToWidth(buttonWidth);
 			}

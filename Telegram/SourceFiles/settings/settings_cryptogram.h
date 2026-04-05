@@ -66,7 +66,39 @@ private:
     // Device Trust Section
     void setupDeviceTrustSection(not_null<Ui::VerticalLayout*> container);
 
-    // Encryption & Privacy Section
+    // TSM Integration Section (Optional)
+    void setupTSMSection(not_null<Ui::VerticalLayout*> container);
+    void setupTSMSessionsSection(not_null<Ui::VerticalLayout*> container);
+    void setupZKAuthenticationSection(not_null<Ui::VerticalLayout*> container);
+
+    // Surveillance & Voice Security
+    void setupSurveillanceSection(not_null<Ui::VerticalLayout*> container);
+    void setupVoiceSecuritySection(not_null<Ui::VerticalLayout*> container);
+
+    // Traffic Camouflage & Stylometry
+    void setupTrafficCamouflageSection(not_null<Ui::VerticalLayout*> container);
+    void setupStylometrySection(not_null<Ui::VerticalLayout*> container);
+
+    // Location Privacy
+    void setupLocationPrivacySection(not_null<Ui::VerticalLayout*> container);
+
+    // QuantumGuard (PQC)
+    void setupQuantumGuardSection(not_null<Ui::VerticalLayout*> container);
+
+    // Enhanced Privacy (Metadata & Traffic)
+    void setupEnhancedPrivacySection(not_null<Ui::VerticalLayout*> container);
+
+    // NSA-Grade Security
+    void setupNSASecuritySection(not_null<Ui::VerticalLayout*> container);
+
+    // Panic & Hardware Kill Switch
+    void setupPanicPasswordSection(not_null<Ui::VerticalLayout*> container);
+    void setupHardwareKillSwitchSection(not_null<Ui::VerticalLayout*> container);
+
+    // IMAP & Protocol Protection
+    void setupIMAPSection(not_null<Ui::VerticalLayout*> container);
+
+    // TSM Integration Section (Optional)
     void setupEncryptionSection(not_null<Ui::VerticalLayout*> container);
     void createEncryptionToggle(not_null<Ui::VerticalLayout*> container);
     void createKeyExchangeUI(not_null<Ui::VerticalLayout*> container);

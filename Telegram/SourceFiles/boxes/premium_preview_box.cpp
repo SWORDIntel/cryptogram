@@ -233,7 +233,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 	const auto raw = result.data();
 
 	raw->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(raw);
 		p.drawImage(0, 0, back);
 	}, raw->lifetime());
@@ -257,7 +257,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 	result->show();
 
 	parent->sizeValue(
-	) | rpl::start_with_next([=](QSize size) {
+	) | rpl::on_next([=](QSize size) {
 		result->setGeometry(QRect(
 			QPoint(
 				(size.width() - effectSize.width()) / 2,
@@ -311,8 +311,8 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 			result->update();
 		};
 		auto &lifetime = result->lifetime();
-		state->lottie->updates() | rpl::start_with_next(update, lifetime);
-		state->effect->updates() | rpl::start_with_next(update, lifetime);
+		state->lottie->updates() | rpl::on_next(update, lifetime);
+		state->effect->updates() | rpl::on_next(update, lifetime);
 	};
 	createLottieIfReady();
 	if (!state->lottie || !state->effect) {
@@ -329,7 +329,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 		rpl::never<>());
 
 	result->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		createLottieIfReady();
 
 		auto p = QPainter(result);
@@ -387,7 +387,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 	result->show();
 
 	parent->sizeValue(
-	) | rpl::start_with_next([=](QSize size) {
+	) | rpl::on_next([=](QSize size) {
 		result->setGeometry(QRect(QPoint(), size));
 	}, result->lifetime());
 	auto &lifetime = result->lifetime();
@@ -413,7 +413,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 		outer->show();
 
 		result->sizeValue(
-		) | rpl::start_with_next([=](QSize size) {
+		) | rpl::on_next([=](QSize size) {
 			outer->resize(size);
 		}, outer->lifetime());
 
@@ -483,7 +483,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 	result->shownValue(
 	) | rpl::filter([=](bool shown) {
 		return shown && state->toggleTimerPending;
-	}) | rpl::start_with_next([=] {
+	}) | rpl::on_next([=] {
 		state->toggleTimerPending = false;
 		state->toggleTimer.callOnce(kToggleStickerTimeout);
 	}, result->lifetime());
@@ -503,7 +503,7 @@ void PreloadSticker(const std::shared_ptr<Data::DocumentMedia> &media) {
 	fill();
 	if (state->medias.empty()) {
 		premium->stickersUpdated(
-		) | rpl::take(1) | rpl::start_with_next(fill, lifetime);
+		) | rpl::take(1) | rpl::on_next(fill, lifetime);
 	}
 
 	return result;
@@ -623,7 +623,7 @@ struct VideoPreviewDocument {
 	result->show();
 
 	parent->sizeValue(
-	) | rpl::start_with_next([=](QSize size) {
+	) | rpl::on_next([=](QSize size) {
 		result->setGeometry(parent->rect());
 	}, result->lifetime());
 	auto &lifetime = result->lifetime();
@@ -713,7 +713,7 @@ struct VideoPreviewDocument {
 	});
 
 	result->paintRequest(
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		auto p = QPainter(result);
 		const auto paintFrame = [&](QColor color, float64 thickness) {
 			auto hq = PainterHighQualityEnabler(p);
@@ -785,7 +785,7 @@ struct VideoPreviewDocument {
 	result->show();
 
 	parent->sizeValue(
-	) | rpl::start_with_next([=](QSize size) {
+	) | rpl::on_next([=](QSize size) {
 		result->setGeometry(QRect(QPoint(), size));
 	}, result->lifetime());
 	auto &lifetime = result->lifetime();
@@ -811,7 +811,7 @@ struct VideoPreviewDocument {
 	create();
 	if (!state->single) {
 		session->api().premium().videosUpdated(
-		) | rpl::take(1) | rpl::start_with_next(create, lifetime);
+		) | rpl::take(1) | rpl::on_next(create, lifetime);
 	}
 
 	return result;
@@ -860,7 +860,7 @@ struct VideoPreviewDocument {
 		const auto section = order[i];
 		const auto button = Ui::CreateChild<Ui::AbstractButton>(raw);
 		parent->widthValue(
-		) | rpl::start_with_next([=](int outer) {
+		) | rpl::on_next([=](int outer) {
 			const auto full = width * count;
 			const auto left = (outer - full) / 2 + (i * width);
 			button->setGeometry(left, 0, width, height);
@@ -869,7 +869,7 @@ struct VideoPreviewDocument {
 			*selected = section;
 		});
 		button->paintRequest(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			auto p = QPainter(button);
 			auto hq = PainterHighQualityEnabler(p);
 			p.setBrush((selected->current() == section)
@@ -882,7 +882,7 @@ struct VideoPreviewDocument {
 				button->rect().marginsRemoved(st::premiumDotPadding));
 		}, button->lifetime());
 		selected->changes(
-		) | rpl::start_with_next([=] {
+		) | rpl::on_next([=] {
 			button->update();
 		}, button->lifetime());
 	}
@@ -962,7 +962,7 @@ void PreviewBox(
 	right->setClickedCallback([=] { move(1); });
 
 	buttonsParent->widthValue(
-	) | rpl::start_with_next([=](int width) {
+	) | rpl::on_next([=](int width) {
 		const auto outerHeight = st::premiumPreviewHeight;
 		close->moveToRight(0, 0, width);
 		left->moveToLeft(0, (outerHeight - left->height()) / 2, width);
@@ -1009,7 +1009,7 @@ void PreviewBox(
 
 	state->selected.value(
 	) | rpl::combine_previous(
-	) | rpl::start_with_next([=](PremiumFeature was, PremiumFeature now) {
+	) | rpl::on_next([=](PremiumFeature was, PremiumFeature now) {
 		const auto animationCallback = [=] {
 			if (!state->animation.animating()) {
 				for (const auto &hiding : base::take(state->hiding)) {
@@ -1158,13 +1158,13 @@ void PreviewBox(
 	if (descriptor.fromSettings) {
 		Data::AmPremiumValue(
 			&show->session()
-		) | rpl::skip(1) | rpl::start_with_next([=] {
+		) | rpl::skip(1) | rpl::on_next([=] {
 			box->closeBox();
 		}, box->lifetime());
 	}
 
 	box->events(
-	) | rpl::start_with_next([=](not_null<QEvent*> e) {
+	) | rpl::on_next([=](not_null<QEvent*> e) {
 		if (e->type() == QEvent::KeyPress) {
 			const auto key = static_cast<QKeyEvent*>(e.get())->key();
 			if (key == Qt::Key_Left) {
@@ -1176,7 +1176,7 @@ void PreviewBox(
 	}, box->lifetime());
 
 	if (const auto &hidden = descriptor.hiddenCallback) {
-		box->boxClosing() | rpl::start_with_next(hidden, box->lifetime());
+		box->boxClosing() | rpl::on_next(hidden, box->lifetime());
 	}
 }
 
@@ -1222,13 +1222,13 @@ void DecorateListPromoBox(
 	if (!descriptor.hideSubscriptionButton) {
 		Data::AmPremiumValue(
 			session
-		) | rpl::skip(1) | rpl::start_with_next([=] {
+		) | rpl::skip(1) | rpl::on_next([=] {
 			box->closeBox();
 		}, box->lifetime());
 	}
 
 	if (const auto &hidden = descriptor.hiddenCallback) {
-		box->boxClosing() | rpl::start_with_next(hidden, box->lifetime());
+		box->boxClosing() | rpl::on_next(hidden, box->lifetime());
 	}
 
 	if (session->premium() || descriptor.hideSubscriptionButton) {
@@ -1248,7 +1248,7 @@ void DecorateListPromoBox(
 
 		box->setStyle(st::premiumPreviewDoubledLimitsBox);
 		box->widthValue(
-		) | rpl::start_with_next([=](int width) {
+		) | rpl::on_next([=](int width) {
 			const auto &padding
 				= st::premiumPreviewDoubledLimitsBox.buttonPadding;
 			button->resizeToWidth(width
@@ -1687,7 +1687,7 @@ object_ptr<Ui::GradientButton> CreateUnlockButton(
 	rpl::combine(
 		result->widthValue(),
 		label->widthValue()
-	) | rpl::start_with_next([=](int outer, int width) {
+	) | rpl::on_next([=](int outer, int width) {
 		label->moveToLeft(
 			(outer - width) / 2,
 			st::premiumPreviewBox.button.textTop,

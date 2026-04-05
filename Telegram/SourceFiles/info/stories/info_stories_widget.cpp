@@ -66,21 +66,21 @@ Widget::Widget(
 		_albumId.value(),
 		controller->key().storiesAddToAlbumId()));
 	_emptyAlbumShown = _inner->albumEmptyValue();
-	_inner->albumIdChanges() | rpl::start_with_next([=](int id) {
+	_inner->albumIdChanges() | rpl::on_next([=](int id) {
 		controller->showSection(
 			Make(controller->storiesPeer(), id),
 			Window::SectionShow::Way::Backward);
 	}, _inner->lifetime());
 	_inner->setScrollHeightValue(scrollHeightValue());
 	_inner->scrollToRequests(
-	) | rpl::start_with_next([this](Ui::ScrollToRequest request) {
+	) | rpl::on_next([this](Ui::ScrollToRequest request) {
 		scrollTo(request);
 	}, _inner->lifetime());
 
 	rpl::combine(
 		_albumId.value(),
 		_emptyAlbumShown.value()
-	) | rpl::start_with_next([=] {
+	) | rpl::on_next([=] {
 		refreshBottom();
 	}, _inner->lifetime());
 }
@@ -180,14 +180,14 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 	});
 
 	const auto buttonTop = st::boxRadius;
-	bottom->widthValue() | rpl::start_with_next([=](int width) {
+	bottom->widthValue() | rpl::on_next([=](int width) {
 		const auto normal = width - 2 * buttonTop;
 		button->resizeToWidth(normal);
 		const auto buttonLeft = (width - normal) / 2;
 		button->moveToLeft(buttonLeft, buttonTop);
 	}, button->lifetime());
 
-	button->heightValue() | rpl::start_with_next([=](int height) {
+	button->heightValue() | rpl::on_next([=](int height) {
 		bottom->resize(bottom->width(), st::boxRadius + height);
 	}, button->lifetime());
 
@@ -197,7 +197,7 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 	};
 
 	_inner->sizeValue(
-	) | rpl::start_with_next([=](const QSize &s) {
+	) | rpl::on_next([=](const QSize &s) {
 		wrap->resizeToWidth(s.width());
 		crl::on_main(wrap, processHeight);
 	}, wrap->lifetime());
@@ -205,7 +205,7 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 	rpl::combine(
 		wrap->heightValue(),
 		heightValue()
-	) | rpl::start_with_next(processHeight, wrap->lifetime());
+	) | rpl::on_next(processHeight, wrap->lifetime());
 
 	if (_shown) {
 		wrap->toggle(

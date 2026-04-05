@@ -155,7 +155,7 @@ Manager::Manager(not_null<Main::Domain*> domain)
 		return (account != nullptr);
 	}) | rpl::start_with_next_done([=](Main::Account *account) {
 		*mtpLifetime = account->mtpMainSessionValue(
-		) | rpl::start_with_next([=](not_null<MTP::Instance*> instance) {
+		) | rpl::on_next([=](not_null<MTP::Instance*> instance) {
 			_api.emplace(instance);
 			request();
 		});

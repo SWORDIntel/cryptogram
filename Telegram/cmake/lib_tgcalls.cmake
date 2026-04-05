@@ -223,6 +223,8 @@ PUBLIC
     TGCALLS_USE_STD_OPTIONAL
 PRIVATE
     WEBRTC_APP_TDESKTOP
+    WEBRTC_POSIX
+    WEBRTC_LINUX
     RTC_ENABLE_H265
     RTC_ENABLE_VP9
 )
@@ -284,7 +286,7 @@ PRIVATE
 # Include WebRTC headers for tgcalls compilation
 target_include_directories(lib_tgcalls SYSTEM
 PRIVATE
-    ${libs_loc}/tg_owt/src
-    ${libs_loc}/tg_owt/src/third_party/abseil-cpp
-    ${libs_loc}/tg_owt/src/third_party/libyuv/include
+    ${submodules_loc}/tg_owt/src
+    ${submodules_loc}/tg_owt/src/third_party/abseil-cpp
+    ${submodules_loc}/tg_owt/src/third_party/libyuv/include
 )
