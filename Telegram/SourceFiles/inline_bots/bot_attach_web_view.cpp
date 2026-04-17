@@ -1980,7 +1980,7 @@ void WebViewInstance::botSetEmojiStatus(
 	}
 	_session->data().customEmojiManager().resolve(
 		request.customEmojiId
-	) | rpl::start_with_next_error([=](not_null<DocumentData*> document) {
+	) | rpl::start(rpl::on_next_error([=](not_null<DocumentData*> document) {
 		const auto sticker = document->sticker();
 		if (!sticker || sticker->setType != Data::StickersType::Emoji) {
 			callback(u"SUGGESTED_EMOJI_INVALID"_q);

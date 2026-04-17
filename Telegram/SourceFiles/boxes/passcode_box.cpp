@@ -120,7 +120,7 @@ void StartPendingReset(
 	};
 
 	session->api().cloudPassword().resetPassword(
-	) | rpl::start_with_next_error_done([=](
+	) | rpl::start(rpl::on_next_error_done([=](
 			Api::CloudPassword::ResetRetryDate retryDate) {
 		constexpr auto kMinute = 60;
 		constexpr auto kHour = 3600;
@@ -607,7 +607,7 @@ void PasscodeBox::validateEmail(
 	box->boxClosing(
 	) | rpl::filter([=] {
 		return !*set;
-	}) | start_with_next([=, weak = base::make_weak(this)] {
+	}) | rpl::start(rpl::on_next([=, weak = base::make_weak(this)] {
 		if (weak) {
 			weak->_clearUnconfirmedPassword.fire({});
 		}

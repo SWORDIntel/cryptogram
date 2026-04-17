@@ -789,7 +789,7 @@ bool UserpicButton::createStreamingObjects(not_null<PhotoData*> photo) {
 		nullptr);
 	_streamed->lockPlayer();
 	_streamed->player().updates(
-	) | rpl::start_with_next_error([=](Update &&update) {
+	) | rpl::start(rpl::on_next_error([=](Update &&update) {
 		handleStreamingUpdate(std::move(update));
 	}, [=](Error &&error) {
 		handleStreamingError(std::move(error));

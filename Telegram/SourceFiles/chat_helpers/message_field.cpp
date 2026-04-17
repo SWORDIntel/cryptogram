@@ -717,7 +717,7 @@ void InitMessageFieldFade(
 	}, topFade->lifetime());
 
 	field->sizeValue(
-	) | rpl::start_with_next_done([=](const QSize &size) {
+	) | rpl::start(rpl::on_next_done([=](const QSize &size) {
 		topFade->resizeToWidth(size.width());
 		bottomFade->resizeToWidth(size.width());
 		bottomFade->move(

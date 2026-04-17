@@ -874,7 +874,7 @@ void PreviewWrap::paintEvent(QPaintEvent *e) {
 
 		using namespace Api;
 		const auto api = std::make_shared<PremiumGiftCodeOptions>(peer);
-		api->request() | rpl::start_with_error_done([=](QString error) {
+		api->request() | rpl::start(rpl::on_error_done([=](QString error) {
 			consumer.put_next({});
 		}, [=] {
 			const auto &options = api->optionsForPeer();
@@ -4199,7 +4199,7 @@ void PreloadUniqueGiftResellPrices(not_null<Main::Session*> session) {
 		}
 	};
 	entry->requestLifetime = entry->api->requestStarGifts(
-	) | rpl::start_with_error_done(finish, [=] {
+	) | rpl::start(rpl::on_error_done(finish, [=] {
 		const auto &gifts = entry->api->starGifts();
 		entry->prices.reserve(gifts.size());
 		for (auto &gift : gifts) {

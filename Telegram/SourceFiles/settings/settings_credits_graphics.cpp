@@ -741,7 +741,7 @@ void FillCreditOptions(
 			fillLoading();
 			std::move(showFinishes) | rpl::on_next([=] {
 				apiCredits->request(
-				) | rpl::start_with_error_done([=](const QString &error) {
+				) | rpl::start(rpl::on_error_done([=](const QString &error) {
 					show->showToast(error);
 				}, [=] {
 					starsState->ready.value() | rpl::filter(

@@ -212,7 +212,7 @@ rpl::producer<UserPhotosSlice> UserPhotosViewer(
 			key,
 			limitBefore,
 			limitAfter
-		)) | rpl::start_with_next_done(
+		)) | rpl::start(rpl::on_next_done(
 			applyUpdate,
 			[=] { builder->checkInsufficientPhotos(); },
 			lifetime);

@@ -95,7 +95,7 @@ void Hint::setupContent() {
 				currentStepData.processRecover.checkedCode,
 				currentStepData.password,
 				hint
-			) | rpl::start_with_error_done([=](const QString &type) {
+			) | rpl::start(rpl::on_error_done([=](const QString &type) {
 				_requestLifetime.destroy();
 
 				error->show();

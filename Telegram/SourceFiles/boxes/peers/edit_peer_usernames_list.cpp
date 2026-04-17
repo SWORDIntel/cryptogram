@@ -320,13 +320,13 @@ void UsernamesList::rebuild(const Data::Usernames &usernames) {
 					_toggleLifetime = api.usernames().reorder(
 						_peer,
 						order()
-					) | rpl::start_with_done([=] {
+					) | rpl::start(rpl::on_done([=] {
 						auto &api = _peer->session().api();
 						_toggleLifetime = api.usernames().toggle(
 							_peer,
 							username.username,
 							!username.active
-						) | rpl::start_with_error_done([=](
+						) | rpl::start(rpl::on_error_done([=](
 								Api::Usernames::Error error) {
 							if (error == Api::Usernames::Error::TooMuch) {
 								constexpr auto kMaxUsernames = 10.;

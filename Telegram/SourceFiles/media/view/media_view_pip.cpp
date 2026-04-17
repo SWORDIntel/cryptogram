@@ -1346,7 +1346,7 @@ void Pip::setupStreaming() {
 	}, _instance->lifetime());
 
 	_instance->player().updates(
-	) | rpl::start_with_next_error([=](Streaming::Update &&update) {
+	) | rpl::start(rpl::on_next_error([=](Streaming::Update &&update) {
 		handleStreamingUpdate(std::move(update));
 	}, [=](Streaming::Error &&error) {
 		handleStreamingError(std::move(error));

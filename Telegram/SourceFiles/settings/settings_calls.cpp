@@ -302,7 +302,7 @@ void Calls::setupContent() {
 	)->toggledChanges(
 	) | rpl::filter([=](bool value) {
 		return (value == api->authorizations().callsDisabledHere());
-	}) | start_with_next([=](bool value) {
+	}) | rpl::start(rpl::on_next([=](bool value) {
 		api->authorizations().toggleCallsDisabledHere(!value);
 	}, content->lifetime());
 
@@ -689,4 +689,3 @@ object_ptr<Ui::GenericBox> ChooseCameraDeviceBox(
 }
 
 } // namespace Settings
-

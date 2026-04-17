@@ -314,7 +314,7 @@ void TopBar::createSearchView(
 	}, wrap->lifetime());
 
 	field->alive(
-	) | rpl::start_with_done([=] {
+	) | rpl::start(rpl::on_done([=] {
 		field->setParent(nullptr);
 		removeButton(search);
 		clearSearchField();
