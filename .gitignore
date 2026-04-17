@@ -72,3 +72,5 @@ settings.local.json
 # SpyGram source archive and extracted files (used for porting only)
 SpyGram-main/
 SpyGram-main.7z.*
+
+/build_m1/
