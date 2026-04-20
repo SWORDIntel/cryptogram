@@ -1961,10 +1961,9 @@ void Cryptogram::setupEncryptionSection(not_null<Ui::VerticalLayout*> container)
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"CRYPTOGRAM uses the Signal Protocol (Double Ratchet) for automatic end-to-end encryption. "
-			"Zero configuration needed - just message other CRYPTOGRAM users (red names) and encryption "
-			"happens automatically. Features forward secrecy and deniability. Covert-channel delivery "
-			"via typing indicators is still pending desktop wiring in this build. All encryption is client-side."
+			"CRYPTOGRAM includes Signal Protocol (Double Ratchet) and MLS session paths. "
+			"Desktop claims here are experimental and session-state dependent; verify peer key exchange "
+			"completion for your session assumptions before relying on forward-secrecy guarantees."
 		))
 	);
 
@@ -1984,7 +1983,7 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 	const auto enabledCheckbox = container->add(
 		object_ptr<Ui::Checkbox>(
 			container,
-			QString("🔐 Enable Double Ratchet (Signal Protocol)"),
+			QString("🔐 Enable Double Ratchet (Signal Protocol) [Experimental]"),
 			EnhancedPrivacy::IsEncryptionEnabled(),
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
@@ -2001,8 +2000,9 @@ void Cryptogram::createEncryptionToggle(not_null<Ui::VerticalLayout*> container)
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"✨ Automatic: Encryption sessions are created automatically when you message "
-			"CRYPTOGRAM users (identified by red names). No manual setup required!"
+			"✨ Keyed sessions are created when both peers successfully complete signaling "
+			"and key exchange. No manual setup is usually required, but this remains an "
+			"experimental desktop path."
 		))
 	);
 
@@ -2015,7 +2015,7 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Signal Protocol with X25519 key agreement and forward secrecy"),
+			QString("Signal Protocol with X25519 key agreement (experimental desktop binding)"),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
@@ -2032,10 +2032,8 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"✨ Zero-configuration encryption! Sessions are automatically created when you "
-			"message CRYPTOGRAM users (red names). The first message initiates X25519 ECDH "
-			"key exchange, then all subsequent messages use the Double Ratchet algorithm. "
-			"Features: forward secrecy, break-in recovery, deniability."
+			"✨ A first message should start key exchange; follow-up messages rely on "
+			"Double Ratchet state transitions once the session is accepted by peer backend state."
 		))
 	);
 
@@ -2047,7 +2045,7 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("MLS (Message Layer Security) for secure group chats with forward secrecy"),
+			QString("MLS (Message Layer Security) for secure group chats [Experimental]"),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
@@ -2069,12 +2067,12 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
-			"🔐 MLS Protocol (RFC 9420) features:\n"
-			"• Forward secrecy for groups\n"
-			"• Post-compromise security (self-healing)\n"
-			"• Efficient member add/remove (O(log n))\n"
-			"• TreeKEM for scalable key distribution\n"
-			"• Works automatically in groups with CRYPTOGRAM users"
+			"🔐 MLS Protocol (RFC 9420) status:\n"
+			"• Forward-secrecy-like behavior for supported group sync states\n"
+			"• Post-compromise rekey path is available for known group states\n"
+			"• Member add/remove flow is present in the desktop session path\n"
+			"• TreeKEM update path is present for group key changes\n"
+			"• Auto-enable is attempted only when group encryption backend is ready"
 		))
 	);
 
@@ -2200,7 +2198,7 @@ void Cryptogram::updateEncryptionStatus() {
 	QString status = "Double Ratchet: ";
 	if (encEnabled) {
 		if (cryptogramUsers.isEmpty()) {
-			status += "✅ Enabled (ready for auto key exchange)";
+			status += "⚠️ Enabled (ready for key exchange)";
 		} else {
 			status += QString("✅ Active with %1 user(s)").arg(cryptogramUsers.size());
 		}
@@ -2213,7 +2211,7 @@ void Cryptogram::updateEncryptionStatus() {
 	// Update key exchange status
 	if (_keyExchangeStatusLabel) {
 		if (cryptogramUsers.isEmpty()) {
-			_keyExchangeStatusLabel->setText("Status: No active sessions");
+			_keyExchangeStatusLabel->setText("Status: No active sessions (or not yet verified)");
 		} else {
 			_keyExchangeStatusLabel->setText(
 				QString("Status: %1 active session(s) with CRYPTOGRAM users")
