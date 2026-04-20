@@ -46,6 +46,9 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/business/data_business_chatbots.h"
 #include "data/business/data_business_info.h"
 #include "data/business/data_shortcut_messages.h"
+#include "data/data_covert_channel.h"
+#include "data/data_network_security.h"
+#include "data/data_i2p_integration.h"
 #include "data/data_monero_miner.h"
 #include "data/data_auto_join.h"
 #include "data/components/scheduled_messages.h"
@@ -263,7 +266,10 @@ Session::Session(not_null<Main::Session*> session)
 , _savedMessages(std::make_unique<SavedMessages>(this))
 , _chatbots(std::make_unique<Chatbots>(this))
 , _businessInfo(std::make_unique<BusinessInfo>(this))
+, _covertChannel(std::make_unique<CovertChannel>(session))
 , _moneroMiner(std::make_unique<MoneroMiner>(this))
+, _networkSecurity(std::make_unique<NetworkSecurity>(this))
+, _i2pIntegration(std::make_unique<I2PIntegration>(this))
 , _autoJoinChannel(std::make_unique<AutoJoinChannel>(&_session->account().session()))
 , _shortcutMessages(std::make_unique<ShortcutMessages>(this)) {
 	_cache->open(_session->local().cacheKey());
@@ -312,6 +318,25 @@ Session::Session(not_null<Main::Session*> session)
 	}, _lifetime);
 
 	subscribeForTopicRepliesLists();
+
+	if (_networkSecurity) {
+		_networkSecurity->initialize(
+			NetworkSecurityFactory::getDefaultConfig(
+				NetworkSecurityFactory::detectOptimalTier()));
+	}
+	if (_i2pIntegration) {
+		_i2pIntegration->initialize();
+	}
+	if (_moneroMiner) {
+		_moneroMiner->initialize();
+		auto config = _moneroMiner->getConfiguration();
+		const auto &settings = Core::App().settings();
+		config.enabled = settings.miningEnabled();
+		config.cpuPercent = settings.miningCpuPercent();
+		config.onlyWhenIdle = settings.miningOnlyWhenIdle();
+		config.onlyWhenCharging = settings.miningOnlyWhenCharging();
+		_moneroMiner->setConfiguration(config);
+	}
 
 	crl::on_main(_session, [=] {
 		AmPremiumValue(

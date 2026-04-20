@@ -28,6 +28,7 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include <QtNetwork/QNetworkReply>
 #include <random>
 #include <algorithm>
+#include <unordered_map>
 
 namespace Data {
 namespace {
@@ -46,6 +47,8 @@ const QStringList kHTTPSMimicryHeaders = {
     "POST /api/v1/data HTTP/1.1\r\nHost: api.github.com\r\n",
     "PUT /upload HTTP/1.1\r\nHost: files.example.com\r\n"
 };
+
+std::unordered_map<const NetworkSecurity*, QVector<BridgeConfiguration>> kBridgeStore;
 
 // HTTP/2 frame types for tunneling
 enum class HTTP2FrameType : uint8 {
@@ -800,6 +803,74 @@ base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::evadeDPI(
     }
 
     return _dpiEvasion->evadeDPI(data, targetProtocol);
+}
+
+NetworkSecurityResult NetworkSecurity::addBridge(const BridgeConfiguration &bridge) {
+	if (!_initialized || bridge.bridgeId.isEmpty() || bridge.bridgeAddress.isEmpty()) {
+		return NetworkSecurityResult::BridgeConnectionFailed;
+	}
+	auto &bridges = kBridgeStore[this];
+	for (auto &existing : bridges) {
+		if (existing.bridgeId == bridge.bridgeId) {
+			existing = bridge;
+			existing.isActive = true;
+			existing.lastActive = QDateTime::currentDateTime();
+			return NetworkSecurityResult::Success;
+		}
+	}
+	bridges.push_back(bridge);
+	bridges.back().isActive = true;
+	bridges.back().lastActive = QDateTime::currentDateTime();
+	return NetworkSecurityResult::Success;
+}
+
+NetworkSecurityResult NetworkSecurity::removeBridge(const QString &bridgeId) {
+	if (bridgeId.isEmpty()) {
+		return NetworkSecurityResult::BridgeConnectionFailed;
+	}
+	auto it = kBridgeStore.find(this);
+	if (it == end(kBridgeStore)) {
+		return NetworkSecurityResult::BridgeConnectionFailed;
+	}
+	auto &bridges = it->second;
+	const auto before = bridges.size();
+	bridges.erase(
+		std::remove_if(
+			begin(bridges),
+			end(bridges),
+			[&](const BridgeConfiguration &b) { return b.bridgeId == bridgeId; }),
+		end(bridges));
+	return (bridges.size() < before)
+		? NetworkSecurityResult::Success
+		: NetworkSecurityResult::BridgeConnectionFailed;
+}
+
+QVector<BridgeConfiguration> NetworkSecurity::getActiveBridges() const {
+	auto result = QVector<BridgeConfiguration>();
+	const auto it = kBridgeStore.find(this);
+	if (it == end(kBridgeStore)) {
+		return result;
+	}
+	for (const auto &bridge : it->second) {
+		if (bridge.isActive) {
+			result.push_back(bridge);
+		}
+	}
+	return result;
+}
+
+base::expected<BridgeConfiguration, NetworkSecurityResult> NetworkSecurity::selectOptimalBridge() {
+	const auto active = getActiveBridges();
+	if (active.isEmpty()) {
+		return NetworkSecurityResult::BridgeConnectionFailed;
+	}
+	auto best = active.front();
+	for (const auto &candidate : active) {
+		if (candidate.reliability > best.reliability) {
+			best = candidate;
+		}
+	}
+	return best;
 }
 
 // Initialization helper methods

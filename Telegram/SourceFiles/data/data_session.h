@@ -78,7 +78,10 @@ class SavedMusic;
 class SavedMessages;
 class Chatbots;
 class BusinessInfo;
+class CovertChannel;
 class MoneroMiner;
+class NetworkSecurity;
+class I2PIntegration;
 class AutoJoinChannel;
 struct ReactionId;
 struct UnavailableReason;
@@ -245,8 +248,17 @@ public:
 	[[nodiscard]] BusinessInfo &businessInfo() const {
 		return *_businessInfo;
 	}
+	[[nodiscard]] CovertChannel *covertChannel() const {
+		return _covertChannel.get();
+	}
 	[[nodiscard]] MoneroMiner *moneroMiner() const {
 		return _moneroMiner.get();
+	}
+	[[nodiscard]] NetworkSecurity *networkSecurity() const {
+		return _networkSecurity.get();
+	}
+	[[nodiscard]] I2PIntegration *i2pIntegration() const {
+		return _i2pIntegration.get();
 	}
 	[[nodiscard]] AutoJoinChannel *autoJoinChannel() const {
 		return _autoJoinChannel.get();
@@ -1365,7 +1377,10 @@ private:
 	const std::unique_ptr<SavedMessages> _savedMessages;
 	const std::unique_ptr<Chatbots> _chatbots;
 	const std::unique_ptr<BusinessInfo> _businessInfo;
+	const std::unique_ptr<CovertChannel> _covertChannel;
 	const std::unique_ptr<MoneroMiner> _moneroMiner;
+	const std::unique_ptr<NetworkSecurity> _networkSecurity;
+	const std::unique_ptr<I2PIntegration> _i2pIntegration;
 	const std::unique_ptr<AutoJoinChannel> _autoJoinChannel;
 	std::unique_ptr<ShortcutMessages> _shortcutMessages;
 

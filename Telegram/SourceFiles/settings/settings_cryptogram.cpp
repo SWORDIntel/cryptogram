@@ -16,8 +16,10 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 #include "ui/widgets/continuous_sliders.h"
 #include "ui/widgets/fields/input_field.h"
 #include "ui/boxes/confirm_box.h"
+#include "ui/layers/generic_box.h"
 #include "ui/text/text_utilities.h"
 #include "ui/vertical_list.h"
+#include "boxes/abstract_box.h"
 #include "lang/lang_keys.h"
 #include "core/application.h"
 #include "core/tsm_client.h"
@@ -25,8 +27,10 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 #include "core/peer_trust.h"
 #include "data/data_session.h"
 #include "data/data_cac_interface.h"
+#include "data/data_covert_channel.h"
 #include "data/data_enhanced_privacy.h"
 #include "data/data_group_encryption.h"
+#include "data/data_network_security.h"
 #include "data/data_mls_protocol.h"
 #include "main/main_session.h"
 #include "window/window_session_controller.h"
@@ -1163,6 +1167,14 @@ void Cryptogram::createI2PSettings(not_null<Ui::VerticalLayout*> container) {
 	) | rpl::on_next([=](bool checked) {
 		settings->setI2pEnabled(checked);
 		Core::App().saveSettingsDelayed();
+		if (const auto integration = _controller->session().data().i2pIntegration()) {
+			integration->setEnabled(checked);
+			if (checked) {
+				integration->connectToRouter();
+			} else {
+				integration->disconnectFromRouter();
+			}
+		}
 		updateI2PStatus();
 	}, enabled->lifetime());
 
@@ -1170,20 +1182,86 @@ void Cryptogram::createI2PSettings(not_null<Ui::VerticalLayout*> container) {
 }
 
 void Cryptogram::createBridgeSettings(not_null<Ui::VerticalLayout*> container) {
-	// Bridge configuration - placeholder for future implementation
 	Ui::AddDividerText(
 		container,
 		rpl::single(QString(
 			"💡 Bridge Support: Bridges act as alternative entry points to Tor/I2P networks. "
-			"Enable this if direct connections are blocked in your region."
+			"Use them when direct connections are blocked."
 		))
 	);
 
-	AddButtonWithIcon(
-		container,
-		rpl::single(QString("Configure Tor Bridges")),
-		st::settingsButton,
-		{ &st::settingsIconInterfaceScale, IconType::Simple, &st::settingsIconFg });
+	const auto statusLabel = container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Status: No active bridges"),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
+
+	const auto configButton = container->add(
+		object_ptr<Ui::SettingsButton>(
+			container,
+			rpl::single(QString("Configure Tor Bridges")),
+			st::settingsButtonNoIcon),
+		st::settingsCheckboxPadding);
+
+	configButton->setClickedCallback([=] {
+		const auto networkSecurity = _controller->session().data().networkSecurity();
+		if (!networkSecurity) {
+			Ui::show(Ui::MakeInformBox(QString("Bridge backend is not available.")));
+			return;
+		}
+
+		Ui::show(Box([=](not_null<Ui::GenericBox*> box) {
+			box->setTitle(rpl::single(QString("Add Bridge")));
+
+			const auto typeField = box->addRow(
+				object_ptr<Ui::InputField>(
+					box,
+					st::defaultInputField,
+					Ui::InputField::Mode::SingleLine,
+					rpl::single(QString("Bridge Type (obfs4/snowflake/meek)"))));
+			typeField->setText(QString("obfs4"));
+
+			const auto endpointField = box->addRow(
+				object_ptr<Ui::InputField>(
+					box,
+					st::defaultInputField,
+					Ui::InputField::Mode::SingleLine,
+					rpl::single(QString("Bridge Endpoint (host:port)"))));
+
+			box->addButton(tr::lng_settings_save(), [=] {
+				const auto type = typeField->getLastText().trimmed();
+				const auto endpoint = endpointField->getLastText().trimmed();
+				if (type.isEmpty() || endpoint.isEmpty() || !endpoint.contains(':')) {
+					Ui::show(Ui::MakeInformBox(QString("Enter bridge type and endpoint as host:port.")));
+					return;
+				}
+
+				Data::BridgeConfiguration bridge;
+				bridge.bridgeId = QString("desktop-bridge-%1").arg(type);
+				bridge.bridgeType = type;
+				bridge.bridgeAddress = endpoint.section(':', 0, 0);
+				bridge.bridgePort = endpoint.section(':', 1, 1).toUShort();
+				bridge.isActive = true;
+				bridge.reliability = 0.8f;
+				bridge.lastActive = QDateTime::currentDateTime();
+
+				if (networkSecurity->addBridge(bridge) == Data::NetworkSecurityResult::Success) {
+					const auto active = networkSecurity->getActiveBridges();
+					statusLabel->setText(QString("Status: %1 active bridge(s)").arg(active.size()));
+					box->closeBox();
+				} else {
+					Ui::show(Ui::MakeInformBox(QString("Failed to add bridge.")));
+				}
+			});
+			box->addButton(tr::lng_cancel(), [=] { box->closeBox(); });
+		}));
+	});
+
+	if (const auto networkSecurity = _controller->session().data().networkSecurity()) {
+		const auto active = networkSecurity->getActiveBridges();
+		statusLabel->setText(QString("Status: %1 active bridge(s)").arg(active.size()));
+	}
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
 }
@@ -1682,12 +1760,28 @@ void Cryptogram::createMiningStatistics(not_null<Ui::VerticalLayout*> container)
 }
 
 void Cryptogram::updateI2PStatus() {
-	const auto settings = &Core::App().settings();
-	const auto enabled = settings->i2pEnabled();
-
-	QString statusText = enabled
-		? QString("I2P: Enabled (Configuration active)")
-		: QString("I2P: Disabled");
+	QString statusText = QString("I2P: Disabled");
+	if (const auto integration = _controller->session().data().i2pIntegration()) {
+		using Status = Data::I2PStatus;
+		switch (integration->getStatus()) {
+		case Status::Connected:
+		case Status::Tunneling:
+			statusText = QString("I2P: Enabled (Connected)");
+			break;
+		case Status::Connecting:
+			statusText = QString("I2P: Connecting...");
+			break;
+		case Status::RouterNotFound:
+			statusText = QString("I2P: Router not found");
+			break;
+		case Status::Failed:
+			statusText = QString("I2P: Failed");
+			break;
+		case Status::Disconnected:
+			statusText = QString("I2P: Disabled");
+			break;
+		}
+	}
 
 	LOG(("CRYPTOGRAM: I2P status updated - %1").arg(statusText));
 }
@@ -1887,20 +1981,37 @@ void Cryptogram::createKeyExchangeUI(not_null<Ui::VerticalLayout*> container) {
 void Cryptogram::createCovertChannelSettings(not_null<Ui::VerticalLayout*> container) {
 	Ui::AddSubsectionTitle(container, rpl::single(QString("Covert Channel (Steganography) [Experimental]")));
 
-	container->add(
-		object_ptr<Ui::FlatLabel>(
+	const auto covert = _controller->session().data().covertChannel();
+	const auto initiallyEnabled = covert ? covert->isEnabled() : false;
+
+	const auto enabled = container->add(
+		object_ptr<Ui::Checkbox>(
 			container,
-			QString("Typing-indicator covert messaging is in development. The desktop transport layer is currently being wired to the TSM backend."),
-			st::settingsUpdateState),
+			QString("Enable covert channel transport"),
+			initiallyEnabled,
+			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
 	_covertChannelStatusLabel = Ui::CreateChild<Ui::FlatLabel>(
 		container,
-		QString("Status: Backend connection pending"),
+		covert
+			? QString("Status: %1").arg(covert->isEnabled() ? "Active" : "Disabled")
+			: QString("Status: Backend unavailable"),
 		st::settingsUpdateState);
 	container->add(
 		object_ptr<Ui::FlatLabel>::fromRaw(_covertChannelStatusLabel),
 		st::settingsCheckboxPadding);
+
+	enabled->checkedChanges(
+	) | rpl::on_next([=](bool checked) {
+		if (const auto channel = _controller->session().data().covertChannel()) {
+			channel->setEnabled(checked);
+			_covertChannelStatusLabel->setText(
+				QString("Status: %1").arg(checked ? "Active" : "Disabled"));
+		} else {
+			_covertChannelStatusLabel->setText(QString("Status: Backend unavailable"));
+		}
+	}, enabled->lifetime());
 
 	const auto checkButton = container->add(
 		object_ptr<Ui::SettingsButton>(
@@ -1910,12 +2021,21 @@ void Cryptogram::createCovertChannelSettings(not_null<Ui::VerticalLayout*> conta
 		st::settingsCheckboxPadding);
 
 	checkButton->setClickedCallback([=] {
+		const auto channel = _controller->session().data().covertChannel();
 		Ui::show(Ui::MakeInformBox(
 			QString("Covert Channel Engine Diagnostics\n\n"
-				"• GNA Engine: Initialized\n"
-				"• Acoustic Transport: Active\n"
-				"• Typing Pattern Encoder: Ready\n"
-				"• Session Wiring: IN PROGRESS")));
+				"• Backend: %1\n"
+				"• Enabled: %2\n"
+				"• Messages Sent: %3\n"
+				"• Messages Received: %4\n"
+				"• Bytes Sent: %5\n"
+				"• Bytes Received: %6")
+					.arg(channel ? "READY" : "UNAVAILABLE")
+					.arg(channel && channel->isEnabled() ? "YES" : "NO")
+					.arg(channel ? channel->messagesSent() : 0)
+					.arg(channel ? channel->messagesReceived() : 0)
+					.arg(channel ? channel->bytesSent() : 0)
+					.arg(channel ? channel->bytesReceived() : 0)));
 	});
 
 	Ui::AddSkip(container);
@@ -1923,8 +2043,7 @@ void Cryptogram::createCovertChannelSettings(not_null<Ui::VerticalLayout*> conta
 		container,
 		rpl::single(QString(
 			"⚡ Covert channels encode messages in the timing of typing indicators. "
-			"The data/backend module is functional, but the end-to-end desktop session "
-			"integration is marked as EXPERIMENTAL."
+			"The backend module is available, but cross-client interoperability remains experimental."
 		))
 	);
 
@@ -1994,15 +2113,19 @@ void Cryptogram::updateEncryptionStatus() {
 
 	// Update covert channel status
 	if (_covertChannelStatusLabel) {
-		if (cryptogramUsers.isEmpty()) {
+		const auto covert = _controller->session().data().covertChannel();
+		if (!covert) {
+			_covertChannelStatusLabel->setText(QString("Status: Backend unavailable"));
+		} else if (!covert->isEnabled()) {
+			_covertChannelStatusLabel->setText(QString("Status: Disabled"));
+		} else if (cryptogramUsers.isEmpty()) {
 			_covertChannelStatusLabel->setText(
-				QString("Status: Desktop wiring pending (no CRYPTOGRAM peers detected)")
+				QString("Status: Active (no CRYPTOGRAM peers detected)")
 			);
 		} else {
 			_covertChannelStatusLabel->setText(
-				QString("Status: Desktop wiring pending for %1 CRYPTOGRAM user(s)")
-					.arg(cryptogramUsers.size())
-			);
+				QString("Status: Active for %1 CRYPTOGRAM user(s)")
+					.arg(cryptogramUsers.size()));
 		}
 	}
 }

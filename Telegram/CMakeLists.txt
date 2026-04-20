@@ -723,6 +723,8 @@ PRIVATE
     data/data_network_integration.cpp
     # data/data_network_mesh.cpp (missing QtWebSockets)
     data/data_network_mtproto_integration.cpp
+    data/data_i2p_integration.cpp
+    data/data_i2p_integration.h
     data/data_network_security.cpp
     data/data_network_security.h
     data/data_network_signal_integration.cpp
