@@ -48,7 +48,10 @@ const QStringList kHTTPSMimicryHeaders = {
     "PUT /upload HTTP/1.1\r\nHost: files.example.com\r\n"
 };
 
-std::unordered_map<const NetworkSecurity*, QVector<BridgeConfiguration>> kBridgeStore;
+auto &BridgeStore() {
+    static auto store = std::unordered_map<NetworkSecurity*, QVector<BridgeConfiguration>>();
+    return store;
+}
 
 // HTTP/2 frame types for tunneling
 enum class HTTP2FrameType : uint8 {
@@ -806,71 +809,74 @@ base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::evadeDPI(
 }
 
 NetworkSecurityResult NetworkSecurity::addBridge(const BridgeConfiguration &bridge) {
-	if (!_initialized || bridge.bridgeId.isEmpty() || bridge.bridgeAddress.isEmpty()) {
-		return NetworkSecurityResult::BridgeConnectionFailed;
-	}
-	auto &bridges = kBridgeStore[this];
-	for (auto &existing : bridges) {
-		if (existing.bridgeId == bridge.bridgeId) {
-			existing = bridge;
-			existing.isActive = true;
-			existing.lastActive = QDateTime::currentDateTime();
-			return NetworkSecurityResult::Success;
-		}
-	}
-	bridges.push_back(bridge);
-	bridges.back().isActive = true;
-	bridges.back().lastActive = QDateTime::currentDateTime();
-	return NetworkSecurityResult::Success;
+    if (!_initialized) {
+        return NetworkSecurityResult::InitializationFailed;
+    }
+    if (bridge.bridgeAddress.isEmpty() || bridge.bridgePort == 0) {
+        return NetworkSecurityResult::BridgeConnectionFailed;
+    }
+
+    auto &bridges = BridgeStore()[this];
+    const auto existing = ranges::find(bridges, bridge.bridgeId, &BridgeConfiguration::bridgeId);
+    if (existing != end(bridges)) {
+        *existing = bridge;
+    } else {
+        bridges.push_back(bridge);
+    }
+
+    return NetworkSecurityResult::Success;
 }
 
 NetworkSecurityResult NetworkSecurity::removeBridge(const QString &bridgeId) {
-	if (bridgeId.isEmpty()) {
-		return NetworkSecurityResult::BridgeConnectionFailed;
-	}
-	auto it = kBridgeStore.find(this);
-	if (it == end(kBridgeStore)) {
-		return NetworkSecurityResult::BridgeConnectionFailed;
-	}
-	auto &bridges = it->second;
-	const auto before = bridges.size();
-	bridges.erase(
-		std::remove_if(
-			begin(bridges),
-			end(bridges),
-			[&](const BridgeConfiguration &b) { return b.bridgeId == bridgeId; }),
-		end(bridges));
-	return (bridges.size() < before)
-		? NetworkSecurityResult::Success
-		: NetworkSecurityResult::BridgeConnectionFailed;
+    if (!_initialized) {
+        return NetworkSecurityResult::InitializationFailed;
+    }
+    auto it = BridgeStore().find(this);
+    if (it == BridgeStore().end()) {
+        return NetworkSecurityResult::BridgeConnectionFailed;
+    }
+    auto &bridges = it->second;
+    const auto before = bridges.size();
+    bridges.erase(
+        std::remove_if(
+            bridges.begin(),
+            bridges.end(),
+            [&](const BridgeConfiguration &bridge) { return bridge.bridgeId == bridgeId; }),
+        bridges.end());
+    return (bridges.size() < before)
+        ? NetworkSecurityResult::Success
+        : NetworkSecurityResult::BridgeConnectionFailed;
 }
 
 QVector<BridgeConfiguration> NetworkSecurity::getActiveBridges() const {
-	auto result = QVector<BridgeConfiguration>();
-	const auto it = kBridgeStore.find(this);
-	if (it == end(kBridgeStore)) {
-		return result;
-	}
-	for (const auto &bridge : it->second) {
-		if (bridge.isActive) {
-			result.push_back(bridge);
-		}
-	}
-	return result;
+    const auto it = BridgeStore().find(const_cast<NetworkSecurity*>(this));
+    if (it == BridgeStore().end()) {
+        return {};
+    }
+    auto active = QVector<BridgeConfiguration>();
+    for (const auto &bridge : it->second) {
+        if (bridge.isActive) {
+            active.push_back(bridge);
+        }
+    }
+    return active;
 }
 
 base::expected<BridgeConfiguration, NetworkSecurityResult> NetworkSecurity::selectOptimalBridge() {
-	const auto active = getActiveBridges();
-	if (active.isEmpty()) {
-		return NetworkSecurityResult::BridgeConnectionFailed;
-	}
-	auto best = active.front();
-	for (const auto &candidate : active) {
-		if (candidate.reliability > best.reliability) {
-			best = candidate;
-		}
-	}
-	return best;
+    if (!_initialized) {
+        return NetworkSecurityResult::InitializationFailed;
+    }
+    const auto active = getActiveBridges();
+    if (active.isEmpty()) {
+        return NetworkSecurityResult::BridgeConnectionFailed;
+    }
+    auto best = active.front();
+    for (const auto &bridge : active) {
+        if (bridge.reliability > best.reliability) {
+            best = bridge;
+        }
+    }
+    return best;
 }
 
 // Initialization helper methods
