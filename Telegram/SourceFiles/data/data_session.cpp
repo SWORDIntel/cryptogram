@@ -1845,16 +1845,19 @@ void Session::documentLoadFail(
 
 void Session::photoLoadProgress(not_null<PhotoData*> photo) {
 	requestPhotoViewRepaint(photo);
+	_photoLoadProgress.fire_copy(photo);
 }
 
 void Session::photoLoadDone(not_null<PhotoData*> photo) {
 	notifyPhotoLayoutChanged(photo);
+	_photoLoadProgress.fire_copy(photo);
 }
 
 void Session::photoLoadFail(
 		not_null<PhotoData*> photo,
 		bool started) {
 	notifyPhotoLayoutChanged(photo);
+	_photoLoadProgress.fire_copy(photo);
 }
 
 void Session::markMediaRead(not_null<const DocumentData*> document) {
@@ -2208,6 +2211,26 @@ rpl::producer<not_null<const HistoryItem*>> Session::itemRemoved(
 	) | rpl::filter([=](not_null<const HistoryItem*> item) {
 		return (itemId == item->fullId());
 	});
+}
+
+void Session::notifyItemsAboutToBeDestroyed(
+		const std::vector<not_null<HistoryItem*>> &items) {
+	_itemsAboutToBeDestroyed.fire_copy(items);
+}
+
+auto Session::itemsAboutToBeDestroyed() const
+-> rpl::producer<std::vector<not_null<HistoryItem*>>> {
+	return _itemsAboutToBeDestroyed.events();
+}
+
+void Session::notifyViewAboutToBeRemoved(
+		not_null<const ViewElement*> view) {
+	_viewAboutToBeRemoved.fire_copy(view);
+}
+
+rpl::producer<not_null<const ViewElement*>>
+Session::viewAboutToBeRemoved() const {
+	return _viewAboutToBeRemoved.events();
 }
 
 void Session::notifyViewRemoved(not_null<const ViewElement*> view) {
@@ -3179,14 +3202,13 @@ HistoryItem *Session::addNewMessage(
 		return nullptr;
 	}
 
-	if (data.type() == mtpc_message) {
+	if (type == NewMessageType::Unread
+		&& data.type() == mtpc_message) {
 		if (const auto h = historyLoaded(peerId)) {
 			if (const auto streamed = h->streamedDraftsIfExists()) {
 				if (const auto adopted = streamed->adoptIncoming(
 						data.c_message())) {
-					if (type == NewMessageType::Unread) {
-						CheckForSwitchInlineButton(adopted);
-					}
+					CheckForSwitchInlineButton(adopted);
 					return adopted;
 				}
 			}
