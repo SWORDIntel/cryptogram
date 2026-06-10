@@ -152,8 +152,8 @@ bool Controller::IsGoodTonSiteUrl(const QString &uri) {
 }
 
 void Controller::showTonSite(
-		const Webview::StorageId &storageId,
-		QString uri) {
+	const Webview::StorageId& storageId,
+	QString uri) {
 	const auto url = TonsiteToHttps(uri);
 	Assert(!url.isEmpty());
 
@@ -166,12 +166,14 @@ void Controller::showTonSite(
 	}
 	_url = url;
 	_subtitleText = _url.value(
-	) | rpl::filter([=](const QString &url) {
+	) | rpl::filter([=](const QString& url) {
 		return !url.isEmpty() && url != u"about:blank"_q;
-	}) | rpl::map([=](QString value) {
-		return HttpsToTonsite(value);
-	});
-	_windowTitleText = _subtitleText.value();
+		}) | rpl::map([=](QString value) {
+			return HttpsToTonsite(value);
+			});
+		_windowTitleText = _subtitleText.value();
+}
+
 void Controller::showTLViewer(
 	const Webview::StorageId& storageId,
 	QString url) {
@@ -185,9 +187,6 @@ void Controller::showTLViewer(
 	_url = url;
 	_subtitleText = tr::lng_context_view_as_json(tr::now);
 	_windowTitleText = _subtitleText.value();
-	_menuToggle->hide();
-}
-
 }
 
 void Controller::createWindow() {

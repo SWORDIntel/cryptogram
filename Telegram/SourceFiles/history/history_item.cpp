@@ -529,40 +529,47 @@ HistoryItem::HistoryItem(
 
 		createComponents(data, isBlocked);
 
-		auto textWithEntities = TextWithEntities();
-		
-		auto blkMsg = Lang::GetOriginalValue(tr::lng_blocked_user_hint.base);
-		auto msg = blkMsg + qs(data.vmessage());
-
-		if (GetEnhancedBool("blocked_user_spoiler_mode")) {
-			_blockMsg = TextWithEntities{
-					msg,
-					Api::EntitiesFromMTP(
-							&history->session(),
-							data.ventities().value_or_empty(),
-							blkMsg.length(), qs(data.vmessage()).length())
-			};
-
-			_originalMsg = TextWithEntities{
-					qs(data.vmessage()),
-					Api::EntitiesFromMTP(
-							&history->session(),
-							data.ventities().value_or_empty())
-			};
-		}
-
-		if ((GetEnhancedBool("blocked_user_spoiler_mode") && blockExist(peerId.value)) || (GetEnhancedBool("blocked_user_spoiler_mode") && user && user->isBlocked())) {
-			textWithEntities = _blockMsg;
+		if (const auto richMessage = data.vrich_message()) {
+			const auto richPage = Iv::ParseRichPage(&history->session(), *richMessage);
+			setRichPage(richPage);
+			setText(Iv::FlattenRichPageSummary(richPage));
 		} else {
-			textWithEntities = TextWithEntities{
-					qs(data.vmessage()),
-					Api::EntitiesFromMTP(
-							&history->session(),
-							data.ventities().value_or_empty())
-			};
+			auto textWithEntities = TextWithEntities();
+			
+			auto blkMsg = Lang::GetOriginalValue(tr::lng_blocked_user_hint.base);
+			auto msg = blkMsg + qs(data.vmessage());
+
+			if (GetEnhancedBool("blocked_user_spoiler_mode")) {
+				_blockMsg = TextWithEntities{
+						msg,
+						Api::EntitiesFromMTP(
+								&history->session(),
+								data.ventities().value_or_empty(),
+								blkMsg.length(), qs(data.vmessage()).length())
+				};
+
+				_originalMsg = TextWithEntities{
+						qs(data.vmessage()),
+						Api::EntitiesFromMTP(
+								&history->session(),
+								data.ventities().value_or_empty())
+				};
+			}
+
+			if ((GetEnhancedBool("blocked_user_spoiler_mode") && blockExist(peerId.value)) || (GetEnhancedBool("blocked_user_spoiler_mode") && user && user->isBlocked())) {
+				textWithEntities = _blockMsg;
+			} else {
+				textWithEntities = TextWithEntities{
+						qs(data.vmessage()),
+						Api::EntitiesFromMTP(
+								&history->session(),
+								data.ventities().value_or_empty())
+				};
+			}
+
+			setText(_media ? textWithEntities : EnsureNonEmpty(textWithEntities));
 		}
 
-		setText(_media ? textWithEntities : EnsureNonEmpty(textWithEntities));
 		if (const auto groupedId = data.vgrouped_id()) {
 			setGroupId(
 				MessageGroupId::FromRaw(
