@@ -1764,7 +1764,6 @@ void Widget::toggleFiltersMenu(bool enabled) {
 
 		_chatFilters = base::make_unique_q<NoScrollPropagationWidget>(this);
 		const auto raw = _chatFilters.get();
-		const auto idBeforeTabs = controller()->activeChatsFilterCurrent();
 		const auto inner = Ui::AddChatFiltersTabsStrip(
 			_chatFilters.get(),
 			&session(),
@@ -1777,9 +1776,6 @@ void Widget::toggleFiltersMenu(bool enabled) {
 			Window::GifPauseReason::Any,
 			controller(),
 			true);
-		if (controller()->activeChatsFilterCurrent() != idBeforeTabs) {
-			controller()->setActiveChatsFilter(idBeforeTabs);
-		}
 		raw->show();
 		raw->stackUnder(_scroll);
 		raw->resizeToWidth(width());

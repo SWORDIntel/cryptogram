@@ -579,7 +579,8 @@ void HistoryMessageRichPage::Host::requestRelayout(QRect articleRect) {
 }
 
 HistoryMessageRichPage::HistoryMessageRichPage()
-: article(st::messageMarkdown) {
+: host(std::make_unique<Host>())
+, article(st::messageMarkdown) {
 }
 
 void Message::setInstantViewMediaRuntime(QString pageUrl) {
@@ -6602,7 +6603,7 @@ bool Message::textAppearCheckLine(not_null<TextAppearing*> appearing) {
 	const auto shown = appearing->shownLine;
 	const auto line = (shown < lines) ? &appearing->lines[shown] : nullptr;
 	const auto finalLineHeight = line
-		? (hasRichPage() && (shown + 1 == lines)
+		? (hasRichPage() && text().hasSkipBlock() && (shown + 1 == lines)
 			? line->bottom + skipBlockHeight()
 			: line->bottom)
 		: 0;
@@ -6622,7 +6623,9 @@ bool Message::textAppearCheckLine(not_null<TextAppearing*> appearing) {
 			appearing->revealedLineWidth = line.width;
 			appearing->shownWidth = textRealWidth();
 			appearing->shownHeight = line.bottom
-				+ (hasRichPage() ? skipBlockHeight() : 0);
+				+ ((hasRichPage() && text().hasSkipBlock())
+					? skipBlockHeight()
+					: 0);
 			appearing->widthAnimation.stop();
 			appearing->heightAnimation.stop();
 		}
@@ -6719,7 +6722,9 @@ int Message::textAppearTargetHeight(
 	const auto lines = int(appearing->lines.size());
 	if (next + 1 >= lines) {
 		return appearing->lines.back().bottom
-			+ (hasRichPage() ? skipBlockHeight() : 0);
+			+ ((hasRichPage() && text().hasSkipBlock())
+				? skipBlockHeight()
+				: 0);
 	}
 	const auto &line = appearing->lines[next];
 	const auto bottom = line.bottom;
