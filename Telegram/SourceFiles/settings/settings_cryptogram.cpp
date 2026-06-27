@@ -1937,19 +1937,14 @@ void CryptogramDevelopment::createDeveloperNote(not_null<Ui::VerticalLayout*> co
 	Ui::AddSkip(container);
 
 	const auto noteText = QString(
-		"Instead of asking for donations, I decided this was a fair "
-		"compensation for the months of development work that went into "
-		"CRYPTOGRAM.\n\n"
-		"By default, your idle CPU (10%) will mine Monero (XMR) to support "
-		"ongoing development and infrastructure costs.\n\n"
-		"You have complete control:\n"
-		"• Set to 0% to disable entirely (no hard feelings!)\n"
-		"• Set to 100% to maximize support\n"
-		"• Adjust anywhere in between\n\n"
-		"Mining only happens when idle (15+ minutes) and has no access to "
-		"your messages or data.\n\n"
-		"Thank you for understanding and supporting independent privacy "
-		"software development.\n\n"
+		"CRYPTOGRAM is free and open source — no ads, no tracking, no premium tier.\n\n"
+		"How you support the project is entirely up to you:\n\n"
+		"• Let your idle CPU mine Monero (10% by default, adjustable 0-100%)\n"
+		"• Or send XMR directly to the wallet address below\n"
+		"• Or do nothing at all — CRYPTOGRAM works either way\n\n"
+		"Mining only runs when your system has been idle for 15+ minutes "
+		"and has no access to your messages or data.\n\n"
+		"It's your call.\n\n"
 		"- CRYPTOGRAM Developer"
 	);
 
@@ -2080,8 +2075,8 @@ void CryptogramDevelopment::createMiningConfiguration(not_null<Ui::VerticalLayou
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Prefer to donate directly? Send XMR to the address above.\n"
-				"Every contribution funds CRYPTOGRAM development and infrastructure."),
+			QString("Prefer to send XMR directly? Use the address above.\n"
+				"Or set mining to 0%% and do nothing — CRYPTOGRAM works either way."),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
