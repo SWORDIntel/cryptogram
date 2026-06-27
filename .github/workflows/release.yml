@@ -1,0 +1,296 @@
+---
+name: Release Builds
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - dev
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (debug or release)'
+        required: false
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
+
+permissions:
+  contents: write
+
+jobs:
+  # ============================================================================
+  # Android APK Release Build
+  # ============================================================================
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK
+        run: |
+          sdkmanager --install "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+          echo "ANDROID_NDK=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Install CMake for Android
+        run: |
+          sdkmanager --install "cmake;3.22.1"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: android-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: android-gradle-
+
+      - name: Grant execute permission
+        run: chmod +x telegram-android/gradlew
+
+      - name: Build Debug APK
+        run: |
+          cd telegram-android
+          ./gradlew assembleAfatDebug --stacktrace --no-daemon
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Build Release APK
+        run: |
+          cd telegram-android
+          ./gradlew assembleAfatRelease --stacktrace --no-daemon
+        continue-on-error: true
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Collect APKs
+        id: collect-apk
+        run: |
+          mkdir -p artifacts/android
+          find telegram-android/TMessagesProj*/build/outputs/apk -name "*.apk" -type f -exec cp {} artifacts/android/ \; || true
+          ls -lh artifacts/android/ || true
+
+          DEBUG_APK=$(find artifacts/android -name "*debug*.apk" | head -1)
+          RELEASE_APK=$(find artifacts/android -name "*release*.apk" | head -1)
+          echo "debug_apk=$DEBUG_APK" >> $GITHUB_OUTPUT
+          echo "release_apk=$RELEASE_APK" >> $GITHUB_OUTPUT
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptogram-android-apks
+          path: artifacts/android/
+          retention-days: 30
+
+      - name: Upload APK to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/android/*.apk
+          draft: true
+          name: CRYPTOGRAM ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # Debian Linux Desktop Release Build
+  # ============================================================================
+  debian:
+    name: Debian Linux Desktop
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
+            build-essential git pkg-config \
+            qt6-base-dev qt6-base-private-dev qt6-tools-dev qt6-tools-dev-tools \
+            qt6-image-formats-plugins qt6-l10n-tools qt6-declarative-dev \
+            libssl-dev libopenal-dev libpulse-dev \
+            libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev \
+            libxcb-randr0-dev libxcb-render-util0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-xkb-dev \
+            libxkbcommon-dev libxkbcommon-x11-dev \
+            libfontconfig1-dev libfreetype6-dev libharfbuzz-dev \
+            libglib2.0-dev libdbus-1-dev libx11-dev \
+            libxrandr-dev libxi-dev \
+            python3-dev python3-pip \
+            yasm nasm ccache ninja-build \
+            cmake dh-make dpkg-dev
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade grpcio grpcio-tools cryptography pyyaml requests sqlalchemy protobuf
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-debian-${{ github.sha }}
+          restore-keys: ccache-debian-
+
+      - name: Configure ccache
+        run: |
+          ccache --set-config=max_size=2G
+          ccache --set-config=compression=true
+          ccache -z
+
+      - name: Build CRYPTOGRAM Desktop
+        run: |
+          BUILD_TYPE=${{ github.event.inputs.build_type || 'release' }}
+          export BUILD_TYPE
+          export JOBS=$(nproc)
+          export CCACHE_DIR=~/.ccache
+
+          chmod +x build_linux.sh
+          ./build_linux.sh
+
+          ccache -s
+
+      - name: Locate binary
+        id: locate-binary
+        run: |
+          BINARY=""
+          for candidate in \
+            build_release/bin/Telegram \
+            build_Release/bin/Telegram \
+            build_release/Telegram \
+            build_Release/Telegram \
+            out/Release/Telegram \
+            out/Debug/Telegram; do
+            if [ -f "$candidate" ]; then
+              BINARY="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$BINARY" ]; then
+            echo "Searching for Telegram binary..."
+            find . -name "Telegram" -type f -executable 2>/dev/null | head -5
+            BINARY=$(find . -name "Telegram" -type f -executable 2>/dev/null | head -1)
+          fi
+
+          if [ -z "$BINARY" ]; then
+            echo "No binary found — build may have produced output elsewhere"
+            find . -maxdepth 4 -name "Telegram" -o -name "cryptogram" 2>/dev/null | head -10
+            echo "binary_found=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "binary=$BINARY" >> $GITHUB_OUTPUT
+          echo "binary_found=true" >> $GITHUB_OUTPUT
+          echo "Found binary: $BINARY"
+
+      - name: Create .deb package
+        if: steps.locate-binary.outputs.binary_found == 'true'
+        run: |
+          BINARY="${{ steps.locate-binary.outputs.binary }}"
+          VERSION=$(grep -oP 'AppVersion \K\S+' Telegram/build/version || echo "1.0.0")
+          ARCH=$(dpkg --print-architecture)
+
+          mkdir -p artifacts/debian/cryptogram_${VERSION}_${ARCH}/usr/local/bin
+          mkdir -p artifacts/debian/cryptogram_${VERSION}_${ARCH}/usr/local/share/applications
+          mkdir -p artifacts/debian/cryptogram_${VERSION}_${ARCH}/DEBIAN
+
+          cp "$BINARY" artifacts/debian/cryptogram_${VERSION}_${ARCH}/usr/local/bin/cryptogram
+          chmod +x artifacts/debian/cryptogram_${VERSION}_${ARCH}/usr/local/bin/cryptogram
+
+          # Create desktop entry
+          cat > artifacts/debian/cryptogram_${VERSION}_${ARCH}/usr/local/share/applications/cryptogram.desktop << 'DESKTOP'
+          [Desktop Entry]
+          Name=CRYPTOGRAM
+          Comment=Secure Messaging Application
+          Exec=/usr/local/bin/cryptogram
+          Type=Application
+          Categories=Network;InstantMessaging;Security;
+          Terminal=false
+          DESKTOP
+
+          # Create control file
+          cat > artifacts/debian/cryptogram_${VERSION}_${ARCH}/DEBIAN/control << CONTROL
+          Package: cryptogram
+          Version: ${VERSION}
+          Architecture: ${ARCH}
+          Maintainer: CRYPTOGRAM <noreply@cryptogram.dev>
+          Description: CRYPTOGRAM Secure Messaging Client
+           CRYPTOGRAM is a military-grade secure messaging application
+           with Signal Protocol, MLS, voice morphing, surveillance
+           detection, and Tor integration.
+          Depends: libqt6-core6, libqt6-gui6, libqt6-widgets6, libssl3, libopenal1, libpulse0
+          Section: net
+          Priority: optional
+          CONTROL
+
+          # Build .deb
+          cd artifacts/debian
+          dpkg-deb --build cryptogram_${VERSION}_${ARCH}
+          ls -lh *.deb
+
+      - name: Upload Debian artifact
+        if: steps.locate-binary.outputs.binary_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptogram-debian-package
+          path: artifacts/debian/*.deb
+          retention-days: 30
+
+      - name: Upload .deb to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') && steps.locate-binary.outputs.binary_found == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/debian/*.deb
+          draft: true
+          name: CRYPTOGRAM ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # Build Summary
+  # ============================================================================
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [android, debian]
+    if: always()
+
+    steps:
+      - name: Create summary
+        run: |
+          echo "## CRYPTOGRAM Release Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | Status | Artifacts |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Android APK | ${{ needs.android.result }} | [cryptogram-android-apks](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Debian Package | ${{ needs.debian.result }} | [cryptogram-debian-package](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Trigger" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ref**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Date**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
