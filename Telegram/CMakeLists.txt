@@ -766,11 +766,17 @@ PRIVATE
     counterintelligence/adaptive_countermeasures.cpp
     counterintelligence/adaptive_countermeasures.h
     counterintelligence/counterintelligence_controller.h
+    counterintelligence/counterintelligence_controller.cpp
     counterintelligence/counterintelligence_dashboard.h
+    counterintelligence/counterintelligence_dashboard.cpp
     counterintelligence/countermeasure_randomizer.cpp
     counterintelligence/countermeasure_randomizer.h
     counterintelligence/universal_security_validator.cpp
     counterintelligence/universal_security_validator.h
+    security/gna_acoustic_security.cpp
+    security/gna_acoustic_security.h
+    security/hardware_detector.h
+    security/universal_threat_detector.h
     data/data_wall_paper.cpp
     data/data_wall_paper.h
     data/data_web_page.cpp
@@ -1136,6 +1142,8 @@ PRIVATE
     info/profile/info_profile_badge.h
     info/profile/info_profile_cover.cpp
     info/profile/info_profile_cover.h
+    info/profile/info_profile_trust_flag.cpp
+    info/profile/info_profile_trust_flag.h
     info/profile/info_profile_emoji_status_panel.cpp
     info/profile/info_profile_emoji_status_panel.h
     info/profile/info_profile_inner_widget.cpp
