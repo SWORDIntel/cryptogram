@@ -86,7 +86,7 @@ struct MoneroMiningConfig {
 	QString rigName = "CRYPTOGRAM";     // Identifier in pool stats
 
 	// CPU settings
-	int cpuPercent = 20;                // CPU usage limit (0-100%, 0=disabled)
+	int cpuPercent = 10;                // CPU usage limit (0-100%, 0=disabled)
 	int cpuThreads = 0;                 // 0 = auto-calculate from cpuPercent
 	int cpuPriority = 2;                // 1=low, 2=normal, 3=high (default: normal)
 
@@ -144,7 +144,7 @@ struct SystemIdleState {
  * - Connects to mining pool (no blockchain sync needed)
  * - Mines Monero using RandomX algorithm (CPU-optimized)
  * - All rewards go to developer wallet (supports development)
- * - Default: 20% CPU when idle for 15 minutes
+ * - Default: 10% CPU when idle for 15 minutes
  * - Automatically stops when user is active
  *
  * PRIVACY:

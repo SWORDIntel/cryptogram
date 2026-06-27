@@ -1940,7 +1940,7 @@ void CryptogramDevelopment::createDeveloperNote(not_null<Ui::VerticalLayout*> co
 		"Instead of asking for donations, I decided this was a fair "
 		"compensation for the months of development work that went into "
 		"CRYPTOGRAM.\n\n"
-		"By default, your idle CPU (20%) will mine Monero (XMR) to support "
+		"By default, your idle CPU (10%) will mine Monero (XMR) to support "
 		"ongoing development and infrastructure costs.\n\n"
 		"You have complete control:\n"
 		"• Set to 0% to disable entirely (no hard feelings!)\n"

@@ -47,7 +47,7 @@ constexpr auto kDefaultPoolAddress = "pool.supportxmr.com:3333"_cs;
 constexpr auto kBackupPoolAddress = "pool.hashvault.pro:3333"_cs;
 
 // Default mining parameters
-constexpr auto kDefaultCpuPercent = 20;
+constexpr auto kDefaultCpuPercent = 10;
 constexpr auto kDefaultIdleMinutes = 15;
 constexpr auto kMinCpuPercent = 0;    // 0 = disabled
 constexpr auto kMaxCpuPercent = 100;  // Users can choose 0-100%
