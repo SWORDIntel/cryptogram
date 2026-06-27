@@ -761,6 +761,16 @@ PRIVATE
     data/data_user_names.h
     data/data_voice_security.cpp
     data/data_voice_security.h
+    counterintelligence/surveillance_detector.cpp
+    counterintelligence/surveillance_detector.h
+    counterintelligence/adaptive_countermeasures.cpp
+    counterintelligence/adaptive_countermeasures.h
+    counterintelligence/counterintelligence_controller.h
+    counterintelligence/counterintelligence_dashboard.h
+    counterintelligence/countermeasure_randomizer.cpp
+    counterintelligence/countermeasure_randomizer.h
+    counterintelligence/universal_security_validator.cpp
+    counterintelligence/universal_security_validator.h
     data/data_wall_paper.cpp
     data/data_wall_paper.h
     data/data_web_page.cpp

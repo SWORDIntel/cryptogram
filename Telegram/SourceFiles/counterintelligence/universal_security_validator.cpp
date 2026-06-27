@@ -1,5 +1,9 @@
 #include "universal_security_validator.h"
+#ifdef __has_include
+#if __has_include("../hardware/npu_acoustic_engine.h")
 #include "../hardware/npu_acoustic_engine.h"
+#endif
+#endif
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
 #include <QtCore/QMutexLocker>
@@ -348,8 +352,11 @@ bool UniversalSecurityValidator::detectGNACapability() {
 }
 
 bool UniversalSecurityValidator::detectNPUCapability() {
-    // Use the NPUAcousticEngine's availability check
+#ifdef SPYGRAM_NPU_AVAILABLE
     return SpyGram::Hardware::NPUAcousticEngine::isAvailable();
+#else
+    return false;
+#endif
 }
 
 bool UniversalSecurityValidator::detectTPMCapability() {

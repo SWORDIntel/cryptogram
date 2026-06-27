@@ -7,7 +7,11 @@
 #include <QtNetwork/QNetworkInterface>
 #include <cmath>
 #include <algorithm>
+#ifdef __has_include
+#if __has_include(<fftw3.h>)
 #include <fftw3.h>  // For frequency analysis - fallback to Qt if not available
+#endif
+#endif
 
 #ifdef SPYGRAM_GNA_AVAILABLE
 #include "../hardware/gna_acoustic_engine.h"

@@ -1117,16 +1117,28 @@ void CryptogramOPSEC::setupQuantumGuardSection(not_null<Ui::VerticalLayout*> con
 			break;
 		}
 
+		auto qhwEngine = std::make_unique<Data::OpenVINOTranslation>();
+		qhwEngine->initialize();
+		QString hwReadiness;
+		if (qhwEngine->isDeviceAvailable(Data::OpenVINODevice::NPU)) {
+			hwReadiness = "NPU-ACCELERATED";
+		} else if (qhwEngine->isDeviceAvailable(Data::OpenVINODevice::GPU)) {
+			hwReadiness = "GPU-ACCELERATED";
+		} else {
+			hwReadiness = "CPU (Software)";
+		}
+
 		_controller->show(Ui::MakeInformBox(
 			QString("Quantum Vulnerability Report\n\n"
 				"• Current Security Level: %1\n"
 				"• Global Threat Level: MODERATE\n"
 				"• Migration Status: HYBRID TRANSITION\n"
 				"• Recommended: %2\n"
-				"• Hardware Readiness: GNA-ACCELERATED\n"
-				"• Estimated Protection: %3")
+				"• Hardware Readiness: %3\n"
+				"• Estimated Protection: %4")
 				.arg(levelStr)
 				.arg(recommended)
+				.arg(hwReadiness)
 				.arg(protection)));
 	});
 
@@ -1797,17 +1809,29 @@ void CryptogramOPSEC::setupSurveillanceSection(not_null<Ui::VerticalLayout*> con
 		else if (threshold <= 75) sensitivityStr = "High";
 		else sensitivityStr = "Maximum";
 
+		auto utdEngine = std::make_unique<Data::OpenVINOTranslation>();
+		utdEngine->initialize();
+		QString tierStr;
+		if (utdEngine->isDeviceAvailable(Data::OpenVINODevice::NPU)) {
+			tierStr = "Tier 1 (NPU Accelerated)";
+		} else if (utdEngine->isDeviceAvailable(Data::OpenVINODevice::GPU)) {
+			tierStr = "Tier 2 (GPU Accelerated)";
+		} else {
+			tierStr = "Tier 3 (CPU)";
+		}
+
 		_controller->show(Ui::MakeInformBox(
 			QString("Universal Threat Detector Status\n\n"
 				"• Engine: %1\n"
 				"• Sensitivity: %2 (%3%)\n"
-				"• Current Tier: Tier 1 (NPU Accelerated)\n"
+				"• Current Tier: %4\n"
 				"• Model: cryptogram-utd-v2.1-heavy\n"
 				"• DB Version: 20260404-01\n"
-				"• Real-time scan: %4")
+				"• Real-time scan: %5")
 				.arg(enabled ? "Active (AI-Powered)" : "DISABLED")
 				.arg(sensitivityStr)
 				.arg(threshold)
+				.arg(tierStr)
 				.arg(enabled ? "ENABLED" : "DISABLED")));
 	});
 
@@ -1823,8 +1847,8 @@ void CryptogramOPSEC::setupSurveillanceSection(not_null<Ui::VerticalLayout*> con
 		container,
 		rpl::single(QString(
 			"Protect your acoustic privacy during voice calls. Voice morphing transforms "
-			"your voice in real-time using Intel GNA hardware to prevent biometric "
-			"identification. Acoustic monitoring detects room microphones and ultrasonic beacons."
+			"your voice in real-time to prevent biometric identification. "
+			"Acoustic monitoring detects room microphones and ultrasonic beacons."
 		))
 	);
 
@@ -2825,14 +2849,21 @@ void CryptogramSecurity::createHardwareSettings(not_null<Ui::VerticalLayout*> co
 			st::settingsCheckbox),
 		st::settingsCheckboxPadding);
 
-	container->add(
-		object_ptr<Ui::Radiobutton>(
-			container,
-			deviceGroup,
-			2, // NPU
-			QString("NPU (AI Accelerator)"),
-			st::settingsCheckbox),
-		st::settingsCheckboxPadding);
+	// Only show NPU option if hardware is detected
+	auto hwEngine = std::make_unique<Data::OpenVINOTranslation>();
+	hwEngine->initialize();
+	const auto npuAvailable = hwEngine->isDeviceAvailable(Data::OpenVINODevice::NPU);
+
+	if (npuAvailable) {
+		container->add(
+			object_ptr<Ui::Radiobutton>(
+				container,
+				deviceGroup,
+				2, // NPU
+				QString("NPU (AI Accelerator)"),
+				st::settingsCheckbox),
+			st::settingsCheckboxPadding);
+	}
 
 	deviceGroup->setChangedCallback([=](int value) {
 		settings->setTranslationDevice(value);

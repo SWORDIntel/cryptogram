@@ -874,86 +874,263 @@ QByteArray VoiceSecurityManager::processWithCPU(const QByteArray &data) {
 }
 
 QByteArray VoiceSecurityManager::applyPitchShift(const QByteArray &data, float shift) {
-    // In a real implementation, this would use a DSP library to shift pitch
-    // This is a placeholder that doesn't actually process the audio
-    
-    // Create a safe copy of the data
-    QByteArray result = data;
-    
-    // Simulate pitch shifting with byte manipulation (NOT REAL PROCESSING)
-    // A real implementation would use a proper DSP algorithm
-    if (shift != 0.0f && !data.isEmpty()) {
-        // This is just to simulate processing, not actual pitch shifting!
-        const int step = qMax(1, static_cast<int>(data.size() / 100));
-        const int offset = static_cast<int>(shift * 10) % step;
-        
-        for (int i = step; i < data.size(); i += step) {
-            const int pos = qBound(0, i + offset, data.size() - 1);
-            if (pos < data.size()) {
-                result[i] = data[pos];
+    if (shift == 0.0f || data.isEmpty()) {
+        return data;
+    }
+
+    // Interpret as 16-bit signed PCM mono
+    const auto *samples = reinterpret_cast<const int16_t*>(data.constData());
+    const int numSamples = data.size() / sizeof(int16_t);
+    if (numSamples < 64) {
+        return data;
+    }
+
+    // Pitch shift factor: shift in range [-1.0, 1.0] maps to [0.5x, 2.0x]
+    const float factor = std::exp(shift * 0.69314718f); // ln(2) ≈ 0.693
+
+    // Step 1: Resample (changes pitch AND speed)
+    const int resampledLen = static_cast<int>(numSamples / factor);
+    if (resampledLen < 1) return data;
+
+    std::vector<int16_t> resampled(resampledLen);
+    for (int i = 0; i < resampledLen; ++i) {
+        const float srcPos = i * factor;
+        const int idx0 = static_cast<int>(srcPos);
+        const int idx1 = std::min(idx0 + 1, numSamples - 1);
+        const float frac = srcPos - idx0;
+        const float val = samples[idx0] * (1.0f - frac) + samples[idx1] * frac;
+        resampled[i] = static_cast<int16_t>(std::clamp(val, -32768.0f, 32767.0f));
+    }
+
+    // Step 2: WSOLA to restore original duration (overlap-add with cross-correlation)
+    const int frameSize = 512;
+    const int hopSize = frameSize / 2;
+    const int searchRange = hopSize / 2;
+
+    std::vector<float> output(numSamples, 0.0f);
+    std::vector<float> window(frameSize);
+    // Hann window
+    for (int i = 0; i < frameSize; ++i) {
+        window[i] = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (frameSize - 1)));
+    }
+
+    int readPos = 0;
+    int writePos = 0;
+
+    while (writePos + frameSize <= numSamples) {
+        // Find best overlap position via cross-correlation
+        float bestCorr = -1.0f;
+        int bestOffset = 0;
+        for (int delta = -searchRange; delta <= searchRange; ++delta) {
+            const int candidatePos = readPos + delta;
+            if (candidatePos < 0 || candidatePos + frameSize > resampledLen) continue;
+            float corr = 0.0f;
+            for (int i = 0; i < frameSize; ++i) {
+                corr += window[i] * resampled[candidatePos + i] * output[writePos + i];
+            }
+            if (corr > bestCorr) {
+                bestCorr = corr;
+                bestOffset = delta;
             }
         }
+
+        const int synchPos = readPos + bestOffset;
+        for (int i = 0; i < frameSize; ++i) {
+            if (synchPos + i < resampledLen && writePos + i < numSamples) {
+                output[writePos + i] += window[i] * resampled[synchPos + i];
+            }
+        }
+
+        readPos += hopSize;
+        writePos += hopSize;
     }
-    
+
+    // Convert back to QByteArray
+    QByteArray result(numSamples * sizeof(int16_t), Qt::Uninitialized);
+    auto *out = reinterpret_cast<int16_t*>(result.data());
+    for (int i = 0; i < numSamples; ++i) {
+        out[i] = static_cast<int16_t>(std::clamp(output[i], -32768.0f, 32767.0f));
+    }
+
     return result;
 }
 
 QByteArray VoiceSecurityManager::applyFormantShift(const QByteArray &data, int shift) {
-    // Placeholder implementation - real code would use a DSP library
-    // Formant shifting requires spectral processing
-    
-    // Create a safe copy of the data
-    QByteArray result = data;
-    
-    // Simulate formant shifting (NOT REAL PROCESSING)
-    if (shift != 0 && !data.isEmpty()) {
-        // This is just to simulate processing, not actual formant shifting!
-        const int formantRegions = 5;
-        const int regionSize = data.size() / formantRegions;
-        
-        for (int region = 0; region < formantRegions; region++) {
-            const int start = region * regionSize;
-            const int end = qMin((region + 1) * regionSize, data.size());
-            const int offset = shift % regionSize;
-            
-            for (int i = start; i < end; i++) {
-                const int pos = qBound(start, i + offset, end - 1);
-                if (i != pos && pos < data.size()) {
-                    // Blend original and shifted data
-                    const auto original = static_cast<unsigned char>(data[i]);
-                    const auto shifted = static_cast<unsigned char>(data[pos]);
-                    result[i] = static_cast<char>((original * 3 + shifted) / 4);
-                }
+    if (shift == 0 || data.isEmpty()) {
+        return data;
+    }
+
+    // Interpret as 16-bit signed PCM mono
+    const auto *samples = reinterpret_cast<const int16_t*>(data.constData());
+    const int numSamples = data.size() / sizeof(int16_t);
+    if (numSamples < 128) {
+        return data;
+    }
+
+    // Formant shift factor: shift of 1 = +1 semitone, -1 = -1 semitone
+    const float factor = std::pow(2.0f, shift / 12.0f);
+
+    // Process in overlapping frames using LPC residual + spectral envelope scaling
+    const int frameSize = 512;
+    const int hopSize = frameSize / 4;
+    const int lpcOrder = 12;
+
+    std::vector<float> output(numSamples, 0.0f);
+    std::vector<float> window(frameSize);
+    for (int i = 0; i < frameSize; ++i) {
+        window[i] = 0.5f * (1.0f - std::cos(2.0f * M_PI * i / (frameSize - 1)));
+    }
+
+    for (int start = 0; start + frameSize <= numSamples; start += hopSize) {
+        // Window the frame
+        std::vector<float> frame(frameSize);
+        for (int i = 0; i < frameSize; ++i) {
+            frame[i] = samples[start + i] * window[i];
+        }
+
+        // Compute LPC coefficients via Levinson-Durbin recursion
+        // Autocorrelation
+        std::vector<float> autocorr(lpcOrder + 1, 0.0f);
+        for (int lag = 0; lag <= lpcOrder; ++lag) {
+            for (int i = lag; i < frameSize; ++i) {
+                autocorr[lag] += frame[i] * frame[i - lag];
             }
         }
+
+        if (autocorr[0] < 1e-6f) continue;
+
+        // Levinson-Durbin
+        std::vector<float> lpc(lpcOrder + 1, 0.0f);
+        std::vector<float> reflection(lpcOrder, 0.0f);
+        lpc[0] = 1.0f;
+        float err = autocorr[0];
+
+        for (int m = 0; m < lpcOrder; ++m) {
+            float acc = autocorr[m + 1];
+            for (int j = 0; j < m; ++j) {
+                acc += lpc[j + 1] * autocorr[m - j];
+            }
+            if (err < 1e-10f) break;
+            reflection[m] = -acc / err;
+            lpc[m + 1] = reflection[m];
+            for (int j = 0; j < m; ++j) {
+                const float tmp = lpc[j + 1];
+                lpc[j + 1] = tmp + reflection[m] * lpc[m - j];
+            }
+            err *= (1.0f - reflection[m] * reflection[m]);
+        }
+
+        // Compute residual (inverse filter)
+        std::vector<float> residual(frameSize, 0.0f);
+        for (int i = 0; i < frameSize; ++i) {
+            float pred = 0.0f;
+            for (int j = 1; j <= lpcOrder && j <= i; ++j) {
+                pred += lpc[j] * frame[i - j];
+            }
+            residual[i] = frame[i] - pred;
+        }
+
+        // Scale the spectral envelope by warping LPC coefficients
+        // Simple approach: scale the residual by the inverse factor,
+        // then re-filter with modified LPC to shift formants
+        // For a basic implementation, we scale residual energy and
+        // apply a frequency-domain envelope shift via resampling the residual
+        const int resampledLen = static_cast<int>(frameSize / factor);
+        std::vector<float> warpedResidual(frameSize, 0.0f);
+        for (int i = 0; i < frameSize; ++i) {
+            const float srcPos = i * factor;
+            const int idx0 = static_cast<int>(srcPos);
+            const int idx1 = std::min(idx0 + 1, frameSize - 1);
+            const float frac = srcPos - idx0;
+            warpedResidual[i] = residual[idx0] * (1.0f - frac) + residual[idx1] * frac;
+        }
+
+        // Re-synthesize: filter the warped residual through the original LPC
+        std::vector<float> synthesized(frameSize, 0.0f);
+        for (int i = 0; i < frameSize; ++i) {
+            float val = warpedResidual[i];
+            for (int j = 1; j <= lpcOrder && j <= i; ++j) {
+                val -= lpc[j] * synthesized[i - j];
+            }
+            synthesized[i] = val;
+        }
+
+        // Overlap-add
+        for (int i = 0; i < frameSize; ++i) {
+            output[start + i] += synthesized[i] * window[i];
+        }
     }
-    
+
+    // Normalize to prevent clipping
+    float maxVal = 0.0f;
+    for (int i = 0; i < numSamples; ++i) {
+        maxVal = std::max(maxVal, std::abs(output[i]));
+    }
+    const float normScale = (maxVal > 32767.0f) ? 32767.0f / maxVal : 1.0f;
+
+    QByteArray result(numSamples * sizeof(int16_t), Qt::Uninitialized);
+    auto *out = reinterpret_cast<int16_t*>(result.data());
+    for (int i = 0; i < numSamples; ++i) {
+        out[i] = static_cast<int16_t>(std::clamp(output[i] * normScale, -32768.0f, 32767.0f));
+    }
+
     return result;
 }
 
 QByteArray VoiceSecurityManager::applyTimbreChange(const QByteArray &data, float change) {
-    // Placeholder implementation - real code would use a DSP library
-    // Timbre changing requires spectral processing
-    
-    // Create a safe copy of the data
-    QByteArray result = data;
-    
-    // Simulate timbre change (NOT REAL PROCESSING)
-    if (change != 0.0f && !data.isEmpty()) {
-        // This is just to simulate processing, not actual timbre changing!
-        const int step = qMax(1, static_cast<int>(data.size() / 200));
-        
-        for (int i = 0; i < data.size() - step; i += step) {
-            // Simple EQ-like modification
-            if (i + step < data.size()) {
-                const auto v1 = static_cast<unsigned char>(data[i]);
-                const auto v2 = static_cast<unsigned char>(data[i + step]);
-                const auto blend = static_cast<char>((v1 * (1.0f - change) + v2 * change));
-                result[i] = blend;
-            }
+    if (change == 0.0f || data.isEmpty()) {
+        return data;
+    }
+
+    // Interpret as 16-bit signed PCM mono
+    const auto *samples = reinterpret_cast<const int16_t*>(data.constData());
+    const int numSamples = data.size() / sizeof(int16_t);
+    if (numSamples < 64) {
+        return data;
+    }
+
+    // Apply a simple spectral tilt modification using a first-order pre-emphasis filter
+    // change > 0: brighten (boost high frequencies)
+    // change < 0: darken (boost low frequencies)
+    const float alpha = std::clamp(change, -0.95f, 0.95f);
+
+    std::vector<float> output(numSamples);
+    output[0] = samples[0];
+
+    // Apply pre-emphasis: y[n] = x[n] + alpha * x[n-1] (brightens)
+    // Or de-emphasis: y[n] = x[n] - alpha * x[n-1] (darkens)
+    if (change > 0.0f) {
+        for (int i = 1; i < numSamples; ++i) {
+            output[i] = samples[i] + alpha * samples[i - 1];
+        }
+    } else {
+        for (int i = 1; i < numSamples; ++i) {
+            output[i] = samples[i] + alpha * samples[i - 1];
         }
     }
-    
+
+    // Apply a simple one-pole low-pass/high-pass shelving filter
+    // For brightening: high-shelf boost; for darkening: low-shelf boost
+    const float cutoff = 0.3f; // normalized frequency
+    const float filterCoeff = (change > 0.0f)
+        ? std::exp(-2.0f * M_PI * cutoff)  // high-pass emphasis
+        : std::exp(-2.0f * M_PI * (1.0f - cutoff)); // low-pass emphasis
+
+    std::vector<float> filtered(numSamples);
+    filtered[0] = output[0];
+    for (int i = 1; i < numSamples; ++i) {
+        filtered[i] = output[i] + filterCoeff * (filtered[i - 1] - output[i]);
+    }
+
+    // Blend original and filtered based on change amount
+    const float blend = std::abs(change);
+    QByteArray result(numSamples * sizeof(int16_t), Qt::Uninitialized);
+    auto *out = reinterpret_cast<int16_t*>(result.data());
+    for (int i = 0; i < numSamples; ++i) {
+        const float val = output[i] * (1.0f - blend) + filtered[i] * blend;
+        out[i] = static_cast<int16_t>(std::clamp(val, -32768.0f, 32767.0f));
+    }
+
     return result;
 }
 
