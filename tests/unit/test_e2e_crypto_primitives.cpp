@@ -25,6 +25,16 @@ static std::vector<unsigned char> randomBytes(int size) {
 	return buf;
 }
 
+static EVP_PKEY *generateKey(int type) {
+	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(type, nullptr);
+	REQUIRE(ctx != nullptr);
+	REQUIRE(EVP_PKEY_keygen_init(ctx) == 1);
+	EVP_PKEY *key = nullptr;
+	REQUIRE(EVP_PKEY_keygen(ctx, &key) == 1);
+	EVP_PKEY_CTX_free(ctx);
+	return key;
+}
+
 static std::vector<unsigned char> sha256(const std::vector<unsigned char> &data) {
 	std::vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
 	SHA256(data.data(), data.size(), hash.data());
@@ -35,7 +45,7 @@ static std::vector<unsigned char> sha256(const std::vector<unsigned char> &data)
 
 TEST_CASE("X25519 key exchange produces shared secret", "[crypto][e2e]") {
 	// Generate Alice's key pair
-	EVP_PKEY *aliceKey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, nullptr, 0);
+	EVP_PKEY *aliceKey = generateKey(EVP_PKEY_X25519);
 	REQUIRE(aliceKey != nullptr);
 
 	size_t alicePrivLen = 0;
@@ -49,7 +59,7 @@ TEST_CASE("X25519 key exchange produces shared secret", "[crypto][e2e]") {
 	REQUIRE(EVP_PKEY_get_raw_public_key(aliceKey, alicePub.data(), &alicePubLen) == 1);
 
 	// Generate Bob's key pair
-	EVP_PKEY *bobKey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, nullptr, 0);
+	EVP_PKEY *bobKey = generateKey(EVP_PKEY_X25519);
 	REQUIRE(bobKey != nullptr);
 
 	size_t bobPubLen = 0;
@@ -58,7 +68,7 @@ TEST_CASE("X25519 key exchange produces shared secret", "[crypto][e2e]") {
 	REQUIRE(EVP_PKEY_get_raw_public_key(bobKey, bobPub.data(), &bobPubLen) == 1);
 
 	// Derive shared secret on Alice's side
-	EVP_PKEY *bobPubKey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, bobPub.data(), bobPubLen);
+	EVP_PKEY *bobPubKey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, bobPub.data(), bobPubLen);
 	REQUIRE(bobPubKey != nullptr);
 
 	EVP_PKEY_CTX *deriveCtx = EVP_PKEY_CTX_new(aliceKey, nullptr);
@@ -75,7 +85,7 @@ TEST_CASE("X25519 key exchange produces shared secret", "[crypto][e2e]") {
 	EVP_PKEY_free(bobPubKey);
 
 	// Derive shared secret on Bob's side
-	EVP_PKEY *alicePubKey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, alicePub.data(), alicePubLen);
+	EVP_PKEY *alicePubKey = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, alicePub.data(), alicePubLen);
 	REQUIRE(alicePubKey != nullptr);
 
 	deriveCtx = EVP_PKEY_CTX_new(bobKey, nullptr);
@@ -98,7 +108,7 @@ TEST_CASE("X25519 key exchange produces shared secret", "[crypto][e2e]") {
 
 TEST_CASE("X25519 different key pairs produce different shared secrets", "[crypto][e2e]") {
 	auto generatePair = [](std::vector<unsigned char> &priv, std::vector<unsigned char> &pub) {
-		EVP_PKEY *key = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, nullptr, 0);
+		EVP_PKEY *key = generateKey(EVP_PKEY_X25519);
 		REQUIRE(key != nullptr);
 		size_t privLen = 0, pubLen = 0;
 		EVP_PKEY_get_raw_private_key(key, nullptr, &privLen);
@@ -122,7 +132,7 @@ TEST_CASE("X25519 different key pairs produce different shared secrets", "[crypt
 	auto deriveShared = [](const std::vector<unsigned char> &priv,
 			       const std::vector<unsigned char> &peerPub) {
 		EVP_PKEY *pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, nullptr, priv.data(), priv.size());
-		EVP_PKEY *peer = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, peerPub.data(), peerPub.size());
+		EVP_PKEY *peer = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr, peerPub.data(), peerPub.size());
 		EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, nullptr);
 		EVP_PKEY_derive_init(ctx);
 		EVP_PKEY_derive_set_peer(ctx, peer);
@@ -145,7 +155,7 @@ TEST_CASE("X25519 different key pairs produce different shared secrets", "[crypt
 
 TEST_CASE("Ed25519 sign and verify round-trip", "[crypto][e2e]") {
 	// Generate key pair
-	EVP_PKEY *key = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, nullptr, nullptr, 0);
+	EVP_PKEY *key = generateKey(EVP_PKEY_ED25519);
 	REQUIRE(key != nullptr);
 
 	size_t pubLen = 0;
@@ -169,7 +179,7 @@ TEST_CASE("Ed25519 sign and verify round-trip", "[crypto][e2e]") {
 	EVP_PKEY_free(key);
 
 	// Verify
-	EVP_PKEY *pubKeyObj = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, pubKey.data(), pubLen);
+	EVP_PKEY *pubKeyObj = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, nullptr, pubKey.data(), pubLen);
 	REQUIRE(pubKeyObj != nullptr);
 
 	mdCtx = EVP_MD_CTX_new();
@@ -183,7 +193,7 @@ TEST_CASE("Ed25519 sign and verify round-trip", "[crypto][e2e]") {
 }
 
 TEST_CASE("Ed25519 signature verification fails on tampered message", "[crypto][e2e]") {
-	EVP_PKEY *key = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, nullptr, nullptr, 0);
+	EVP_PKEY *key = generateKey(EVP_PKEY_ED25519);
 	REQUIRE(key != nullptr);
 
 	size_t pubLen = 0;
@@ -205,7 +215,7 @@ TEST_CASE("Ed25519 signature verification fails on tampered message", "[crypto][
 
 	// Tamper with message
 	auto tampered = std::string("Tampered message");
-	EVP_PKEY *pubKeyObj = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, pubKey.data(), pubLen);
+	EVP_PKEY *pubKeyObj = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, nullptr, pubKey.data(), pubLen);
 	mdCtx = EVP_MD_CTX_new();
 	EVP_DigestVerifyInit(mdCtx, nullptr, nullptr, nullptr, pubKeyObj);
 	int result = EVP_DigestVerify(mdCtx, signature.data(), sigLen,
@@ -277,10 +287,10 @@ TEST_CASE("AES-256-GCM fails with wrong AAD", "[crypto][e2e]") {
 	EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
 	EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr);
 	EVP_EncryptInit_ex(ctx, nullptr, nullptr, key.data(), iv.data());
+	int len = 0;
 	EVP_EncryptUpdate(ctx, nullptr, &len, reinterpret_cast<const unsigned char*>(aad.data()), aad.size());
 
 	std::vector<unsigned char> ciphertext(plaintext.size());
-	int len = 0;
 	EVP_EncryptUpdate(ctx, ciphertext.data(), &len,
 		reinterpret_cast<const unsigned char*>(plaintext.data()), plaintext.size());
 	int totalLen = len;
@@ -333,7 +343,6 @@ TEST_CASE("AES-256-GCM fails with wrong key", "[crypto][e2e]") {
 	ctx = EVP_CIPHER_CTX_new();
 	EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), nullptr, nullptr, nullptr);
 	EVP_DecryptInit_ex(ctx, nullptr, nullptr, wrongKey.data(), iv.data());
-	EVP_DecryptUpdate(ctx, decrypted.data(), &len, ciphertext.data(), totalLen);
 
 	std::vector<unsigned char> decrypted(plaintext.size());
 	EVP_DecryptUpdate(ctx, decrypted.data(), &len, ciphertext.data(), totalLen);

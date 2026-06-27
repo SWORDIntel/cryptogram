@@ -199,6 +199,6 @@ TEST_CASE("E2E: Settings cryptogram has OPSEC sections", "[ci][e2e][settings]") 
 	REQUIRE_FALSE(content.empty());
 
 	// Verify key feature sections are present
-	REQUIRE(containsPattern(content, "Signal") || containsPattern(content, "DoubleRatchet") || containsPattern(content, "doubleRatchet"));
-	REQUIRE(containsPattern(content, "MLS") || containsPattern(content, "mls"));
+	REQUIRE((containsPattern(content, "Signal") || containsPattern(content, "DoubleRatchet") || containsPattern(content, "doubleRatchet")));
+	REQUIRE((containsPattern(content, "MLS") || containsPattern(content, "mls")));
 }

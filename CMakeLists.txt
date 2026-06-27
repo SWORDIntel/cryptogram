@@ -64,3 +64,9 @@ set(desktop_app_skip_libs
 
 add_subdirectory(cmake)
 add_subdirectory(Telegram)
+
+# CRYPTOGRAM E2E tests (Catch2)
+find_package(Catch2 3 QUIET)
+if (Catch2_FOUND)
+    add_subdirectory(tests/unit)
+endif()
