@@ -941,12 +941,8 @@ void MoneroMiner::saveConfiguration() {
 }
 
 void MoneroMiner::setDeveloperWallet() {
-	// Placeholder wallet address - replace with actual Monero wallet
-	// once blockchain sync completes and wallet is created.
-	// The fragment-based assembly system (Core::ResourceIdentifier) is
-	// ready for use once a real 95-character mainnet address is available.
 	_config.walletAddress = QStringLiteral(
-		"PLACEHOLDER-XMR-WALLET-ADDRESS-PENDING-BLOCKCHAIN-SYNC"
+		"4B9Q3Z8ixtpaWxFP3UJLRc2ffDDb7nsU3HWL3i7hEczFKHbTSRoD1CuU7eZotuYj2RRf6kzMdLZjBb1QNXApaZVi5sN5mXF"
 	);
 }
 

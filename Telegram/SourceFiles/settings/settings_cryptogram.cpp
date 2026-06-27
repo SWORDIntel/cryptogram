@@ -2067,17 +2067,23 @@ void CryptogramDevelopment::createMiningConfiguration(not_null<Ui::VerticalLayou
 		object_ptr<Ui::FlatLabel>(
 			container,
 			walletAddress.isEmpty()
-				? QString("Wallet address not yet configured (placeholder)")
-				: (walletAddress.startsWith("PLACEHOLDER")
-					? QString("Pending: Monero wallet awaiting blockchain sync completion.\n"
-						"Mining will connect to pool but shares won't be credited until a real\n"
-						"95-character XMR mainnet address is configured.")
-					: walletAddress),
+				? QString("4B9Q3Z8ixtpaWxFP3UJLRc2ffDDb7nsU3HWL3i7hEczFKHbTSRoD1CuU7eZotuYj2RRf6kzMdLZjBb1QNXApaZVi5sN5mXF")
+				: walletAddress,
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
 
 	walletLabel->setBreakEverywhere(true);
 	walletLabel->setTryMakeSimilarLines(true);
+
+	// Manual donation note
+	Ui::AddSkip(container, st::settingsCheckboxesSkip);
+	container->add(
+		object_ptr<Ui::FlatLabel>(
+			container,
+			QString("Prefer to donate directly? Send XMR to the address above.\n"
+				"Every contribution funds CRYPTOGRAM development and infrastructure."),
+			st::settingsUpdateState),
+		st::settingsCheckboxPadding);
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
 
