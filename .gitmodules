@@ -106,6 +106,9 @@
 [submodule "Telegram/ThirdParty/cld3"]
 	path = Telegram/ThirdParty/cld3
 	url = https://github.com/google/cld3.git
+[submodule "Telegram/ThirdParty/dispatch"]
+	path = Telegram/ThirdParty/dispatch
+	url = https://github.com/apple/swift-corelibs-libdispatch
 [submodule "Telegram/lib_translate"]
 	path = Telegram/lib_translate
 	url = https://github.com/desktop-app/lib_translate
