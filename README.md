@@ -53,7 +53,7 @@ All advanced security features are configurable via the **CRYPTOGRAM Settings** 
 | **Hardware Failsafes** | Panic Password (Secure Erase), USB/Smartcard Tether |
 | **Identity & Trust** | CAC/PIV Smartcard Integration, ZK Authentication |
 | **Data Isolation** | IMAP Protection Shield (Protocol-level data masking) |
-| **Development** | Monero Mining (CPU controlled), OpenVINO AI Optimization, Middle Finger Bot |
+| **Development** | Monero Mining (CPU controlled), OpenVINO AI Optimization |
 
 ## CI/CD — GitHub Actions
 
