@@ -98,3 +98,9 @@ debian/debhelper-build-stamp
 debian/files
 debian/*.substvars
 cryptogram.keystore
+
+# AI/IDE tooling artifacts (local only, not tracked)
+.agents/
+.claude/
+.devin/
+.cursorignore
