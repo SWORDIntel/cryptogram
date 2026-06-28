@@ -304,9 +304,7 @@ SystemMediaControlsManager::SystemMediaControlsManager()
 		) | rpl::filter([](Media::Player::Instance::Seeking seeking) {
 			return (seeking == Media::Player::Instance::Seeking::Finish);
 		}) | rpl::map([=] {
-			const auto type = mediaPlayer->current(AudioMsgId::Type::Song)
-				? AudioMsgId::Type::Song
-				: AudioMsgId::Type::Voice;
+			const auto type = mediaPlayer->getActiveType();
 			return mediaPlayer->getState(type).position;
 		}) | rpl::distinct_until_changed(
 		) | rpl::on_next([=](int position) {

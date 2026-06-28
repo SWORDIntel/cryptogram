@@ -24,6 +24,8 @@ namespace Core {
 namespace {
 
 constexpr auto kInitialVideoQuality = 480; // Start with SD.
+constexpr auto kMinIvZoom = 25;
+constexpr auto kMaxIvZoom = 400;
 
 [[nodiscard]] WindowPosition Deserialize(const QByteArray &data) {
 	QDataStream stream(data);
