@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
 
@@ -1683,33 +1683,8 @@ ContextMenuRequest::ContextMenuRequest(
 : navigation(navigation) {
 }
 
-void AddCanaryActions(
-		not_null<Ui::PopupMenu*> menu,
-		const ContextMenuRequest &request,
-		not_null<ListWidget*> list) {
-	const auto item = request.item;
-	if (!item) {
-		return;
-	}
-
-	auto submenuPtr = std::make_unique<Ui::PopupMenu>(list, st::popupMenuWithIcons);
-	auto submenu = submenuPtr.get();
-	menu->addAction(QString("OPSEC: Canary & Honeypot"), std::move(submenuPtr), &st::menuIconPermissions);
-
-	submenu->addAction(QString("Deploy Canary Link"), [=] {
-		Ui::Toast::Show(QString("Canary Token Deployed\n\n"
-				"A unique tracking URL has been embedded. You will receive a "
-				"notification if this link is accessed by an unauthorized party."));
-	}, &st::menuIconLink);
-
-	submenu->addAction(QString("Create Chat Honeypot"), [=] {
-		Ui::Toast::Show(QString("Honeypot Initialized\n\n"
-				"Believable decoy data has been generated for this chat. "
-				"The system will monitor for suspicious access patterns."));
-	}, &st::menuIconInvite);
-}
-
-base::unique_qptr<Ui::PopupMenu> FillContextMenu(
+void FillContextMenuItems(
+		not_null<Ui::PopupMenu*> result,
 		not_null<ListWidget*> list,
 		const ContextMenuRequest &request,
 		bool skipWhoReacted = false) {
@@ -1797,7 +1772,6 @@ base::unique_qptr<Ui::PopupMenu> FillContextMenu(
 	}
 
 	AddTopMessageActions(result, request, list);
-	AddCanaryActions(result, request, list);
 	if (lnkPhoto && request.selectedItems.empty()) {
 		AddPhotoActions(result, lnkPhoto, item, list);
 	} else if (lnkDocument) {
@@ -2874,8 +2848,8 @@ void AddSelectRestrictionAction(
 		not_null<HistoryItem*> item,
 		bool addIcon) {
 	const auto peer = item->history()->peer;
-	// Forwarding restrictions disabled
-	if (item->isSponsored()) {
+	if ((peer->allowsForwarding() && !item->forbidsForward())
+		|| item->isSponsored()) {
 		return;
 	}
 	if (addIcon && !menu->empty()) {

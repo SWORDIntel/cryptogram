@@ -19,11 +19,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 
 namespace Statistic {
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
-#endif
-
 Data::StatisticalChart StatisticalChartFromJSON(const QByteArray &json) {
 	auto error = QJsonParseError{ 0, QJsonParseError::NoError };
 	const auto document = QJsonDocument::fromJson(json, &error);
@@ -177,9 +172,5 @@ Data::StatisticalChart StatisticalChartFromJSON(const QByteArray &json) {
 
 	return result;
 }
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 } // namespace Statistic

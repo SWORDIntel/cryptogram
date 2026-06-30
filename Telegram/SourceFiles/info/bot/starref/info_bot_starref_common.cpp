@@ -340,34 +340,6 @@ not_null<Ui::AbstractButton*> AddViewListButton(
 	return button;
 }
 
-not_null<Ui::RoundButton*> AddFullWidthButton(
-		not_null<Ui::BoxContent*> box,
-		rpl::producer<QString> text,
-		Fn<void()> callback,
-		const style::RoundButton *stOverride) {
-	const auto &boxSt = box->getDelegate()->style();
-	const auto result = box->addButton(
-		std::move(text),
-		std::move(callback),
-		stOverride ? *stOverride : boxSt.button);
-	rpl::combine(
-		box->widthValue(),
-		result->widthValue()
-	) | rpl::on_next([=](int width, int buttonWidth) {
-		const auto correct = width
-			- boxSt.buttonPadding.left()
-			- boxSt.buttonPadding.right();
-		if (correct > 0 && buttonWidth != correct) {
-			result->resizeToWidth(correct);
-			result->moveToLeft(
-				boxSt.buttonPadding.left(),
-				boxSt.buttonPadding.top(),
-				width);
-		}
-	}, result->lifetime());
-	return result;
-}
-
 void AddFullWidthButtonFooter(
 		not_null<Ui::BoxContent*> box,
 		not_null<Ui::RpWidget*> button,

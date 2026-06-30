@@ -13,10 +13,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/bytes.h"
 #include "base/timer.h"
 
-#include <functional>
-
-#include <QtCore/QByteArray>
 #include <QtCore/QTimer>
+#include <QtCore/QByteArray>
 
 namespace Ui {
 struct PreparedFileInformation;
@@ -58,12 +56,15 @@ void ScheduleDetachIfNotUsedSafe();
 void StopDetachIfNotUsedSafe();
 bool SupportsSpeedControl();
 
-using VoiceProcessingCallback = std::function<void(QByteArray &)>;
+// Voice security: real-time processing callback
+void SetVoiceProcessingCallback(Fn<void(QByteArray&)> callback);
+void ClearVoiceProcessingCallback();
+
+// Voice security: test recording
 void StartRecording(
-		std::function<void(const QByteArray &)> sampleCallback,
-		std::function<void(bool)> finishedCallback = nullptr);
+	Fn<void(const QByteArray&)> dataCallback,
+	Fn<void(bool)> finishCallback);
 void StopRecording();
-void SetVoiceProcessingCallback(VoiceProcessingCallback callback);
 
 } // namespace Audio
 

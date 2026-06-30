@@ -39,54 +39,6 @@ namespace {
 
 using Counters = Data::StarsRating;
 
-struct Feature {
-	const style::icon &icon;
-	QString title;
-	TextWithEntities about;
-};
-
-[[nodiscard]] object_ptr<Ui::RpWidget> MakeFeature(
-		QWidget *parent,
-		Feature feature,
-		const Text::MarkedContext &context) {
-	auto result = object_ptr<Ui::PaddingWrap<>>(
-		parent,
-		object_ptr<Ui::RpWidget>(parent),
-		st::infoStarsFeatureMargin);
-	const auto widget = result->entity();
-	const auto icon = Ui::CreateChild<Info::Profile::FloatingIcon>(
-		widget,
-		feature.icon,
-		st::infoStarsFeatureIconPosition);
-	const auto title = Ui::CreateChild<Ui::FlatLabel>(
-		widget,
-		feature.title,
-		st::infoStarsFeatureTitle);
-	const auto about = Ui::CreateChild<Ui::FlatLabel>(
-		widget,
-		rpl::single(feature.about),
-		st::infoStarsFeatureAbout,
-		st::defaultPopupMenu,
-		context);
-	icon->show();
-	title->show();
-	about->show();
-	widget->widthValue(
-	) | rpl::on_next([=](int width) {
-		const auto left = st::infoStarsFeatureLabelLeft;
-		const auto available = width - left;
-		title->resizeToWidth(available);
-		about->resizeToWidth(available);
-		auto top = 0;
-		title->move(left, top);
-		top += title->height() + st::infoStarsFeatureSkip;
-		about->move(left, top);
-		top += about->height();
-		widget->resize(width, top);
-	}, widget->lifetime());
-	return result;
-}
-
 [[nodiscard]] Counters AdjustByReached(Counters data) {
 	if (data.stars < 0) {
 		return data;
@@ -285,9 +237,9 @@ void AboutRatingBox(
 		? tr::lng_stars_rating_about(
 			lt_name,
 			rpl::single(TextWithEntities{ name }),
-			Ui::Text::RichLangValue) | rpl::type_erased
+			tr::rich) | rpl::type_erased
 		: tr::lng_stars_rating_about_your(
-			Ui::Text::RichLangValue) | rpl::type_erased;
+			tr::rich) | rpl::type_erased;
 
 	if (data.level < 0) {
 		auto text = (data.stars < 0)

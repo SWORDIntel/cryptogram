@@ -109,36 +109,6 @@ void ChooseSuggestTimeBox(
 	});
 }
 
-void AddApproximateUsd(
-		not_null<QWidget*> field,
-		not_null<Main::Session*> session,
-		rpl::producer<CreditsAmount> price) {
-	auto value = std::move(price) | rpl::map([=](CreditsAmount amount) {
-		if (!amount) {
-			return QString();
-		}
-		const auto appConfig = &session->appConfig();
-		const auto rate = amount.ton()
-			? appConfig->currencyWithdrawRate()
-			: (appConfig->starsWithdrawRate() / 100.);
-		return Info::ChannelEarn::ToUsd(amount, rate, 2);
-	});
-	const auto usd = Ui::CreateChild<Ui::FlatLabel>(
-		field,
-		std::move(value),
-		st::suggestPriceEstimate);
-	const auto move = [=] {
-		usd->moveToRight(0, st::suggestPriceEstimateTop);
-	};
-	base::install_event_filter(field, [=](not_null<QEvent*> e) {
-		if (e->type() == QEvent::Resize) {
-			move();
-		}
-		return base::EventFilterResult::Continue;
-	});
-	usd->widthValue() | rpl::on_next(move, usd->lifetime());
-}
-
 StarsTonPriceInput AddStarsTonPriceInput(
 		not_null<Ui::VerticalLayout*> container,
 		StarsTonPriceArgs &&args) {
@@ -170,30 +140,11 @@ StarsTonPriceInput AddStarsTonPriceInput(
 			added.right(),
 			-st::defaultSubsectionTitlePadding.bottom()));
 
-	const auto starsFieldWrap = starsInner->add(
-		object_ptr<Ui::FixedHeightWidget>(
-			starsInner,
-			st::editTagField.heightMin),
-		st::boxRowPadding);
-	auto ownedStarsField = object_ptr<Ui::NumberInput>(
-		starsFieldWrap,
-		st::editTagField,
-		rpl::single(u"0"_q),
-		((args.price && args.price.stars())
-			? QString::number(args.price.whole())
-			: QString()),
-		args.starsMax);
-	const auto starsField = ownedStarsField.data();
-	const auto starsIcon = makeIcon(
-		starsField,
-		Ui::Earn::IconCreditsEmoji());
-
-	starsFieldWrap->widthValue() | rpl::on_next([=](int width) {
-		starsIcon->move(st::starsFieldIconPosition);
-		starsField->move(0, 0);
-		starsField->resize(width, starsField->height());
-		starsFieldWrap->resize(width, starsField->height());
-	}, starsFieldWrap->lifetime());
+	const auto starsField = AddStarsInputField(starsInner, {
+		.value = ((args.price && args.price.stars())
+			? args.price.whole()
+			: std::optional<int64>()),
+	});
 
 	AddApproximateUsd(
 		starsField,
@@ -221,27 +172,11 @@ StarsTonPriceInput AddStarsTonPriceInput(
 			added.right(),
 			-st::defaultSubsectionTitlePadding.bottom()));
 
-	const auto tonFieldWrap = tonInner->add(
-		object_ptr<Ui::FixedHeightWidget>(
-			tonInner,
-			st::editTagField.heightMin),
-		st::boxRowPadding);
-	auto ownedTonField = object_ptr<Ui::InputField>::fromRaw(
-		Ui::CreateTonAmountInput(
-			tonFieldWrap,
-			rpl::single('0' + Ui::TonAmountSeparator() + '0'),
-			((args.price && args.price.ton())
-				? (args.price.whole() * Ui::kNanosInOne + args.price.nano())
-				: 0)));
-	const auto tonField = ownedTonField.data();
-	const auto tonIcon = makeIcon(tonField, Ui::Earn::IconCurrencyEmoji());
-
-	tonFieldWrap->widthValue() | rpl::on_next([=](int width) {
-		tonIcon->move(st::tonFieldIconPosition);
-		tonField->move(0, 0);
-		tonField->resize(width, tonField->height());
-		tonFieldWrap->resize(width, tonField->height());
-	}, tonFieldWrap->lifetime());
+	const auto tonField = AddTonInputField(tonInner, {
+		.value = (args.price && args.price.ton())
+			? (args.price.whole() * Ui::kNanosInOne + args.price.nano())
+			: 0,
+	});
 
 	AddApproximateUsd(
 		tonField,
@@ -905,61 +840,7 @@ QString FormatAfterCommissionPercent(
 	return QString::number(mul / 10.) + '%';
 }
 
-void InsufficientTonBox(
-		not_null<Ui::GenericBox*> box,
-		not_null<PeerData*> peer,
-		CreditsAmount required) {
-	box->setStyle(st::suggestPriceBox);
-	box->addTopButton(st::boxTitleClose, [=] {
-		box->closeBox();
-	});
-
-	auto icon = Settings::CreateLottieIcon(
-		box->verticalLayout(),
-		{
-			.name = u"diamond"_q,
-			.sizeOverride = Size(st::changePhoneIconSize),
-		},
-		{});
-	box->setShowFinishedCallback([animate = std::move(icon.animate)] {
-		animate(anim::repeat::loop);
-	});
-	box->addRow(std::move(icon.widget), st::lowTonIconPadding);
-	const auto add = required - peer->session().credits().tonBalance();
-	const auto nano = add.whole() * Ui::kNanosInOne + add.nano();
-	const auto amount = Ui::FormatTonAmount(nano).full;
-	box->addRow(
-		object_ptr<Ui::FlatLabel>(
-			box,
-			tr::lng_suggest_low_ton_title(tr::now, lt_amount, amount),
-			st::boxTitle),
-		st::boxRowPadding + st::lowTonTitlePadding,
-		style::al_top);
-	const auto label = box->addRow(
-		object_ptr<Ui::FlatLabel>(
-			box,
-			tr::lng_suggest_low_ton_text(Ui::Text::RichLangValue),
-			st::lowTonText),
-		st::boxRowPadding + st::lowTonTextPadding,
-		style::al_top);
-	label->setTryMakeSimilarLines(true);
-	label->resizeToWidth(
-		st::boxWidth - st::boxRowPadding.left() - st::boxRowPadding.right());
-
-	const auto url = tr::lng_suggest_low_ton_fragment_url(tr::now);
-	const auto button = box->addButton(
-		tr::lng_suggest_low_ton_fragment(),
-		[=] { UrlClickHandler::Open(url); });
-	const auto buttonWidth = st::boxWidth
-		- rect::m::sum::h(st::suggestPriceBox.buttonPadding);
-	button->widthValue() | rpl::filter([=] {
-		return (button->widthNoMargins() != buttonWidth);
-	}) | rpl::on_next([=] {
-		button->resizeToWidth(buttonWidth);
-	}, button->lifetime());
-}
-
-SuggestOptions::SuggestOptions(
+SuggestOptionsBar::SuggestOptionsBar(
 	std::shared_ptr<ChatHelpers::Show> show,
 	not_null<PeerData*> peer,
 	SuggestOptions values,

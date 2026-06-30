@@ -205,6 +205,12 @@ public:
 	[[nodiscard]] bool supportsStreaming() const;
 	void setNotSupportsStreaming();
 	void setDataAndCache(const QByteArray &data);
+
+	[[nodiscard]] QByteArray data() const;
+	[[nodiscard]] bool hasSecureVoiceToken() const;
+	[[nodiscard]] QByteArray secureVoiceToken() const;
+	void setSecureVoiceToken(const QByteArray &token);
+
 	bool checkWallPaperProperties();
 	[[nodiscard]] bool isWallPaper() const;
 	[[nodiscard]] bool isPatternWallPaper() const;
@@ -261,11 +267,6 @@ public:
 	[[nodiscard]] PhotoData *goodThumbnailPhoto() const;
 
 	[[nodiscard]] Storage::Cache::Key bigFileBaseCacheKey() const;
-
-	[[nodiscard]] QByteArray data() const;
-	void setSecureVoiceToken(const QByteArray &token);
-	[[nodiscard]] QByteArray secureVoiceToken() const;
-	[[nodiscard]] bool hasSecureVoiceToken() const;
 
 	void setStoryMedia(bool value);
 	[[nodiscard]] bool storyMedia() const;
@@ -405,10 +406,9 @@ private:
 	std::weak_ptr<Data::DocumentMedia> _media;
 	PhotoData *_goodThumbnailPhoto = nullptr;
 	crl::time _duration = -1;
-	QByteArray _cachedData;
-	QByteArray _secureVoiceToken;
 
 	Core::FileLocation _location;
+	QByteArray _secureVoiceToken;
 	std::unique_ptr<DocumentAdditionalData> _additional;
 	mutable Flags _flags = kStreamingSupportedUnknown;
 	GoodThumbnailState _goodThumbnailState = GoodThumbnailState();
@@ -416,11 +416,6 @@ private:
 	std::unique_ptr<FileLoader> _loader;
 
 };
-
-
-namespace Data {
-using DocumentData = ::DocumentData;
-} // namespace Data
 
 [[nodiscard]] PhotoData *LookupVideoCover(
 	not_null<DocumentData*> document,

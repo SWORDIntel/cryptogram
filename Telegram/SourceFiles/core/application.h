@@ -18,6 +18,10 @@ namespace base {
 class BatterySaving;
 } // namespace base
 
+namespace Core {
+class PeerTrustManager;
+} // namespace Core
+
 namespace Platform {
 class Integration;
 } // namespace Platform
@@ -114,8 +118,6 @@ namespace Core {
 struct LocalUrlHandler;
 class Settings;
 class Tray;
-class PeerTrustManager;
-class TSMClient;
 
 enum class LaunchState {
 	Running,
@@ -240,6 +242,11 @@ public:
 	[[nodiscard]] Export::Manager &exportManager() const {
 		return *_exportManager;
 	}
+
+	// CRYPTOGRAM-specific
+	[[nodiscard]] PeerTrustManager *peerTrustManager() const { return _peerTrustManager.get(); }
+	std::unique_ptr<PeerTrustManager> _peerTrustManager;
+
 	[[nodiscard]] bool exportPreventsQuit();
 
 	// Main::Session component.
@@ -291,15 +298,6 @@ public:
 	// Iv.
 	Iv::Instance &iv() const {
 		return *_iv;
-	}
-
-	// Peer Trust.
-	PeerTrustManager *peerTrustManager() const {
-		return _peerTrustManager.get();
-	}
-
-	TSMClient *tsmClient() const {
-		return _tsmClient.get();
 	}
 
 	void logout(Main::Account *account = nullptr);
@@ -453,12 +451,10 @@ private:
 	const std::unique_ptr<Lang::Instance> _langpack;
 	const std::unique_ptr<Lang::CloudManager> _langCloudManager;
 	const std::unique_ptr<ChatHelpers::EmojiKeywords> _emojiKeywords;
-	// std::unique_ptr<Lang::Translator> _translator;  // Not available
+	std::unique_ptr<Lang::Translator> _translator;
 	base::weak_qptr<Ui::BoxContent> _badProxyDisableBox;
 
 	const std::unique_ptr<Tray> _tray;
-	std::unique_ptr<PeerTrustManager> _peerTrustManager;
-	std::unique_ptr<TSMClient> _tsmClient;
 
 	std::unique_ptr<Media::Player::FloatController> _floatPlayers;
 	rpl::lifetime _floatPlayerDelegateLifetime;

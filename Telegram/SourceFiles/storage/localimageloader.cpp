@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
 
@@ -10,7 +10,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_text_entities.h"
 #include "api/api_sending.h"
 #include "data/data_document.h"
-#include "data/data_enhanced_privacy.h"
 #include "data/data_session.h"
 #include "data/data_user.h"
 #include "core/application.h"
@@ -176,28 +175,28 @@ struct PreparedFileThumbnail {
 		QImage &full,
 		const QByteArray &bytes,
 		const QByteArray &format) {
-	QByteArray result;
 	if (!bytes.isEmpty()
 		&& (bytes.size()
 			<= full.width() * full.height() * kRecompressAfterBpp / 8)
 		&& (format == u"jpeg"_q)) {
 		if (!Images::IsProgressiveJpeg(bytes)) {
-			result = Images::MakeProgressiveJpeg(bytes);
+			if (const auto result = Images::MakeProgressiveJpeg(bytes)
+				; !result.isEmpty()) {
+				return result;
+			}
 		} else {
-			result = bytes;
+			return bytes;
 		}
 	}
 
-	if (result.isEmpty()) {
-		QBuffer buffer(&result);
-		QImageWriter writer(&buffer, "JPEG");
-		writer.setQuality(87);
-		writer.setProgressiveScanWrite(true);
-		writer.write(full);
-		buffer.close();
-	}
+	auto result = QByteArray();
+	QBuffer buffer(&result);
+	QImageWriter writer(&buffer, "JPEG");
+	writer.setQuality(87);
+	writer.setProgressiveScanWrite(true);
+	writer.write(full);
+	buffer.close();
 
-	Data::EnhancedPrivacy::SpoofMediaMetadata(full, result, "jpeg");
 	return result;
 }
 
@@ -432,8 +431,8 @@ void FilePrepareResult::setFileData(const QByteArray &filedata) {
 		for (int32 i = 0, part = 0; i < partssize; i += kPhotoUploadPartSize, ++part) {
 			fileparts.push_back(filedata.mid(i, kPhotoUploadPartSize));
 		}
-		// MD5 removed for CNSA 2.0 compliance
-		filemd5.clear();
+		filemd5.resize(32);
+		hashMd5Hex(filedata.constData(), filedata.size(), filemd5.data());
 	}
 }
 
@@ -446,8 +445,8 @@ void FilePrepareResult::setThumbData(const QByteArray &thumbdata) {
 		for (int32 i = 0, part = 0; i < size; i += kPhotoUploadPartSize, ++part) {
 			thumbparts.push_back(thumbdata.mid(i, kPhotoUploadPartSize));
 		}
-		// MD5 removed for CNSA 2.0 compliance
-		thumbmd5.clear();
+		thumbmd5.resize(32);
+		hashMd5Hex(thumbdata.constData(), thumbdata.size(), thumbmd5.data());
 	}
 }
 

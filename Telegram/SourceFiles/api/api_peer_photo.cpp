@@ -21,7 +21,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_session.h"
 #include "data/data_user.h"
 #include "data/data_user_photos.h"
-#include "data/data_enhanced_privacy.h"
 #include "history/history.h"
 #include "main/main_session.h"
 #include "storage/file_upload.h"
@@ -45,7 +44,6 @@ constexpr auto kSharedMediaLimit = 100;
 	QByteArray jpeg;
 	QBuffer jpegBuffer(&jpeg);
 	image.save(&jpegBuffer, "JPG", 87);
-	Data::EnhancedPrivacy::SpoofMediaMetadata(image, jpeg, "jpeg");
 
 	const auto scaled = [&](int size) {
 		return image.scaled(
@@ -156,7 +154,7 @@ PeerPhoto::PeerPhoto(not_null<ApiWrap*> api)
 
 		// You can't use _session->lifetime() in the constructor,
 		// only queued, because it is not constructed yet.
-		_session->uploader().photoReady(
+		uploader.photoReady(
 		) | rpl::on_next([=](const Storage::UploadedMedia &data) {
 			ready(data.fullId, data.info.file, std::nullopt);
 		}, _session->lifetime());

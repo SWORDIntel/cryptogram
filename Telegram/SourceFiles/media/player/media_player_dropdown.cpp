@@ -89,7 +89,7 @@ SpeedSliderItem::SpeedSliderItem(
 	rpl::producer<float64> value)
 : Ui::Menu::ItemBase(parent, st.dropdown.menu)
 , _slider(base::make_unique_q<Ui::MediaSlider>(this, st.slider))
-, _dummyAction(Ui::CreateChild<QAction>(parent.get()))
+, _dummyAction(new QAction(parent))
 , _st(st)
 , _height(st.sliderPadding.top()
 	+ st.dropdown.menu.itemStyle.font->height
@@ -684,7 +684,7 @@ void OrderController::fillMenu(not_null<Ui::DropdownMenu*> menu) {
 			(active
 				? st::mediaPlayerOrderMenuActive
 				: st::mediaPlayerOrderMenu),
-			Ui::Menu::CreateAction(menu->menu(), fields.label, callback),
+			Ui::Menu::CreateAction(menu, fields.label, callback),
 			&(active ? fields.activeIcon : fields.icon),
 			&(active ? fields.activeIcon : fields.icon)));
 	};

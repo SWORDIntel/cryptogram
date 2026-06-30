@@ -109,8 +109,8 @@ PreviewWrap::PreviewWrap(
 
 	using namespace HistoryView;
 	_history->owner().viewRepaintRequest(
-	) | rpl::on_next([=](not_null<const Element*> view) {
-		if (view == _item.get()) {
+	) | rpl::on_next([=](Data::RequestViewRepaint data) {
+		if (data.view == _item.get()) {
 			update();
 		}
 	}, lifetime());
@@ -195,9 +195,7 @@ void PreparedPreviewBox(
 					container,
 					tr::lng_bot_share_prepared_about(lt_bot, rpl::single(name)),
 					st::boxDividerLabel),
-				st::defaultBoxDividerLabelPadding,
-				st::defaultDividerBar,
-				RectPart::Top | RectPart::Bottom)));
+				st::defaultBoxDividerLabelPadding)));
 	const auto row = container->add(object_ptr<Ui::VerticalLayout>(
 		container));
 

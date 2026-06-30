@@ -242,6 +242,7 @@ public:
     NetworkSecurityResult configureVPN(const VPNConfiguration &config);
     NetworkSecurityResult connectVPN();
     NetworkSecurityResult disconnectVPN();
+
     bool isVPNConnected() const;
     VPNConfiguration getVPNStatus() const;
 

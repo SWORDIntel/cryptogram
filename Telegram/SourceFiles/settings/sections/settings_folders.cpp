@@ -186,8 +186,8 @@ FilterRowButton::FilterRowButton(
 	tr::lng_filters_recommended_add(),
 	st::settingsFilterAddRecommended)
 , _state(description.isEmpty() ? State::Normal : State::Suggested) {
-	_restore.setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
-	_add.setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
+	_restore.setFullRadius(true);
+	_add.setFullRadius(true);
 	setup(filter, description.isEmpty()
 		? ComputeCountString(session, filter)
 		: description);
@@ -595,76 +595,6 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
 			crl::guard(container, doneCallback),
 			crl::guard(container, saveAnd)));
 	});
-	Ui::AddSkip(container);
-	const auto nonEmptyAbout = container->add(
-		object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
-			container,
-			object_ptr<Ui::VerticalLayout>(container))
-	)->setDuration(0);
-	const auto aboutRows = nonEmptyAbout->entity();
-	Ui::AddDivider(aboutRows);
-	Ui::AddSkip(aboutRows);
-	Ui::AddSubsectionTitle(aboutRows, tr::lng_filters_recommended());
-
-	const auto setTagsProgress = [=](float64 value) {
-		for (const auto &row : state->rows) {
-			row.button->setColorIndexProgress(value);
-		}
-	};
-	tagsButtonEnabled->events() | rpl::distinct_until_changed(
-	) | rpl::on_next([=](bool value) {
-		state->tagsEnabledAnimation.stop();
-		state->tagsEnabledAnimation.start(
-			setTagsProgress,
-			value ? .0 : 1.,
-			value ? 1. : .0,
-			st::universalDuration);
-	}, lifetime);
-	setTagsProgress(session->data().chatsFilters().tagsEnabled());
-
-	rpl::single(rpl::empty) | rpl::then(
-		session->data().chatsFilters().suggestedUpdated()
-	) | rpl::map([=] {
-		return session->data().chatsFilters().suggestedFilters();
-	}) | rpl::filter([=](const std::vector<Data::SuggestedFilter> &list) {
-		return !list.empty();
-	}) | rpl::take(
-		1
-	) | rpl::on_next([=](
-			const std::vector<Data::SuggestedFilter> &suggestions) {
-		for (const auto &suggestion : suggestions) {
-			const auto &filter = suggestion.filter;
-			if (ranges::contains(state->rows, filter, &FilterRow::filter)) {
-				continue;
-			}
-			state->suggested = state->suggested.current() + 1;
-			const auto button = aboutRows->add(object_ptr<FilterRowButton>(
-				aboutRows,
-				session,
-				filter,
-				suggestion.description));
-			button->addRequests(
-				) | rpl::on_next([=] {
-				if (showLimitReached()) {
-					return;
-				}
-				addFilter(filter);
-				state->suggested = state->suggested.current() - 1;
-				delete button;
-			}, button->lifetime());
-		}
-		aboutRows->resizeToWidth(container->width());
-		Ui::AddSkip(aboutRows, st::defaultVerticalListSkip);
-	}, aboutRows->lifetime());
-
-	auto showSuggestions = rpl::combine(
-		state->suggested.value(),
-		state->count.value(),
-		Data::AmPremiumValue(session)
-	) | rpl::map([limit](int suggested, int count, bool) {
-		return suggested > 0 && count < limit();
-	});
-	nonEmptyAbout->toggleOn(std::move(showSuggestions));
 
 	const auto prepareGoodIdsForNewFilters = [=] {
 		const auto &list = session->data().chatsFilters().list();
@@ -842,46 +772,7 @@ not_null<Ui::VerticalLayout*> SetupFoldersList(
 	return wrap;
 }
 
-void SetupTopContent(
-		not_null<Ui::VerticalLayout*> parent,
-		rpl::producer<> showFinished) {
-	const auto divider = Ui::CreateChild<Ui::BoxContentDivider>(parent.get());
-	const auto verticalLayout = parent->add(
-		object_ptr<Ui::VerticalLayout>(parent.get()));
-
-	auto icon = CreateLottieIcon(
-		verticalLayout,
-		{
-			.name = u"filters"_q,
-			.sizeOverride = {
-				st::settingsFilterIconSize,
-				st::settingsFilterIconSize,
-			},
-		},
-		st::settingsFilterIconPadding);
-	std::move(
-		showFinished
-	) | rpl::on_next([animate = std::move(icon.animate)] {
-		animate(anim::repeat::once);
-	}, verticalLayout->lifetime());
-	verticalLayout->add(std::move(icon.widget));
-
-	verticalLayout->add(
-		object_ptr<Ui::FlatLabel>(
-			verticalLayout,
-			tr::lng_filters_about(),
-			st::settingsFilterDividerLabel),
-		st::settingsFilterDividerLabelPadding,
-		style::al_top)->setTryMakeSimilarLines(true);
-
-	verticalLayout->geometryValue(
-	) | rpl::on_next([=](const QRect &r) {
-		divider->setGeometry(r);
-	}, divider->lifetime());
-
-}
-
-void SetupTagContent(
+void SetupRecommendedSection(
 		not_null<Window::SessionController*> controller,
 		not_null<Ui::VerticalLayout*> container,
 		not_null<FoldersState*> state,
@@ -892,22 +783,17 @@ void SetupTagContent(
 		return Data::PremiumLimits(session).dialogFiltersCurrent();
 	};
 
-	auto premium = Data::AmPremiumValue(session);
-	const auto tagsButton = content->add(
-		object_ptr<Ui::SettingsButton>(
-			content,
-			tr::lng_filters_enable_tags(),
-			st::settingsButtonNoIconLocked));
-	const auto state = tagsButton->lifetime().make_state<State>();
-	tagsButton->toggleOn(rpl::merge(
-		rpl::combine(
-			session->data().chatsFilters().tagsEnabledValue(),
-			rpl::duplicate(premium),
-			rpl::mappers::_1 && rpl::mappers::_2),
-		state->tagsTurnOff.events()));
-	rpl::duplicate(premium) | rpl::on_next([=](bool value) {
-		tagsButton->setToggleLocked(!value);
-	}, tagsButton->lifetime());
+	const auto showLimitReached = [=] {
+		const auto removed = ranges::count_if(
+			state->rows,
+			&FilterRow::removed);
+		const auto count = int(state->rows.size() - removed);
+		if (count < limit()) {
+			return false;
+		}
+		controller->show(Box(FiltersLimitBox, session, count));
+		return true;
+	};
 
 	const auto find = [=](not_null<FilterRowButton*> button) {
 		const auto i = ranges::find(state->rows, button, &FilterRow::button);
@@ -1188,37 +1074,13 @@ void BuildTagsSection(SectionBuilder &builder, not_null<FoldersState*> state) {
 			}
 		});
 
-	tagsButton->toggledValue(
-	) | rpl::filter([=](bool checked) {
-		const auto premium = session->premium();
-		if (checked && !premium) {
-			ShowPremiumPreviewToBuy(controller, PremiumFeature::FilterTags);
-			state->tagsTurnOff.fire(false);
-		}
-		if (!premium) {
-			tagsButtonEnabled->fire(false);
-		} else {
-			tagsButtonEnabled->fire_copy(checked);
-		}
-		const auto proceed = premium
-			&& (checked != session->data().chatsFilters().tagsEnabled());
-		if (!proceed) {
-			state->requestTimer.cancel();
-		}
-		return proceed;
-	}) | rpl::on_next([=](bool v) {
-		state->sendCallback = [=] { send(v); };
-		state->requestTimer.cancel();
-		state->requestTimer.setCallback([=] { send(v); });
-		state->requestTimer.callOnce(500);
-	}, tagsButton->lifetime());
-
-	tagsButton->lifetime().add([=] {
-		if (state->requestTimer.isActive()) {
-			if (state->sendCallback) {
-				state->sendCallback();
-			}
-		}
+		return SectionBuilder::WidgetToAdd{};
+	}, [] {
+		return SearchEntry{
+			.id = u"folders/show-tags"_q,
+			.title = tr::lng_filters_enable_tags(tr::now),
+			.keywords = { u"tags"_q, u"colors"_q, u"premium"_q },
+		};
 	});
 
 	builder.addSkip();

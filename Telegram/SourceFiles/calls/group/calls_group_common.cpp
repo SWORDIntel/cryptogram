@@ -109,7 +109,7 @@ object_ptr<Ui::RpWidget> MakeRoundActiveLogo(
 	auto result = object_ptr<Ui::RpWidget>(parent);
 	const auto logo = result.data();
 	logo->resize(logo->width(), logoOuter.height());
-	logo->paintRequest() | rpl::on_next([=] {
+	logo->paintRequest() | rpl::on_next([=, &icon] {
 		if (logo->width() < logoOuter.width()) {
 			return;
 		}

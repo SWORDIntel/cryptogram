@@ -17,9 +17,9 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include <QtCore/QStringList>
 #include <QtCore/QDateTime>
 #ifdef __has_include
-#if __has_include(<QtMultimedia/QAudioInput>)
-#include <QtMultimedia/QAudioInput>
-#include <QtMultimedia/QAudioOutput>
+#if __has_include(<QtMultimedia/QAudioSource>)
+#include <QtMultimedia/QAudioSource>
+#include <QtMultimedia/QAudioSink>
 #define CRYPTOGRAM_HAVE_QTMULTIMEDIA 1
 #endif
 #endif
@@ -29,7 +29,20 @@ namespace Security {
 
 // Forward declarations
 enum class SecurityTier;
-using SpyGram::Counterintelligence::ThreatLevel;
+enum class ThreatLevel {
+    None = 0,
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    Critical = 4
+};
+
+namespace GNAEngines {
+class GNASurveillanceEngine;
+class GNAVoiceMorphingEngine;
+class GNACovertChannelEngine;
+class GNASteganographyEngine;
+} // namespace GNAEngines
 
 // GNA (Gaussian Neural Accelerator) capabilities
 struct GNACapabilities {
@@ -202,8 +215,8 @@ private Q_SLOTS:
 
 private:
     // Core initialization
-    void initializeGNAHardware();
-    void initializeAudioInterface();
+    bool initializeGNAHardware();
+    bool initializeAudioInterface();
     void initializeThreatDetection();
     void initializeVoiceMorphing();
     void initializeCovertChannels();
@@ -232,7 +245,8 @@ private:
 
     // Covert channel management
     void initializeUltrasonicChannel();
-    void transmitUltrasonicData(const QByteArray& data);
+    bool transmitUltrasonicData(const QByteArray& data);
+    QByteArray captureAudioSample();
     QByteArray receiveUltrasonicData();
 
     // Security and encryption
@@ -255,8 +269,8 @@ private:
 
     // Audio interface
 #ifdef CRYPTOGRAM_HAVE_QTMULTIMEDIA
-    std::unique_ptr<QAudioInput> _audioInput;
-    std::unique_ptr<QAudioOutput> _audioOutput;
+    std::unique_ptr<QAudioSource> _audioInput;
+    std::unique_ptr<QAudioSink> _audioOutput;
 #endif
 
     // Performance tracking
@@ -264,15 +278,10 @@ private:
     QDateTime _metricsStartTime;
 
     // Processing engines
-    class GNASurveillanceEngine;
-    class GNAVoiceMorphingEngine;
-    class GNACovertChannelEngine;
-    class GNASteganographyEngine;
-
-    std::unique_ptr<GNASurveillanceEngine> _surveillanceEngine;
-    std::unique_ptr<GNAVoiceMorphingEngine> _voiceMorphingEngine;
-    std::unique_ptr<GNACovertChannelEngine> _covertChannelEngine;
-    std::unique_ptr<GNASteganographyEngine> _steganographyEngine;
+    std::unique_ptr<GNAEngines::GNASurveillanceEngine> _surveillanceEngine;
+    std::unique_ptr<GNAEngines::GNAVoiceMorphingEngine> _voiceMorphingEngine;
+    std::unique_ptr<GNAEngines::GNACovertChannelEngine> _covertChannelEngine;
+    std::unique_ptr<GNAEngines::GNASteganographyEngine> _steganographyEngine;
 
     // Timers for periodic operations
     base::Timer _surveillanceTimer;
@@ -284,99 +293,18 @@ private:
     QByteArray _steganographyKey;
 };
 
-// Individual GNA processing engines
-namespace GNAEngines {
-
-// Surveillance detection engine
-class GNASurveillanceEngine final {
-public:
-    explicit GNASurveillanceEngine(const GNACapabilities& capabilities);
-    ~GNASurveillanceEngine();
-
-    bool initialize();
-    AcousticThreatResult detectSurveillance(const QByteArray& audioData);
-    bool detectMicrophone(const QByteArray& audioData);
-    bool detectAudioLeakage();
-
-private:
-    GNACapabilities _capabilities;
-    bool _initialized = false;
-    QStringList _knownMicrophoneSignatures;
-};
-
-// Voice morphing engine
-class GNAVoiceMorphingEngine final {
-public:
-    explicit GNAVoiceMorphingEngine(const GNACapabilities& capabilities);
-    ~GNAVoiceMorphingEngine();
-
-    bool initialize();
-    QByteArray morphVoice(const QByteArray& audioData, const VoiceMorphingConfig& config);
-    QByteArray anonymizeVoice(const QByteArray& audioData);
-    bool authenticateVoice(const QByteArray& voiceSample, const QString& userId);
-
-private:
-    GNACapabilities _capabilities;
-    bool _initialized = false;
-    QHash<QString, QByteArray> _voiceProfiles;
-};
-
-// Covert channel engine
-class GNACovertChannelEngine final {
-public:
-    explicit GNACovertChannelEngine(const GNACapabilities& capabilities);
-    ~GNACovertChannelEngine();
-
-    bool initialize();
-    bool transmitData(const QByteArray& data, const CovertChannelConfig& config);
-    QByteArray receiveData();
-    bool detectCovertChannel(const QByteArray& audioData);
-
-private:
-    GNACapabilities _capabilities;
-    bool _initialized = false;
-    QByteArray _transmissionBuffer;
-    QByteArray _receptionBuffer;
-};
-
-// Steganography engine
-class GNASteganographyEngine final {
-public:
-    explicit GNASteganographyEngine(const GNACapabilities& capabilities);
-    ~GNASteganographyEngine();
-
-    bool initialize();
-    QByteArray embedData(const QByteArray& audioData, const QByteArray& hiddenData);
-    QByteArray extractData(const QByteArray& audioData);
-    bool detectSteganography(const QByteArray& audioData);
-
-private:
-    GNACapabilities _capabilities;
-    bool _initialized = false;
-    QString _steganographyMethod;
-};
-
-} // namespace GNAEngines
-
 // Utility functions for GNA acoustic security
 namespace GNAUtils {
-    // Audio analysis utilities
     double calculateAudioEntropy(const QByteArray& audioData);
     QStringList extractSpectralFeatures(const QByteArray& audioData);
     bool detectAudioAnomaly(const QByteArray& audioData);
     double calculateSignalToNoiseRatio(const QByteArray& audioData);
-
-    // Frequency analysis
     QList<double> performFFT(const QByteArray& audioData);
     bool detectUltrasonicSignal(const QByteArray& audioData, int targetFrequency);
     QList<int> findPeakFrequencies(const QByteArray& audioData);
-
-    // Voice processing
     QByteArray normalizeAudioVolume(const QByteArray& audioData);
     QByteArray removeSilence(const QByteArray& audioData);
     QByteArray extractVoiceFeatures(const QByteArray& audioData);
-
-    // Security utilities
     QByteArray generateAcousticFingerprint(const QByteArray& audioData);
     bool compareAcousticFingerprints(const QByteArray& fp1, const QByteArray& fp2);
     QByteArray obfuscateAudioData(const QByteArray& audioData);

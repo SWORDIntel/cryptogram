@@ -2117,14 +2117,7 @@ void ComposeControls::init() {
 		_botCommandStart->setClickedCallback([=] { setText({ "/" }); });
 	}
 
-	if (_like) {
-		_like->setClickedCallback([=] { _likeToggled.fire({}); });
-		_liked.value(
-		) | rpl::on_next([=](bool liked) {
-			const auto icon = liked ? &_st.liked : nullptr;
-			_like->setIconOverride(icon, icon);
-		}, _like->lifetime());
-	}
+	initLikeButton();
 
 	_wrap->sizeValue(
 	) | rpl::on_next([=](QSize size) {
@@ -2968,10 +2961,10 @@ void ComposeControls::initSendButton() {
 	_send->finishAnimating();
 
 	_send->clicks(
-	) | rpl::filter([=] {
-		return (_send->type() == Ui::SendButton::Type::Cancel);
-	}) | rpl::on_next([=] {
-		cancelInlineBot();
+	) | rpl::on_next([=] {
+		if (_send->type() == Ui::SendButton::Type::Cancel) {
+			cancelInlineBot();
+		}
 	}, _send->lifetime());
 
 	const auto send = crl::guard(_send.get(), [=](Api::SendOptions options) {
@@ -3005,11 +2998,9 @@ void ComposeControls::setupSendMenu(
 		button,
 		_show,
 		[=] { return sendButtonMenuDetails(); },
-		sendAction);
-
-	_send->widthValue() | rpl::skip(1) | rpl::on_next([=] {
-		updateControlsGeometry(_wrap->size());
-	}, _send->lifetime());
+		sendAction,
+		&_st.tabbed.menu,
+		&_st.tabbed.icons);
 }
 
 void ComposeControls::initSendAsButton(
@@ -3027,9 +3018,11 @@ void ComposeControls::initSendAsButton(
 		rpl::single(key) | rpl::then(
 			session().sendAsPeers().updated() | rpl::filter(_1 == key)
 		),
-		Data::CanSendAnythingValue(peer, false)
+		(videoStream
+			? rpl::single(true)
+			: Data::CanSendAnythingValue(key.peer, false))
 	) | rpl::skip(1) | rpl::on_next([=] {
-		if (updateSendAsButton()) {
+		if (updateSendAsButton(videoStream)) {
 			updateControlsVisibility();
 			updateControlsGeometry(_wrap->size());
 			orderControls();
@@ -3152,7 +3145,6 @@ void SetupRestrictionView(
 			st->premiumRequired.button);
 		unlock->show();
 		unlock->setAttribute(Qt::WA_TransparentForMouseEvents);
-		unlock->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 		unlock->setFullRadius(true);
 		return unlock;
 	};

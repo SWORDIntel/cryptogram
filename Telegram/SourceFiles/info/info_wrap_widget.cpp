@@ -176,9 +176,9 @@ void WrapWidget::setupShortcuts() {
 
 	Shortcuts::Requests(
 	) | rpl::filter([=] {
-		return requireTopBarSearch()
-			&& (Core::App().activeWindow()
-				== &_controller->parentController()->window());
+		return (Core::App().activeWindow()
+				== &_controller->parentController()->window())
+			&& (requireTopBarSearch() || isSettings());
 	}) | rpl::on_next([=](not_null<Shortcuts::Request*> request) {
 		using Command = Shortcuts::Command;
 		request->check(Command::Search) && request->handle([=] {

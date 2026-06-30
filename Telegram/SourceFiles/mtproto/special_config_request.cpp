@@ -446,16 +446,7 @@ bool SpecialConfigRequest::decryptSimpleConfig(const QByteArray &bytes) {
 
 	auto publicKey = details::RSAPublicKey(bytes::make_span(kPublicKey));
 	auto decrypted = publicKey.decrypt(bytes::make_span(decodedBytes));
-	if (decrypted.empty()) {
-		LOG(("Config Error: Failed to decrypt special config response."));
-		return false;
-	}
 	auto decryptedBytes = gsl::make_span(decrypted);
-
-	if (decryptedBytes.size() <= CTRState::KeySize) {
-		LOG(("Config Error: Decrypted payload too small."));
-		return false;
-	}
 
 	auto aesEncryptedBytes = decryptedBytes.subspan(CTRState::KeySize);
 	auto aesivec = bytes::make_vector(decryptedBytes.subspan(CTRState::KeySize - CTRState::IvecSize, CTRState::IvecSize));

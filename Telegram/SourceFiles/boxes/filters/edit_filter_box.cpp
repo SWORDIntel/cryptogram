@@ -652,12 +652,21 @@ void EditFilterBox(
 
 		const auto &padding = st::defaultSubsectionTitlePadding;
 		const auto isPremium = session->premium();
-		const auto title = Ui::AddSubsectionTitle(
-			colors,
-			tr::lng_filters_tag_color_subtitle());
-		const auto preview = Ui::CreateChild<Ui::RpWidget>(colors);
-		title->geometryValue(
-		) | rpl::on_next([=](const QRect &r) {
+		const auto titleWrap = colors->add(
+			object_ptr<Ui::FixedHeightWidget>(
+				colors,
+				rect::m::sum::v(padding)
+					+ st::defaultSubsectionTitle.style.font->height));
+		const auto title = Ui::CreateChild<Ui::FlatLabel>(
+			titleWrap,
+			tr::lng_filters_tag_color_subtitle(),
+			st::defaultSubsectionTitle);
+		title->move(rect::m::pos::tl(padding));
+		const auto preview = Ui::CreateChild<Ui::RpWidget>(titleWrap);
+		rpl::combine(
+			title->sizeValue(),
+			titleWrap->widthValue()
+		) | rpl::on_next([=](const QSize &s, int w) {
 			const auto h = st::normalFont->height;
 			const auto left = padding.left()
 				+ s.width()
@@ -677,6 +686,7 @@ void EditFilterBox(
 		};
 		const auto tag = preview->lifetime().make_state<TagState>();
 		tag->context.textContext = Core::TextContext({ .session = session });
+		const auto shift = st::settingsFilterTagPreviewSkip / 2;
 		preview->paintRequest() | rpl::on_next([=] {
 			auto p = QPainter(preview);
 			p.setOpacity(tag->alpha);

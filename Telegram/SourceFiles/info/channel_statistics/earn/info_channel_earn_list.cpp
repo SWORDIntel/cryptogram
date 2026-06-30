@@ -595,8 +595,6 @@ void InnerWidget::fill() {
 						container,
 						tr::lng_channel_earn_learn_close(),
 						st::defaultActiveButton);
-					button->setTextTransform(
-						Ui::RoundButtonTextTransform::NoTransform);
 					button->resizeToWidth(box->width()
 						- st.buttonPadding.left()
 						- st.buttonPadding.left());
@@ -608,9 +606,7 @@ void InnerWidget::fill() {
 		container->add(object_ptr<Ui::DividerLabel>(
 			container,
 			std::move(label),
-			st::defaultBoxDividerLabelPadding,
-			st::defaultDividerBar
-			));
+			st::defaultBoxDividerLabelPadding));
 	};
 	if (canViewCurrencyEarn) {
 		addAboutWithLearn(bot

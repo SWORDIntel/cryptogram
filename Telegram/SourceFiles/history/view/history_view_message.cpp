@@ -384,17 +384,11 @@ struct SecondRightAction {
 	ClickHandlerPtr link;
 };
 
-KeyboardStyle::KeyboardStyle(
-	const style::BotKeyboardButton &st,
-	Fn<void()> repaint)
-: ReplyKeyboard::Style(st)
-, _repaint(std::move(repaint)) {
-	style::PaletteChanged(
-	) | rpl::on_next([=] {
-		_cachedBg = {};
-		_cachedOutline = {};
-	}, _lifetime);
-}
+struct BadgePillGeometry {
+	int textWidth = 0;
+	int width = 0;
+	int height = 0;
+};
 
 [[nodiscard]] bool IsRippleLink(const ClickHandlerPtr &handler) {
 	switch (handler->getTextEntity().type) {

@@ -807,7 +807,9 @@ void ChatLinks::setupContent(
 	content->add(object_ptr<Ui::DividerLabel>(
 		content,
 		std::move(label),
-		st::settingsChatbotsBottomTextMargin));
+		st::settingsChatbotsBottomTextMargin,
+		st::defaultDividerBar,
+		RectPart::Top));
 
 	Ui::ResizeFitChild(this, content);
 }

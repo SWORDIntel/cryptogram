@@ -9,8 +9,8 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "data/data_quantumguard.h"
 #include "data/data_nsa_security.h"
 #include "data/data_quantum_storage.h"
-#include "data/data_tsm_factory.h"
-#include "data/data_tsm_quantum.h"
+#include "data/data_session.h"
+#include "main/main_session.h"
 
 #include <cstddef>
 #include <openssl/evp.h>
@@ -74,7 +74,7 @@ constexpr auto kThreatAssessmentInterval = 60000; // 1 minute threat assessment
 constexpr auto kQuantumThreatTimeout = 5000; // 5 second quantum threat response
 
 QString quantumStoragePath(not_null<Session*> session) {
-    const auto basePath = session->local().basePath();
+    const auto basePath = QString::fromUtf8("cryptogram_data");
     QDir dir(basePath);
     if (!dir.exists(kQuantumStoragePath)) {
         dir.mkdir(kQuantumStoragePath);
@@ -105,11 +105,11 @@ namespace {
 	}
 
 	bool hasQuantumSession(not_null<PeerData*> peer) {
-		return g_quantumSessions.find(peer->peerId()) != g_quantumSessions.end();
+		return g_quantumSessions.find(peer->id) != g_quantumSessions.end();
 	}
 
 	QuantumSession getQuantumSession(not_null<PeerData*> peer) {
-		const auto id = peer->peerId();
+		const auto id = peer->id;
 		auto it = g_quantumSessions.find(id);
 		if (it == g_quantumSessions.end()) {
 			QuantumSession session;
@@ -124,7 +124,7 @@ namespace {
 	}
 
 	void updateQuantumSession(not_null<PeerData*> peer, const QuantumSession &session) {
-		g_quantumSessions[peer->peerId()] = session;
+		g_quantumSessions[peer->id] = session;
 	}
 
 	QuantumThreatLevel getCurrentQuantumThreatLevel() {
@@ -320,7 +320,6 @@ public:
     not_null<Session*> session;
     std::shared_ptr<QuantumGuard> quantumGuard;
     std::shared_ptr<NSASecurity> nsaSecurity;
-    std::shared_ptr<QuantumTSMInterface> quantumTSM;
 
     QTimer *threatAssessmentTimer;
     QuantumThreatLevel currentQuantumThreatLevel = QuantumThreatLevel::Moderate;
@@ -389,7 +388,7 @@ QuantumSignalProtocol::QuantumKeyBundle QuantumSignalProtocol::generateQuantumKe
     }
 
     QuantumKeyBundle bundle;
-    bundle.deviceId.identifier = QString::number(_session->userId().bare);
+    bundle.deviceId.identifier = QString::number(_session->session().userId().bare);
     bundle.deviceId.registrationId = base::RandomValue<uint64>();
     bundle.created = QDateTime::currentDateTime();
     bundle.expires = bundle.created.addDays(30); // 30-day key expiry

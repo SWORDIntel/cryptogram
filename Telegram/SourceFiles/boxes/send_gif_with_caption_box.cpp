@@ -169,9 +169,40 @@ struct State final {
 				std::numeric_limits<int>::max(),
 				Qt::KeepAspectRatio).height()),
 		st::boxRowPadding);
-	widget->paintRequest(
-	) | rpl::on_next([=] {
-		auto p = QPainter(widget);
+	widget->paintOn([=](QPainter &p) {
+		if (state->hasSpoiler) {
+			if (state->firstFrame.isNull()
+					&& state->gif
+					&& state->gif->ready()) {
+				state->firstFrame = state->gif->current(
+					{ .frame = widget->size() },
+					crl::now());
+				state->blurredFrame = Images::BlurLargeImage(
+					base::duplicate(state->firstFrame),
+					24);
+			}
+			if (!state->blurredFrame.isNull()) {
+				p.drawImage(0, 0, state->blurredFrame);
+			} else if (const auto thumb = state->mediaView->thumbnail()) {
+				p.drawImage(
+					widget->rect(),
+					thumb->pixNoCache(
+						widget->size() * style::DevicePixelRatio(),
+						{
+							.options = Images::Option::Blur,
+							.outer = widget->size(),
+						}).toImage());
+			}
+			if (!state->spoiler) {
+				state->spoiler = std::make_unique<Ui::SpoilerAnimation>(
+					[=] { widget->update(); });
+			}
+			const auto now = crl::now();
+			const auto index = state->spoiler->index(now, false);
+			const auto frame = Ui::DefaultImageSpoiler().frame(index);
+			Ui::FillSpoilerRect(p, widget->rect(), frame);
+			return;
+		}
 		if (state->gif && state->gif->started()) {
 			p.drawImage(
 				0,
@@ -215,7 +246,7 @@ struct State final {
 		return true;
 	};
 	if (!updateThumbnail()) {
-		document->owner().session().downloaderTaskFinished(
+		document->session().downloaderTaskFinished(
 		) | rpl::on_next([=] {
 			if (updateThumbnail()) {
 				state->loadingLifetime.destroy();
@@ -269,83 +300,15 @@ struct State final {
 		Ui::InputField::Mode::MultiLine,
 		tr::lng_photo_caption());
 	Ui::ResizeFitChild(wrap, input);
-
-	struct State final {
-		base::unique_qptr<ChatHelpers::TabbedPanel> emojiPanel;
-		base::unique_qptr<Limit> charsLimitation;
-	};
-	const auto state = box->lifetime().make_state<State>();
-
-	{
-		const auto container = box->getDelegate()->outerContainer();
-		using Selector = ChatHelpers::TabbedSelector;
-		state->emojiPanel = base::make_unique_q<ChatHelpers::TabbedPanel>(
-			container,
-			controller,
-			object_ptr<Selector>(
-				nullptr,
-				controller->uiShow(),
-				Window::GifPauseReason::Layer,
-				Selector::Mode::EmojiOnly));
-		const auto emojiPanel = state->emojiPanel.get();
-		emojiPanel->setDesiredHeightValues(
-			1.,
-			st::emojiPanMinHeight / 2,
-			st::emojiPanMinHeight);
-		emojiPanel->hide();
-		emojiPanel->selector()->setCurrentPeer(controller->session().user());
-		emojiPanel->selector()->emojiChosen(
-		) | rpl::on_next([=](ChatHelpers::EmojiChosen data) {
-			Ui::InsertEmojiAtCursor(input->textCursor(), data.emoji);
-		}, input->lifetime());
-		emojiPanel->selector()->customEmojiChosen(
-		) | rpl::on_next([=](ChatHelpers::FileChosen data) {
-			const auto info = data.document->sticker();
-			if (info
-				&& info->setType == Data::StickersType::Emoji
-				&& !controller->session().premium()) {
-				ShowPremiumPreviewBox(
-					controller,
-					PremiumFeature::AnimatedEmoji);
-			} else {
-				Data::InsertCustomEmoji(input, data.document);
-			}
-		}, input->lifetime());
-	}
-
-	const auto emojiButton = Ui::AddEmojiToggleToField(
-		input,
+	SetupCaptionFieldInBox(
 		box,
 		controller,
-		state->emojiPanel.get(),
-		st::sendGifWithCaptionEmojiPosition);
-	emojiButton->show();
-
-	const auto session = &controller->session();
-	const auto checkCharsLimitation = [=](auto repeat) -> void {
-		const auto remove = Ui::ComputeFieldCharacterCount(input)
-			- Data::PremiumLimits(session).captionLengthCurrent();
-		if (remove > 0) {
-			if (!state->charsLimitation) {
-				state->charsLimitation = base::make_unique_q<Limit>(
-					input,
-					emojiButton,
-					style::al_top);
-				state->charsLimitation->show();
-				Data::AmPremiumValue(session) | rpl::on_next([=] {
-					repeat(repeat);
-				}, state->charsLimitation->lifetime());
-			}
-			state->charsLimitation->setLeft(remove);
-			state->charsLimitation->show();
-		} else {
-			state->charsLimitation = nullptr;
-		}
-	};
-
-	input->changes() | rpl::on_next([=] {
-		checkCharsLimitation(checkCharsLimitation);
-	}, input->lifetime());
+		input,
+		controller->session().user(),
+		[](not_null<DocumentData*>) {
+			return false;
+		},
+		PremiumFeature::AnimatedEmoji);
 
 	return input;
 }

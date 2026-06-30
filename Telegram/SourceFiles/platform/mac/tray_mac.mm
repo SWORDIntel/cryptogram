@@ -348,8 +348,13 @@ void Tray::createIcon() {
 		// On macOS we are activating the window on click
 		// instead of showing the menu, when the window is not activated.
 		_nativeIcon->clicks(
-		) | rpl::on_next([=] {
-			if (IsAnyActiveForTrayMenu()) {
+		) | rpl::on_next([=](TrayClickType type) {
+			if (!_menu) {
+				return;
+			}
+			if (type == TrayClickType::Right) {
+				_nativeIcon->showMenu(_menu.get());
+			} else if (IsAnyActiveForTrayMenu()) {
 				_nativeIcon->showMenu(_menu.get());
 			} else {
 				_nativeIcon->deactivateButton();

@@ -161,6 +161,126 @@ Scene::Scene(const QRectF &rect)
 
 	_canvas->grabContentRequests(
 	) | rpl::on_next([=](ItemCanvas::Content &&content) {
+		if (content.clear) {
+			auto mask = std::move(content.pixmap);
+			if (mask.isNull()) {
+				return;
+			}
+			const auto maskPos = content.position;
+			const auto maskSize = mask.size()
+				/ float64(mask.devicePixelRatio());
+			const auto maskRect = QRectF(maskPos, maskSize);
+			auto targets = std::vector<ItemEraser::Target>();
+			const auto hits = QGraphicsScene::items(
+				maskRect,
+				Qt::IntersectsItemBoundingRect,
+				Qt::DescendingOrder);
+			for (auto *raw : hits) {
+				const auto it = _itemsByPointer.find(raw);
+				if (it == end(_itemsByPointer)) {
+					continue;
+				}
+				const auto &item = it->second;
+				if (!item->isNormalStatus()) {
+					continue;
+				}
+				const auto line = std::dynamic_pointer_cast<ItemLine>(item);
+				if (!line) {
+					continue;
+				}
+				auto before = line->pixmap();
+				if (!line->applyEraser(mask, maskPos)) {
+					continue;
+				}
+				targets.push_back({
+					.item = line,
+					.before = std::move(before),
+				});
+			}
+			if (!targets.empty()) {
+				const auto eraser = std::make_shared<ItemEraser>(
+					std::move(mask),
+					maskPos,
+					std::move(targets));
+				addItem(eraser);
+				_canvas->setZValue(++_lastLineZ);
+			}
+			return;
+		}
+		if (content.blur) {
+			auto mask = std::move(content.pixmap);
+			if (mask.isNull() || !_blurSource) {
+				return;
+			}
+			const auto maskPos = content.position;
+			const auto maskSize = mask.size()
+				/ float64(mask.devicePixelRatio());
+			const auto sourceRect = QRectF(maskPos, maskSize);
+			const auto expandedRect = sourceRect.toAlignedRect().adjusted(
+				-st::photoEditorBlurRadius,
+				-st::photoEditorBlurRadius,
+				st::photoEditorBlurRadius,
+				st::photoEditorBlurRadius);
+			const auto captureRect = expandedRect.intersected(
+				sceneRect().toAlignedRect());
+			if (captureRect.isEmpty()) {
+				return;
+			}
+			auto source = _blurSource(captureRect);
+			if (source.isNull()) {
+				return;
+			}
+			const auto sourceDpr = source.devicePixelRatio();
+			if (source.format() != QImage::Format_ARGB32_Premultiplied) {
+				source = source.convertToFormat(
+					QImage::Format_ARGB32_Premultiplied);
+				source.setDevicePixelRatio(sourceDpr);
+			}
+			const auto canvasVisible = _canvas->isVisible();
+			_canvas->setVisible(false);
+			{
+				auto p = QPainter(&source);
+				render(
+					&p,
+					QRectF(QPointF(), QSizeF(captureRect.size())),
+					QRectF(captureRect),
+					Qt::IgnoreAspectRatio);
+			}
+			_canvas->setVisible(canvasVisible);
+			auto blurred = Images::BlurLargeImage(
+				std::move(source),
+				st::photoEditorBlurRadius);
+			if (blurred.isNull()) {
+				return;
+			}
+			blurred.setDevicePixelRatio(sourceDpr);
+			auto result = QImage(
+				mask.size(),
+				QImage::Format_ARGB32_Premultiplied);
+			result.setDevicePixelRatio(mask.devicePixelRatio());
+			result.fill(Qt::transparent);
+			{
+				auto p = QPainter(&result);
+				p.drawImage(
+					QRectF(QPointF(), maskSize),
+					blurred,
+					QRectF(
+						sourceRect.x() - captureRect.x(),
+						sourceRect.y() - captureRect.y(),
+						sourceRect.width(),
+						sourceRect.height()));
+				p.setCompositionMode(
+					QPainter::CompositionMode_DestinationIn);
+				p.drawPixmap(0, 0, mask);
+			}
+			auto blurPixmap = QPixmap::fromImage(std::move(result));
+			const auto item = std::make_shared<ItemLine>(
+				std::move(blurPixmap));
+			item->setPos(maskPos);
+			addItem(item);
+			_canvas->setZValue(++_lastLineZ);
+			return;
+		}
 		const auto item = std::make_shared<ItemLine>(
 			std::move(content.pixmap));
 		item->setPos(content.position);

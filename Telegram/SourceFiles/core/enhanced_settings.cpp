@@ -1,5 +1,5 @@
 /*
-This file is part of CRYPTOGRAM Desktop,
+This file is part of 64Gram Desktop,
 the unofficial app based on Telegram Desktop.
 For license and copyright information please follow this link:
 https://github.com/TDesktop-x64/tdesktop/blob/dev/LEGAL
@@ -281,7 +281,7 @@ namespace EnhancedSettings {
 			return;
 		}
 		const char *defaultHeader = R"HEADER(
-// This is a list of default options for CRYPTOGRAM Desktop
+// This is a list of default options for 64Gram Desktop
 // Please don't modify it, its content is not used in any way
 // You can place your own options in the 'enhanced-settings-custom.json' file
 )HEADER";

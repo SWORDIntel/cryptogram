@@ -1481,6 +1481,7 @@ void LanguageBox::setupTop(not_null<Ui::VerticalLayout*> container) {
 			rpl::duplicate(premium),
 			_1 && _2),
 		_translateChatTurnOff.events()));
+	_translateChatsToggle = translateChat;
 	std::move(premium) | rpl::on_next([=](bool value) {
 		translateChat->setToggleLocked(!value);
 	}, translateChat->lifetime());

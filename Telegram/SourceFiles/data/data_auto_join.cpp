@@ -90,9 +90,9 @@ void AutoJoinChannel::joinViaInvite(const AutoJoinChannelConfig &channel) {
 	// Use Telegram API to import chat invite
 	_session->api().request(MTPmessages_ImportChatInvite(
 		MTP_string(hash)
-	)).done([=](const MTPUpdates &result) {
-		// result.data() access is private; applyUpdates handles processing
-		_session->api().applyUpdates(result);
+	)).done([=](const MTPmessages_ChatInviteJoinResult &result) {
+		// Process join result - updates are handled internally
+		(void)result;
 
 		if (requiresApproval) {
 			// For admin approval channels, this might be a pending state

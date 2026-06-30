@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
 
@@ -469,14 +469,17 @@ HistoryInner::HistoryInner(
 		mouseActionCancel();
 	}, lifetime());
 	session().data().viewRepaintRequest(
-	) | rpl::on_next([this](not_null<const Element*> view) {
-		repaintItem(view);
+	) | rpl::on_next([this](Data::RequestViewRepaint data) {
+		repaintItem(data.view, data.rect);
 	}, lifetime());
 	session().data().viewLayoutChanged(
 	) | rpl::filter([=](not_null<const Element*> view) {
-		return (view == viewByItem(view->data())) && view->isUnderCursor();
+		return (view == viewByItem(view->data()));
 	}) | rpl::on_next([=](not_null<const Element*> view) {
-		mouseActionUpdate();
+		markReadMetricsStale();
+		if (view->isUnderCursor()) {
+			mouseActionUpdate();
+		}
 	}, lifetime());
 
 	session().data().itemDataChanges(
@@ -594,34 +597,13 @@ void HistoryInner::setupSharingDisallowed() {
 				ChannelDataFlag::NoForwards
 			) | rpl::type_erased;
 	}
-	const auto chat = _peer->asChat();
-	const auto channel = _peer->asChannel();
-	_sharingDisallowed = chat
-		? Data::PeerFlagValue(chat, ChatDataFlag::NoForwards)
-		: Data::PeerFlagValue(
-			channel,
-			ChannelDataFlag::NoForwards
-		) | rpl::type_erased;
 
-	auto rights = chat
-		? chat->adminRightsValue()
-		: channel->adminRightsValue();
-	auto canDelete = std::move(
-		rights
-	) | rpl::map([=] {
-		return chat
-			? chat->canDeleteMessages()
-			: channel->canDeleteMessages();
-	});
-	rpl::combine(
-		_sharingDisallowed.value(),
-		std::move(canDelete)
-	) | rpl::filter([=](bool disallowed, bool canDelete) {
-		return hasSelectRestriction() && !getSelectedItems().empty();
-	}) | rpl::on_next([=] {
-		_widget->clearSelected();
-		if (_mouseAction == MouseAction::PrepareSelect) {
-			mouseActionCancel();
+	const auto clearIfRestricted = [=] {
+		if (hasSelectRestriction() && !getSelectedItems().empty()) {
+			_widget->clearSelected();
+			if (_mouseAction == MouseAction::PrepareSelect) {
+				mouseActionCancel();
+			}
 		}
 	};
 

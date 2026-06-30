@@ -30,34 +30,6 @@ namespace {
 
 constexpr auto kShowOrLineOpacity = 0.3;
 
-[[nodiscard]] object_ptr<RpWidget> MakeShowOrPremiumIcon(
-		not_null<RpWidget*> parent,
-		not_null<const style::icon*> icon) {
-	const auto margin = st::showOrIconMargin;
-	const auto padding = st::showOrIconPadding;
-	const auto inner = padding.top() + icon->height() + padding.bottom();
-	const auto full = margin.top() + inner + margin.bottom();
-	auto result = object_ptr<FixedHeightWidget>(parent, full);
-	const auto raw = result.data();
-
-	raw->resize(st::boxWideWidth, full);
-	raw->paintRequest(
-	) | rpl::on_next([=] {
-		auto p = QPainter(raw);
-		auto hq = PainterHighQualityEnabler(p);
-		const auto width = raw->width();
-		const auto position = QPoint((width - inner) / 2, margin.top());
-		const auto rect = QRect(position, QSize(inner, inner));
-		const auto shift = QPoint(padding.left(), padding.top());
-		p.setPen(Qt::NoPen);
-		p.setBrush(st::showOrIconBg);
-		p.drawEllipse(rect);
-		icon->paint(p, position + shift, width);
-	}, raw->lifetime());
-
-	return result;
-}
-
 } // namespace
 
 object_ptr<RpWidget> MakeShowOrLabel(
@@ -187,7 +159,6 @@ void ShowOrPremiumBox(
 			std::move(skin.showButton),
 			st::showOrShowButton),
 		buttonPadding);
-	show->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	box->addRow(
 		MakeShowOrLabel(box, std::move(skin.orPremium)),
 		st::showOrLabelPadding + buttonPadding,

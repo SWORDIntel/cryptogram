@@ -196,17 +196,7 @@ void SelfForwardsTagger::showSelectorForMessages(
 		base::install_event_filter(selector, list, eventFilterCallback);
 	}
 
-	struct State {
-		rpl::lifetime timerLifetime;
-		bool expanded = false;
-	};
-	const auto state = selector->lifetime().make_state<State>();
-	const auto restartTimer = [=](crl::time ms) {
-		state->timerLifetime.destroy();
-		base::timer_once(ms) | rpl::on_next([=] {
-			hideAndDestroy();
-		}, state->timerLifetime);
-	};
+	const auto state = selector->lifetime().make_state<ToastTimerState>();
 
 	selector->willExpand() | rpl::on_next([=] {
 		state->expanded = true;
@@ -262,32 +252,6 @@ void SelfForwardsTagger::showToast(
 	}
 }
 
-void SelfForwardsTagger::createLottieIcon(
-		not_null<QWidget*> widget,
-		const QString &name) {
-	const auto lottieWidget = Ui::CreateChild<Ui::RpWidget>(widget);
-	struct State {
-		std::unique_ptr<Lottie::Icon> lottieIcon;
-	};
-	const auto state = lottieWidget->lifetime().make_state<State>();
-	state->lottieIcon = Lottie::MakeIcon({
-		.name = name,
-		.sizeOverride = st::selfForwardsTaggerIcon,
-	});
-	const auto icon = state->lottieIcon.get();
-	lottieWidget->resize(st::selfForwardsTaggerIcon);
-	lottieWidget->move(st::selfForwardsTaggerIconPosition);
-	lottieWidget->show();
-	lottieWidget->raise();
-	icon->animate(
-		[=] { lottieWidget->update(); },
-		0,
-		icon->framesCount() - 1);
-	lottieWidget->paintRequest() | rpl::on_next([=] {
-		auto p = QPainter(lottieWidget);
-		icon->paint(p, 0, 0);
-	}, lottieWidget->lifetime());
-}
 
 void SelfForwardsTagger::showTaggedToast(DocumentId reaction) {
 	auto text = tr::lng_message_tagged_with(

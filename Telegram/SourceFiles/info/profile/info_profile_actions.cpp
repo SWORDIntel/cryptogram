@@ -675,7 +675,6 @@ void SetupAboutPeerIdDrag(
 		labelWrap,
 		std::move(linkText),
 		st::defaultTableSmallButton);
-	link->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	link->setClickedCallback([=] {
 		state->myTimezone = !state->myTimezone.current();
 		state->expanded = true;
@@ -897,11 +896,11 @@ void DeleteContactNote(
 	subtextLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
 
 	rpl::combine(
-		notesLine.subtext->geometryValue(),
-		notesContainer->widthValue()
+		notesLine.wrap->entity()->widthValue(),
+		notesLine.subtext->geometryValue()
 	) | rpl::on_next([=, skip = st::lineWidth * 5](
-			const QRect &subtextGeometry,
-			int parentWidth) {
+			int width,
+			const QRect &subtextGeometry) {
 		subtextLabel->moveToRight(
 			0,
 			subtextGeometry.y() + skip,
@@ -1564,8 +1563,13 @@ Section DetailsFiller::makeInfo() {
 		rpl::combine(
 			container->widthValue(),
 			label->geometryValue(),
-			button->sizeValue()
-		) | rpl::on_next([=](int width, QRect, QSize buttonSize) {
+			button->sizeValue(),
+			button->shownValue()
+		) | rpl::on_next([=](
+				int width,
+				QRect,
+				QSize buttonSize,
+				bool buttonShown) {
 			button->moveToRight(
 				rightSkip,
 				(parent->height() - buttonSize.height()) / 2);
@@ -2172,7 +2176,11 @@ Section DetailsFiller::makePersonalChannel(not_null<UserData*> user) {
 		rpl::duplicate(
 			channel
 		) | rpl::on_next([=](ChannelData *channel) {
-			clear();
+			if (!channel && messageChannelWrap->animating()) {
+				base::call_delayed(duration, messageChannelWrap, clear);
+			} else {
+				clear();
+			}
 			if (!channel) {
 				return;
 			}
@@ -2200,86 +2208,21 @@ Section DetailsFiller::makePersonalChannel(not_null<UserData*> user) {
 	};
 }
 
-object_ptr<Ui::RpWidget> DetailsFiller::setupMuteToggle() {
-	const auto peer = _peer;
-	const auto topicRootId = _topic ? _topic->rootId() : MsgId();
-	const auto makeThread = [=] {
-		return topicRootId
-			? static_cast<Data::Thread*>(peer->forumTopicFor(topicRootId))
-			: peer->owner().history(peer).get();
-	};
-	auto result = object_ptr<Ui::SettingsButton>(
-		_wrap,
-		tr::lng_profile_enable_notifications(),
-		st::infoNotificationsButton);
-	result->toggleOn(_topic
-		? NotificationsEnabledValue(_topic)
-		: NotificationsEnabledValue(peer), true);
-	result->setAcceptBoth();
-	const auto notifySettings = &peer->owner().notifySettings();
-	MuteMenu::SetupMuteMenu(
-		result.data(),
-		result->clicks(
-		) | rpl::filter([=](Qt::MouseButton button) {
-			if (button == Qt::RightButton) {
-				return true;
-			}
-			const auto topic = topicRootId
-				? peer->forumTopicFor(topicRootId)
-				: nullptr;
-			Assert(!topicRootId || topic != nullptr);
-			const auto is = topic
-				? notifySettings->isMuted(topic)
-				: notifySettings->isMuted(peer);
-			if (is) {
-				if (topic) {
-					notifySettings->update(topic, { .unmute = true });
-				} else {
-					notifySettings->update(peer, { .unmute = true });
-				}
-				return false;
-			} else {
-				return true;
-			}
-		}) | rpl::to_empty,
-		makeThread,
-		_controller->uiShow());
-	object_ptr<FloatingIcon>(
-		result,
-		st::infoIconNotifications,
-		st::infoNotificationsIconPosition);
-	return result;
-}
-
-void DetailsFiller::setupAboutVerification() {
-	const auto peer = _peer;
-	const auto inner = _wrap->add(object_ptr<Ui::VerticalLayout>(_wrap));
-	peer->session().changes().peerFlagsValue(
-		peer,
-		Data::PeerUpdate::Flag::VerifyInfo
-	) | rpl::on_next([=] {
-		const auto info = peer->botVerifyDetails();
-		while (inner->count()) {
-			delete inner->widgetAt(0);
-		}
-		if (!info) {
-			Ui::AddDivider(inner);
-		} else if (!info->description.empty()) {
-			Ui::AddDividerText(inner, rpl::single(info->description));
-		}
-		inner->resizeToWidth(inner->width());
-	}, inner->lifetime());
-}
-
-void DetailsFiller::setupMainApp() {
-	const auto button = _wrap->add(
+void DetailsFiller::addMainApp(not_null<UserData*> user) {
+	const auto parent = _stack->layout();
+	auto wrap = object_ptr<Ui::SlideWrap<Ui::VerticalLayout>>(
+		parent,
+		object_ptr<Ui::VerticalLayout>(parent));
+	const auto raw = wrap.data();
+	const auto inner = raw->entity();
+	const auto button = inner->add(
 		object_ptr<Ui::RoundButton>(
 			inner,
 			tr::lng_profile_open_app(),
 			st::infoOpenApp),
 		st::infoOpenAppMargin,
 		style::al_justify);
-	button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
+	button->setFullRadius(true);
 
 	const auto controller = _controller->parentController();
 	button->setClickedCallback([=] {
@@ -3355,31 +3298,23 @@ object_ptr<Ui::RpWidget> SetupChannelMembersAndManage(
 	return result;
 }
 
-Cover *AddCover(
-		not_null<Ui::VerticalLayout*> container,
+void BuildProfileDetailsSections(
+		SectionStack &stack,
 		not_null<Controller*> controller,
 		not_null<PeerData*> peer,
 		Data::ForumTopic *topic,
-		Data::SavedSublist *sublist) {
-	const auto shown = sublist ? sublist->sublistPeer() : peer;
-	const auto result = topic
-		? container->add(object_ptr<Cover>(
-			container,
-			controller->parentController(),
-			topic))
-		: container->add(object_ptr<Cover>(
-			container,
-			controller->parentController(),
-			shown,
-			[=] { return controller->wrapWidget(); }));
-	result->showSection(
-	) | rpl::on_next([=](Section section) {
-		controller->showSection(topic
-			? std::make_shared<Info::Memento>(topic, section)
-			: std::make_shared<Info::Memento>(shown, section));
-	}, result->lifetime());
-	result->setOnlineCount(rpl::single(0));
-	return result;
+		Data::SavedSublist *sublist,
+		Origin origin) {
+	if (topic) {
+		DetailsFiller filler(controller, &stack, topic);
+		filler.buildSections();
+	} else if (sublist) {
+		DetailsFiller filler(controller, &stack, sublist);
+		filler.buildSections();
+	} else {
+		DetailsFiller filler(controller, &stack, peer, origin);
+		filler.buildSections();
+	}
 }
 
 void AddDetails(

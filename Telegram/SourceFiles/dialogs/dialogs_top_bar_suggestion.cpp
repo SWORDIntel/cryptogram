@@ -211,7 +211,8 @@ rpl::producer<Ui::SlideWrap<Ui::RpWidget>*> TopBarSuggestionValue(
 		rpl::merge(
 			session->promoSuggestions().value(),
 			session->api().authorizations().unreviewedChanges(),
-			Data::AmPremiumValue(session) | rpl::skip(1) | rpl::to_empty
+			Data::AmPremiumValue(session) | rpl::skip(1) | rpl::to_empty,
+			session->giftAuctions().hasActiveChanges() | rpl::to_empty
 		) | rpl::on_next([=] {
 			const auto was = state->wrap.get();
 			const auto weak = base::make_weak(was);

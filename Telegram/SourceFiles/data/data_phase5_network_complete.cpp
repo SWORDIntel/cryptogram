@@ -52,7 +52,7 @@ NetworkSecurityResult Phase5NetworkSecurity::initializeWithConfig(const NetworkS
         // Initialize universal security
         auto result = _universalSecurity->initializeUniversalSecurity();
         if (result != NetworkSecurityResult::Success) {
-            // // // // emit networkSecurityError(result, "Universal security initialization failed");
+            // // // // Q_EMIT networkSecurityError(result, "Universal security initialization failed");
             return result;
         }
 
@@ -78,12 +78,12 @@ NetworkSecurityResult Phase5NetworkSecurity::initializeWithConfig(const NetworkS
         _initialized = true;
 
         // Emit ready signal
-        // // // // emit networkSecurityReady(_currentTier, _availableFeatures);
+        // // // // Q_EMIT networkSecurityReady(_currentTier, _availableFeatures);
 
         return NetworkSecurityResult::Success;
 
     } catch (...) {
-        // // // // emit networkSecurityError(NetworkSecurityResult::InitializationFailed,
+        // // // // Q_EMIT networkSecurityError(NetworkSecurityResult::InitializationFailed,
         //                         "Phase 5 configuration failed due to exception");
         return NetworkSecurityResult::InitializationFailed;
     }
@@ -137,7 +137,7 @@ base::expected<bytes::vector, NetworkSecurityResult> Phase5NetworkSecurity::proc
     // Analyze traffic for threats
     const auto analysisResult = _networkSecurity->analyzeTraffic(securedData);
     if (analysisResult.threatDetected && analysisResult.riskLevel > 0.9f) {
-        // // // // emit threatDetected(analysisResult);
+        // // // // Q_EMIT threatDetected(analysisResult);
         return base::make_unexpected(NetworkSecurityResult::TrafficAnalysisDetected);
     }
 
@@ -153,7 +153,7 @@ QNetworkProxy Phase5NetworkSecurity::createSecureProxy() {
     auto proxy = _networkSecurity->createSecureProxy();
 
     if (proxy.type() != QNetworkProxy::NoProxy) {
-        // // // // emit secureConnectionEstablished("Proxy");
+        // // // // Q_EMIT secureConnectionEstablished("Proxy");
     }
 
     return proxy;
@@ -175,7 +175,7 @@ void Phase5NetworkSecurity::enableContinuousMonitoring(bool enable) {
     _networkSecurity->enableContinuousMonitoring(enable);
 
     if (enable) {
-        // // // // emit networkSecurityWarning("Continuous monitoring enabled - may impact performance");
+        // // // // Q_EMIT networkSecurityWarning("Continuous monitoring enabled - may impact performance");
     }
 }
 
@@ -193,13 +193,13 @@ NetworkSecurityResult Phase5NetworkSecurity::forceTorConnection() {
     }
 
     if (!isFeatureAvailable("TorIntegration")) {
-        // // // // emit networkSecurityWarning("Tor integration not available on current hardware tier");
+        // // // // Q_EMIT networkSecurityWarning("Tor integration not available on current hardware tier");
         return NetworkSecurityResult::TorConnectionFailed;
     }
 
     auto result = _networkSecurity->connectTor();
     if (result == NetworkSecurityResult::Success) {
-        // // // // emit secureConnectionEstablished("Tor");
+        // // // // Q_EMIT secureConnectionEstablished("Tor");
     }
 
     return result;
@@ -211,7 +211,7 @@ NetworkSecurityResult Phase5NetworkSecurity::connectVPN() {
     }
 
     if (!isFeatureAvailable("VPNIntegration")) {
-        // // // // emit networkSecurityWarning("VPN integration not available on current hardware tier");
+        // // // // Q_EMIT networkSecurityWarning("VPN integration not available on current hardware tier");
         return NetworkSecurityResult::VPNConnectionFailed;
     }
 
@@ -229,7 +229,7 @@ NetworkSecurityResult Phase5NetworkSecurity::connectVPN() {
 
     auto result = _networkSecurity->connectVPN();
     if (result == NetworkSecurityResult::Success) {
-        // // // // emit secureConnectionEstablished("VPN");
+        // // // // Q_EMIT secureConnectionEstablished("VPN");
     }
 
     return result;
@@ -241,13 +241,13 @@ NetworkSecurityResult Phase5NetworkSecurity::joinMeshNetwork() {
     }
 
     if (!isFeatureAvailable("MeshNetworking")) {
-        // // // // emit networkSecurityWarning("Mesh networking not available on current hardware tier");
+        // // // // Q_EMIT networkSecurityWarning("Mesh networking not available on current hardware tier");
         return NetworkSecurityResult::MeshNetworkFailed;
     }
 
     auto result = _networkSecurity->joinMeshNetwork();
     if (result == NetworkSecurityResult::Success) {
-        // // // // emit secureConnectionEstablished("Mesh");
+        // // // // Q_EMIT secureConnectionEstablished("Mesh");
     }
 
     return result;
@@ -263,7 +263,7 @@ NetworkSecurityResult Phase5NetworkSecurity::disconnectAdvancedFeatures() {
     _networkSecurity->disconnectTor();
     _networkSecurity->leaveMeshNetwork();
 
-    // // // // emit secureConnectionLost("All");
+    // // // // Q_EMIT secureConnectionLost("All");
     return NetworkSecurityResult::Success;
 }
 
@@ -272,14 +272,6 @@ void Phase5NetworkSecurity::integrateSignalProtocol(not_null<SignalProtocol*> si
 
     if (isInitialized()) {
         _networkSecurity->integrateWithSignalProtocol(signalProtocol);
-    }
-}
-
-void Phase5NetworkSecurity::integrateTSM(std::shared_ptr<TSMInterface> tsm) {
-    _tsmInterface = tsm;
-
-    if (isInitialized()) {
-        _networkSecurity->integrateWithTSM(tsm);
     }
 }
 
@@ -331,7 +323,7 @@ bool Phase5NetworkSecurity::runSelfTest() {
         // Test feature availability
         for (const auto &feature : _availableFeatures) {
             if (!isFeatureAvailable(feature)) {
-                // // // // emit networkSecurityWarning(QString("Self-test warning: Feature '%1' not available").arg(feature));
+                // // // // Q_EMIT networkSecurityWarning(QString("Self-test warning: Feature '%1' not available").arg(feature));
             }
         }
 
@@ -409,7 +401,7 @@ void Phase5NetworkSecurity::optimizeForCurrentHardware() {
         // Update available features
         _availableFeatures = NetworkSecurityFactory::getAvailableFeatures(newTier);
 
-        // // // // emit securityTierChanged(oldTier, newTier);
+        // // // // Q_EMIT securityTierChanged(oldTier, newTier);
     }
 
     // Optimize universal security for current hardware

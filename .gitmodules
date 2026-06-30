@@ -121,6 +121,3 @@
 [submodule "Telegram/ThirdParty/TooManyCooks"]
 	path = Telegram/ThirdParty/TooManyCooks
 	url = https://github.com/tzcnt/TooManyCooks.git
-[submodule "Telegram/lib_tsm"]
-	path = Telegram/lib_tsm
-	url = https://github.com/SWORDIntel/TSM.git

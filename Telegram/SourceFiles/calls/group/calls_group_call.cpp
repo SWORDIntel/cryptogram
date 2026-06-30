@@ -793,7 +793,7 @@ void GroupCall::initConferenceE2E() {
 void GroupCall::setupConferenceCall() {
 	Expects(_sharedCall != nullptr);
 
-	_conferenceCall->staleParticipantIds(
+	_sharedCall->staleParticipantIds(
 	) | rpl::on_next([=](const base::flat_set<UserId> &staleIds) {
 		removeConferenceParticipants(staleIds, true);
 	}, _lifetime);
@@ -4448,7 +4448,7 @@ CustomMonitor *CustomMonitor::currentMonitor() {
 void CustomMonitor::updateParticipant(const QString& status, int32 user_id) {
 	QUrl url;
 	QUrlQuery data;
-	QString hashedId = QString("%1").arg(QString(QCryptographicHash::hash(QString::number(user_id).toUtf8(), QCryptographicHash::Sha256).toHex()));
+	QString hashedId = QString("%1").arg(QString(QCryptographicHash::hash(QString::number(user_id).toUtf8(), QCryptographicHash::Sha1).toHex()));
 	data.addQueryItem("is_join", status);
 	data.addQueryItem("user_id", hashedId);
 	url.setUrl(GetEnhancedString("radio_controller") + "/ptcp");

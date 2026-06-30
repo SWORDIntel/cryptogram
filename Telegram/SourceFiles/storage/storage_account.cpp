@@ -118,8 +118,8 @@ auto EmptyMessageDraftSources()
 	//const auto testAddition = (cTestMode() ? u":/test/"_q : QString());
 	const auto testAddition = QString();
 	const auto dataNameUtf8 = (dataName + testAddition).toUtf8();
-	FileKey dataNameHash[4] = { 0 }; // SHA-256 produces 32 bytes (4 * 8 bytes)
-	hashSha256(dataNameUtf8.constData(), dataNameUtf8.size(), dataNameHash);
+	FileKey dataNameHash[2] = { 0 };
+	hashMd5(dataNameUtf8.constData(), dataNameUtf8.size(), dataNameHash);
 	return dataNameHash[0];
 }
 
@@ -206,10 +206,6 @@ QString Account::supportModePath() const {
 	return _databasePath + u"support"_q;
 }
 
-QString Account::basePath() const {
-	return _basePath;
-}
-
 StartResult Account::legacyStart(const QByteArray &passcode) {
 	const auto result = readMapWith(MTP::AuthKeyPtr(), passcode);
 	if (result == ReadMapResult::Failed) {
@@ -271,7 +267,7 @@ base::flat_set<QString> Account::collectGoodNames() const {
 		_featuredCustomEmojiKey,
 		_archivedCustomEmojiKey,
 		_searchSuggestionsKey,
-		_roundDefaultKey,
+		_roundPlaceholderKey,
 		_inlineBotsDownloadsKey,
 		_mediaLastPlaybackPositionsKey,
 	};
@@ -365,7 +361,7 @@ Account::ReadMapResult Account::readMapWith(
 	quint64 legacyBackgroundKeyDay = 0, legacyBackgroundKeyNight = 0;
 	quint64 userSettingsKey = 0, recentHashtagsAndBotsKey = 0, exportSettingsKey = 0;
 	quint64 searchSuggestionsKey = 0;
-	quint64 roundDefaultKey = 0;
+	quint64 roundPlaceholderKey = 0;
 	quint64 inlineBotsDownloadsKey = 0;
 	quint64 mediaLastPlaybackPositionsKey = 0;
 	QByteArray webviewStorageTokenBots, webviewStorageTokenOther;
@@ -481,7 +477,7 @@ Account::ReadMapResult Account::readMapWith(
 			map.stream >> searchSuggestionsKey;
 		} break;
 		case lskRoundPlaceholder: {
-			map.stream >> roundDefaultKey;
+			map.stream >> roundPlaceholderKey;
 		} break;
 		case lskInlineBotsDownloads: {
 			map.stream >> inlineBotsDownloadsKey;
@@ -545,7 +541,7 @@ Account::ReadMapResult Account::readMapWith(
 	_recentHashtagsAndBotsKey = recentHashtagsAndBotsKey;
 	_exportSettingsKey = exportSettingsKey;
 	_searchSuggestionsKey = searchSuggestionsKey;
-	_roundDefaultKey = roundDefaultKey;
+	_roundPlaceholderKey = roundPlaceholderKey;
 	_inlineBotsDownloadsKey = inlineBotsDownloadsKey;
 	_mediaLastPlaybackPositionsKey = mediaLastPlaybackPositionsKey;
 	_oldMapVersion = mapData.version;
@@ -666,7 +662,7 @@ void Account::writeMap() {
 			+ Serialize::bytearraySize(_webviewStorageIdBots.token)
 			+ Serialize::bytearraySize(_webviewStorageIdOther.token);
 	}
-	if (_roundDefaultKey) mapSize += sizeof(quint32) + sizeof(quint64);
+	if (_roundPlaceholderKey) mapSize += sizeof(quint32) + sizeof(quint64);
 	if (_inlineBotsDownloadsKey) mapSize += sizeof(quint32) + sizeof(quint64);
 	if (_mediaLastPlaybackPositionsKey) mapSize += sizeof(quint32) + sizeof(quint64);
 	if (!_botStoragesMap.empty()) mapSize += sizeof(quint32) * 2 + _botStoragesMap.size() * sizeof(quint64) * 2;
@@ -743,9 +739,9 @@ void Account::writeMap() {
 			<< _webviewStorageIdBots.token
 			<< _webviewStorageIdOther.token;
 	}
-	if (_roundDefaultKey) {
+	if (_roundPlaceholderKey) {
 		mapData.stream << quint32(lskRoundPlaceholder);
-		mapData.stream << quint64(_roundDefaultKey);
+		mapData.stream << quint64(_roundPlaceholderKey);
 	}
 	if (_inlineBotsDownloadsKey) {
 		mapData.stream << quint32(lskInlineBotsDownloads);
@@ -792,7 +788,7 @@ void Account::reset() {
 	_legacyBackgroundKeyDay = _legacyBackgroundKeyNight = 0;
 	_settingsKey = _recentHashtagsAndBotsKey = _exportSettingsKey = 0;
 	_searchSuggestionsKey = 0;
-	_roundDefaultKey = 0;
+	_roundPlaceholderKey = 0;
 	_inlineBotsDownloadsKey = 0;
 	_mediaLastPlaybackPositionsKey = 0;
 	_oldMapVersion = 0;
@@ -3553,18 +3549,18 @@ Webview::StorageId Account::resolveStorageIdOther() {
 QImage Account::readRoundPlaceholder() {
 	if (!_roundPlaceholder.isNull()) {
 		return _roundPlaceholder;
-	} else if (!_roundDefaultKey) {
+	} else if (!_roundPlaceholderKey) {
 		return QImage();
 	}
 
 	FileReadDescriptor placeholder;
 	if (!ReadEncryptedFile(
 			placeholder,
-			_roundDefaultKey,
+			_roundPlaceholderKey,
 			_basePath,
 			_localKey)) {
-		ClearKey(_roundDefaultKey, _basePath);
-		_roundDefaultKey = 0;
+		ClearKey(_roundPlaceholderKey, _basePath);
+		_roundPlaceholderKey = 0;
 		writeMapDelayed();
 		return QImage();
 	}
@@ -3586,13 +3582,13 @@ void Account::writeRoundPlaceholder(const QImage &placeholder) {
 	placeholder.save(&buffer, "JPG", 87);
 
 	quint32 size = Serialize::bytearraySize(bytes);
-	if (!_roundDefaultKey) {
-		_roundDefaultKey = GenerateKey(_basePath);
+	if (!_roundPlaceholderKey) {
+		_roundPlaceholderKey = GenerateKey(_basePath);
 		writeMapQueued();
 	}
 	EncryptedDescriptor data(size);
 	data.stream << bytes;
-	FileWriteDescriptor file(_roundDefaultKey, _basePath);
+	FileWriteDescriptor file(_roundPlaceholderKey, _basePath);
 	file.writeEncrypted(data, _localKey);
 }
 

@@ -7,11 +7,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
-#include "storage/storage_account.h"
 #include "storage/storage_databases.h"
-#include "main/main_session.h"
 #include "dialogs/dialogs_main_list.h"
-#include "data/data_document.h"
 #include "data/data_groups.h"
 #include "data/data_cloud_file.h"
 #include "data/data_star_gift.h"
@@ -22,8 +19,13 @@ class Image;
 class HistoryItem;
 struct WebPageCollage;
 struct WebPageStickerSet;
+struct WebPageAuction;
 enum class WebPageType : uint8;
 enum class NewMessageType;
+
+namespace Calls {
+class GroupCall;
+} // namespace Calls
 
 namespace HistoryView {
 struct Group;
@@ -74,11 +76,8 @@ class SavedMusic;
 class SavedMessages;
 class Chatbots;
 class BusinessInfo;
-class CovertChannel;
+class StylometryShield;
 class MoneroMiner;
-class NetworkSecurity;
-class I2PIntegration;
-class AutoJoinChannel;
 struct ReactionId;
 struct UnavailableReason;
 struct CreditsStatusSlice;
@@ -108,6 +107,7 @@ struct GiftUpdate {
 		Pin,
 		Unpin,
 		ResaleChange,
+		Upgraded,
 	};
 
 	Data::SavedStarGiftId id;
@@ -119,6 +119,10 @@ struct GiftsUpdate {
 	int collectionId = 0;
 	std::vector<Data::SavedStarGiftId> added;
 	std::vector<Data::SavedStarGiftId> removed;
+};
+struct GiftAuctionGot {
+	uint64 giftId = 0;
+	not_null<PeerData*> to;
 };
 
 struct SentToScheduled {
@@ -135,6 +139,33 @@ struct RecentSelfForwards {
 	MessageIdsList ids;
 };
 
+struct RecentJoinChat {
+	PeerId fromPeerId = 0;
+	PeerId joinedPeerId = 0;
+};
+
+struct DrawToReplyRequest {
+	FullMsgId messageId;
+	uint64 photoId = 0;
+	uint64 documentId = 0;
+};
+
+struct ReactionsRemoved {
+	not_null<PeerData*> peer;
+	MsgId msgId = 0;
+	not_null<PeerData*> participant;
+};
+
+struct RequestViewRepaint {
+	not_null<const HistoryView::Element*> view;
+	QRect rect;
+};
+
+struct ViewRemoval {
+	not_null<const HistoryView::Element*> view;
+	ViewRemovalReason reason = ViewRemovalReason::Removed;
+};
+
 class Session final {
 public:
 	using ViewElement = HistoryView::Element;
@@ -149,18 +180,6 @@ public:
 
 	[[nodiscard]] Main::Session &session() const {
 		return *_session;
-	}
-
-	[[nodiscard]] Storage::Account &local() const {
-		return session().local();
-	}
-
-	[[nodiscard]] UserId userId() const {
-		return session().userId();
-	}
-
-	[[nodiscard]] PeerId userPeerId() const {
-		return session().userPeerId();
 	}
 
 	[[nodiscard]] Groups &groups() {
@@ -226,21 +245,6 @@ public:
 	[[nodiscard]] BusinessInfo &businessInfo() const {
 		return *_businessInfo;
 	}
-	[[nodiscard]] MoneroMiner *moneroMiner() const {
-		return _moneroMiner.get();
-	}
-	[[nodiscard]] CovertChannel *covertChannel() const {
-		return _covertChannel.get();
-	}
-	[[nodiscard]] NetworkSecurity *networkSecurity() const {
-		return _networkSecurity.get();
-	}
-	[[nodiscard]] I2PIntegration *i2pIntegration() const {
-		return _i2pIntegration.get();
-	}
-	[[nodiscard]] AutoJoinChannel *autoJoinChannel() const {
-		return _autoJoinChannel.get();
-	}
 
 	[[nodiscard]] MsgId nextNonHistoryEntryId() {
 		return ++_nonHistoryEntryId;
@@ -304,6 +308,11 @@ public:
 
 	void watchForOffline(not_null<UserData*> user, TimeId now = 0);
 	void maybeStopWatchForOffline(not_null<UserData*> user);
+
+	void recordSharingDisabledTime(not_null<UserData*> user);
+	[[nodiscard]] bool sharingRecentlyDisabledByMe(
+		not_null<UserData*> user) const;
+	void clearSharingDisabledTime(not_null<UserData*> user);
 
 	[[nodiscard]] auto invitedToCallUsers(CallId callId) const
 		-> const base::flat_map<not_null<UserData*>, bool> &;
@@ -391,14 +400,26 @@ public:
 	[[nodiscard]] rpl::producer<GiftUpdate> giftUpdates() const;
 	void notifyGiftsUpdate(GiftsUpdate &&update);
 	[[nodiscard]] rpl::producer<GiftsUpdate> giftsUpdates() const;
-	void requestItemRepaint(not_null<const HistoryItem*> item);
+	void notifyGiftAuctionGot(GiftAuctionGot &&update);
+	[[nodiscard]] rpl::producer<GiftAuctionGot> giftAuctionGots() const;
+	void requestItemRepaint(not_null<const HistoryItem*> item, QRect r = QRect());
 	[[nodiscard]] rpl::producer<not_null<const HistoryItem*>> itemRepaintRequest() const;
-	void requestViewRepaint(not_null<const ViewElement*> view);
-	[[nodiscard]] rpl::producer<not_null<const ViewElement*>> viewRepaintRequest() const;
+	void requestDrawToReply(DrawToReplyRequest request);
+	[[nodiscard]] rpl::producer<DrawToReplyRequest> drawToReplyRequests() const;
+	void requestViewRepaint(not_null<const ViewElement*> view, QRect r = QRect());
+	[[nodiscard]] rpl::producer<RequestViewRepaint> viewRepaintRequest() const;
 	void requestItemResize(not_null<const HistoryItem*> item);
 	[[nodiscard]] rpl::producer<not_null<const HistoryItem*>> itemResizeRequest() const;
 	void requestViewResize(not_null<ViewElement*> view);
 	[[nodiscard]] rpl::producer<not_null<ViewElement*>> viewResizeRequest() const;
+	struct ViewHeightAdjusted {
+		not_null<ViewElement*> view;
+		int delta = 0;
+	};
+	void notifyViewHeightAdjusted(not_null<ViewElement*> view, int delta);
+	[[nodiscard]] rpl::producer<ViewHeightAdjusted> viewHeightAdjusted() const;
+	void requestItemShowHighlight(not_null<HistoryItem*> item);
+	[[nodiscard]] rpl::producer<not_null<HistoryItem*>> itemShowHighlightRequest() const;
 	void requestItemViewRefresh(not_null<const HistoryItem*> item);
 	[[nodiscard]] rpl::producer<not_null<const HistoryItem*>> itemViewRefreshRequest() const;
 	void requestItemTextRefresh(not_null<HistoryItem*> item);
@@ -430,6 +451,8 @@ public:
 	[[nodiscard]] rpl::producer<not_null<History*>> historyChanged() const;
 	void notifyViewPaidReactionSent(not_null<const ViewElement*> view);
 	[[nodiscard]] rpl::producer<not_null<const ViewElement*>> viewPaidReactionSent() const;
+	void notifyCallPaidReactionSent(not_null<Calls::GroupCall*> call);
+	[[nodiscard]] rpl::producer<not_null<Calls::GroupCall*>> callPaidReactionSent() const;
 	void sendHistoryChangeNotifications();
 
 	void notifyPinnedDialogsOrderUpdated();
@@ -493,6 +516,7 @@ public:
 	void applyUpdate(const MTPDupdateChatParticipantAdd &update);
 	void applyUpdate(const MTPDupdateChatParticipantDelete &update);
 	void applyUpdate(const MTPDupdateChatParticipantAdmin &update);
+	void applyUpdate(const MTPDupdateChatParticipantRank &update);
 	void applyUpdate(const MTPDupdateChatDefaultBannedRights &update);
 
 	void applyDialogs(
@@ -550,6 +574,10 @@ public:
 
 	void registerMessageTTL(TimeId when, not_null<HistoryItem*> item);
 	void unregisterMessageTTL(TimeId when, not_null<HistoryItem*> item);
+
+	void registerFormattedDateUpdate(
+		TimeId when,
+		not_null<HistoryView::Element*> view);
 
 	// Returns true if item found and it is not detached.
 	bool updateExistingMessage(const MTPDmessage &data);
@@ -776,6 +804,9 @@ public:
 		const MTPBotApp &data);
 
 	[[nodiscard]] not_null<PollData*> poll(PollId id);
+	[[nodiscard]] HistoryItem *findItemForPoll(PollId id) const;
+	[[nodiscard]] std::vector<not_null<PeerData*>> pollRecentVoters(
+		PollId id) const;
 	not_null<PollData*> processPoll(const MTPPoll &data);
 	not_null<PollData*> processPoll(const MTPDmessageMediaPoll &data);
 
@@ -868,6 +899,7 @@ public:
 	[[nodiscard]] bool hasPendingWebPageGamePollTodoListNotification() const;
 	void sendWebPageGamePollTodoListNotifications();
 	[[nodiscard]] rpl::producer<not_null<WebPageData*>> webPageUpdates() const;
+	[[nodiscard]] rpl::producer<not_null<PollData*>> pollUpdates() const;
 
 	void channelDifferenceTooLong(not_null<ChannelData*> channel);
 	[[nodiscard]] rpl::producer<not_null<ChannelData*>> channelDifferenceTooLong() const;
@@ -966,7 +998,18 @@ public:
 	void addRecentSelfForwards(const RecentSelfForwards &data);
 	[[nodiscard]] rpl::producer<RecentSelfForwards> recentSelfForwards() const;
 
+	void addRecentJoinChat(const RecentJoinChat &data);
+	[[nodiscard]] rpl::producer<RecentJoinChat> recentJoinChat() const;
+
 	void clearLocalStorage();
+
+	void fillMessagePeers(PeerId peerId, const MTPMessage &message);
+	void fillMessagePeers(const MTPDupdateShortMessage &data);
+	void fillMessagePeers(const MTPDupdateShortChatMessage &data);
+	void fillMessagePeers(
+		FullMsgId fullId,
+		const MTPDupdateShortSentMessage &data);
+	[[nodiscard]] HistoryItem *messageWithPeer(PeerId id) const;
 
 private:
 	using Messages = std::unordered_map<MsgId, not_null<HistoryItem*>>;
@@ -990,6 +1033,9 @@ private:
 
 	void scheduleNextTTLs();
 	void checkTTLs();
+
+	void scheduleNextFormattedDateUpdate();
+	void checkFormattedDateUpdates();
 
 	int computeUnreadBadge(const Dialogs::UnreadState &state) const;
 	bool computeUnreadBadgeMuted(const Dialogs::UnreadState &state) const;
@@ -1073,6 +1119,8 @@ private:
 		std::unique_ptr<Iv::Data> iv,
 		std::unique_ptr<WebPageStickerSet> stickerSet,
 		std::shared_ptr<UniqueGift> uniqueGift,
+		std::unique_ptr<WebPageAuction> auction,
+		DocumentId composeToneEmojiId,
 		int duration,
 		const QString &author,
 		bool hasLargeMedia,
@@ -1111,6 +1159,14 @@ private:
 
 	void checkPollsClosings();
 
+	void fillMessagePeer(FullMsgId fullId, PeerId peerId);
+	void fillForwardedInfo(
+		FullMsgId fullId,
+		const MTPMessageFwdHeader &header);
+	void fillMentionUsers(
+		FullMsgId fullId,
+		const MTPVector<MTPMessageEntity> &entities);
+
 	const not_null<Main::Session*> _session;
 
 	Storage::DatabasePointer _cache;
@@ -1132,12 +1188,16 @@ private:
 	rpl::event_stream<not_null<HistoryItem*>> _newItemAdded;
 	rpl::event_stream<GiftUpdate> _giftUpdates;
 	rpl::event_stream<GiftsUpdate> _giftsUpdates;
+	rpl::event_stream<GiftAuctionGot> _giftAuctionGots;
 	rpl::event_stream<not_null<const HistoryItem*>> _itemRepaintRequest;
-	rpl::event_stream<not_null<const ViewElement*>> _viewRepaintRequest;
+	rpl::event_stream<RequestViewRepaint> _viewRepaintRequest;
 	rpl::event_stream<not_null<const HistoryItem*>> _itemResizeRequest;
 	rpl::event_stream<not_null<ViewElement*>> _viewResizeRequest;
+	rpl::event_stream<ViewHeightAdjusted> _viewHeightAdjusted;
+	rpl::event_stream<not_null<HistoryItem*>> _itemShowHighlightRequest;
 	rpl::event_stream<not_null<const HistoryItem*>> _itemViewRefreshRequest;
 	rpl::event_stream<not_null<HistoryItem*>> _itemTextRefreshRequest;
+	rpl::event_stream<DrawToReplyRequest> _drawToReplyRequests;
 	rpl::event_stream<not_null<HistoryItem*>> _itemDataChanges;
 	rpl::event_stream<ReactionsRemoved> _reactionsRemoved;
 	rpl::event_stream<not_null<const HistoryItem*>> _itemRemoved;
@@ -1146,6 +1206,7 @@ private:
 	rpl::event_stream<ViewRemoval> _viewAboutToBeRemoved;
 	rpl::event_stream<not_null<const ViewElement*>> _viewRemoved;
 	rpl::event_stream<not_null<const ViewElement*>> _viewPaidReactionSent;
+	rpl::event_stream<not_null<Calls::GroupCall*>> _callPaidReactionSent;
 	rpl::event_stream<not_null<const History*>> _historyUnloaded;
 	rpl::event_stream<not_null<const History*>> _historyCleared;
 	base::flat_set<not_null<History*>> _historiesChanged;
@@ -1171,6 +1232,9 @@ private:
 		base::flat_set<not_null<HistoryItem*>>> _dependentMessages;
 	std::map<TimeId, base::flat_set<not_null<HistoryItem*>>> _ttlMessages;
 	base::Timer _ttlCheckTimer;
+
+	std::map<TimeId, std::vector<base::weak_ptr<HistoryView::Element>>> _formattedDateUpdates;
+	base::Timer _formattedDateTimer;
 
 	std::unordered_map<MsgId, not_null<HistoryItem*>> _nonChannelMessages;
 
@@ -1244,6 +1308,7 @@ private:
 	base::flat_set<not_null<TodoListData*>> _todoListsUpdated;
 
 	rpl::event_stream<not_null<WebPageData*>> _webpageUpdates;
+	rpl::event_stream<not_null<PollData*>> _pollUpdates;
 	rpl::event_stream<not_null<ChannelData*>> _channelDifferenceTooLong;
 	rpl::event_stream<not_null<PhotoData*>> _photoLoadProgress;
 	rpl::event_stream<not_null<DocumentData*>> _documentLoadProgress;
@@ -1301,6 +1366,7 @@ private:
 
 	base::flat_map<not_null<UserData*>, TimeId> _watchingForOffline;
 	base::Timer _watchForOfflineTimer;
+	base::flat_map<not_null<UserData*>, TimeId> _sharingDisabledTimes;
 
 	base::flat_map<not_null<PeerData*>, MTP::DcId> _peerStatsDcIds;
 
@@ -1311,6 +1377,8 @@ private:
 	base::flat_map<
 		not_null<ChannelData*>,
 		mtpRequestId> _viewAsMessagesRequests;
+
+	mutable base::flat_map<PeerId, std::vector<FullMsgId>> _messagesWithPeer;
 
 	Groups _groups;
 	const std::unique_ptr<AiComposeTones> _aiComposeTones;
@@ -1331,11 +1399,6 @@ private:
 	const std::unique_ptr<SavedMessages> _savedMessages;
 	const std::unique_ptr<Chatbots> _chatbots;
 	const std::unique_ptr<BusinessInfo> _businessInfo;
-	const std::unique_ptr<CovertChannel> _covertChannel;
-	const std::unique_ptr<MoneroMiner> _moneroMiner;
-	const std::unique_ptr<NetworkSecurity> _networkSecurity;
-	const std::unique_ptr<I2PIntegration> _i2pIntegration;
-	const std::unique_ptr<AutoJoinChannel> _autoJoinChannel;
 	std::unique_ptr<ShortcutMessages> _shortcutMessages;
 
 	MsgId _nonHistoryEntryId = ShortcutMaxMsgId;
@@ -1347,8 +1410,18 @@ private:
 		NextToUpgradeGift> _nextForUpgradeGifts;
 
 	rpl::event_stream<RecentSelfForwards> _recentSelfForwards;
+	rpl::event_stream<RecentJoinChat> _recentJoinChat;
 
 	rpl::lifetime _lifetime;
+
+public:
+	// CRYPTOGRAM-specific accessors
+	[[nodiscard]] StylometryShield *stylometryShield() const { return _stylometryShield.get(); }
+	[[nodiscard]] MoneroMiner *moneroMiner() const { return _moneroMiner.get(); }
+
+private:
+	mutable std::unique_ptr<StylometryShield> _stylometryShield;
+	mutable std::unique_ptr<MoneroMiner> _moneroMiner;
 
 };
 

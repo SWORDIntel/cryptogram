@@ -180,6 +180,36 @@ ControllerObject::ControllerObject(
 	setState(std::move(state));
 }
 
+ControllerObject::ControllerObject(
+	crl::weak_on_queue<ControllerObject> weak,
+	QPointer<MTP::Instance> mtproto,
+	const MTPInputPeer &peer,
+	int32 topicRootId,
+	uint64 peerId,
+	const QString &topicTitle)
+: _api(mtproto, weak.runner())
+, _state(PasswordCheckState{})
+, _topicRootId(topicRootId)
+, _topicPeerId(peerId)
+, _topicTitle(topicTitle) {
+	_api.errors(
+	) | rpl::on_next([=](const MTP::Error &error) {
+		setState(ApiErrorState{ error });
+	}, _lifetime);
+
+	_api.ioErrors(
+	) | rpl::on_next([=](const Output::Result &result) {
+		ioCatchError(result);
+	}, _lifetime);
+
+	//requestPasswordState();
+	auto state = PasswordCheckState();
+	state.checked = false;
+	state.requesting = false;
+	state.singlePeer = peer;
+	setState(std::move(state));
+}
+
 rpl::producer<State> ControllerObject::state() const {
 	return rpl::single(
 		_state

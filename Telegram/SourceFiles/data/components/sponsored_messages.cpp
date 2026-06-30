@@ -10,7 +10,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "api/api_text_entities.h"
 #include "api/api_peer_search.h" // SponsoredSearchResult
 #include "apiwrap.h"
-#include <gsl/gsl>
 #include "core/click_handler_types.h"
 #include "data/data_channel.h"
 #include "data/data_document.h"
@@ -578,8 +577,11 @@ void SponsoredMessages::append(
 	const auto itemId = FullMsgId(
 		history->peer->id,
 		_session->data().nextLocalMessageId());
-	auto list = entries();
-	list->emplace_back(itemId, std::move(sharedMessage));
+	const auto list = entries();
+	list->push_back({
+		.itemFullId = itemId,
+		.sponsored = std::move(sharedMessage),
+	});
 	auto &entry = list->back();
 	const auto fileOrigin = FileOrigin(); // No way to refresh in ads.
 
@@ -604,9 +606,9 @@ void SponsoredMessages::append(
 			mediaPhoto,
 			fileOrigin,
 			preloaded);
-	} else if (mediaDocument && VideoPreload::Can(gsl::not_null<DocumentData*>(mediaDocument))) {
+	} else if (mediaDocument && VideoPreload::Can(mediaDocument)) {
 		preload = std::make_unique<VideoPreload>(
-			gsl::not_null<DocumentData*>(mediaDocument),
+			mediaDocument,
 			fileOrigin,
 			preloaded);
 	}

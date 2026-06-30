@@ -335,7 +335,7 @@ void Launcher::init() {
 	prepareSettings();
 	initQtMessageLogging();
 
-	QApplication::setApplicationName(u"Cryptogram"_q);
+	QApplication::setApplicationName(u"64Gram"_q);
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	// fallback session management is useless for tdesktop since it doesn't have
@@ -531,10 +531,10 @@ QByteArray Launcher::instanceHash() const {
 		if (customWorkingDir()) {
 			const auto d = QFile::encodeName(
 				QDir(cWorkingDir()).absolutePath());
-			hashLegacyHex(d.constData(), d.size(), h.data());
+			hashMd5Hex(d.constData(), d.size(), h.data());
 		} else {
 			const auto f = QFile::encodeName(cExeDir() + cExeName());
-			hashLegacyHex(f.constData(), f.size(), h.data());
+			hashMd5Hex(f.constData(), f.size(), h.data());
 		}
 		return h;
 	}();

@@ -148,8 +148,6 @@ void VerifyBox::setupControls(
 			button->setFullWidth(w - small.left() - small.right());
 		}, button->lifetime());
 		button->setClickedCallback([=] { ::File::OpenUrl(openUrl); });
-		button->setTextTransform(
-			Ui::RoundButtonTextTransform::NoTransform);
 	}
 	if (resend) {
 		auto link = TextWithEntities{ tr::lng_cloud_password_resend(tr::now) };

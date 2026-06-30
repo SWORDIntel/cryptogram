@@ -373,6 +373,9 @@ void FillTopReactors(
 		state->updated.events_starting_with({}),
 		wrap->widthValue()
 	) | rpl::on_next([=](auto, int width) {
+		if (!state->widgets.empty()) {
+			parent->resize(parent->width(), state->widgets.back()->height());
+		}
 		const auto single = width / 4;
 		if (single <= st::paidReactTopUserpic) {
 			return;
@@ -596,9 +599,10 @@ void PaidReactionsBox(
 				tr::rich)
 			: tr::lng_paid_react_about(
 				lt_channel,
-				rpl::single(Text::Bold(args.channel)),
-				Text::RichLangValue)),
-		st::boostText);
+				rpl::single(tr::bold(args.name)),
+				tr::rich)),
+		dark ? st::darkEditStarsText : st::boostText);
+	label->setTryMakeSimilarLines(true);
 	labelWrap->widthValue() | rpl::on_next([=](int width) {
 		label->resizeToWidth(width);
 	}, label->lifetime());
@@ -612,16 +616,39 @@ void PaidReactionsBox(
 	if (!videoStream) {
 		addTopReactors();
 
-	const auto named = box->addRow(
-		object_ptr<Checkbox>(
-			box,
-			tr::lng_paid_react_show_in_top(tr::now),
-			state->shownPeer.current() != 0),
-		style::al_top);
-	named->checkedValue(
-	) | rpl::on_next([=](bool show) {
-		state->shownPeer = show ? state->savedShownPeer : 0;
-	}, named->lifetime());
+		const auto skip = st::defaultCheckbox.margin.bottom();
+		const auto named = box->addRow(
+			object_ptr<Checkbox>(
+				box,
+				tr::lng_paid_react_show_in_top(tr::now),
+				state->shownPeer.current() != 0,
+				st::paidReactBoxCheckbox),
+			st::boxRowPadding + QMargins(0, 0, 0, skip),
+			style::al_top);
+		named->checkedValue(
+		) | rpl::on_next([=](bool show) {
+			state->shownPeer = show ? state->savedShownPeer : 0;
+		}, named->lifetime());
+	}
+
+	AddSkip(content);
+	AddSkip(content);
+
+	AddDividerText(
+		content,
+		(videoStreamAdmin
+			? tr::lng_paid_react_admin_cant(tr::marked)
+			: tr::lng_paid_react_agree(
+				lt_link,
+				rpl::combine(
+					tr::lng_paid_react_agree_link(),
+					tr::lng_group_invite_subscription_about_url()
+				) | rpl::map([](const QString &text, const QString &url) {
+					return tr::link(text, url);
+				}),
+				tr::rich)),
+		st::defaultBoxDividerLabelPadding,
+		dark ? st::groupCallDividerLabel : st::defaultDividerLabel);
 
 	const auto button = box->addButton(rpl::single(QString()), [=] {
 		args.send(state->chosen.current(), state->shownPeer.current());
@@ -633,52 +660,13 @@ void PaidReactionsBox(
 		args.send(0, state->shownPeer.current());
 	}, box->lifetime());
 
-	{
-		const auto buttonLabel = CreateChild<FlatLabel>(
-			button,
-			rpl::single(QString()),
-			st::creditsBoxButtonLabel);
-		args.submit(
-			state->chosen.value()
-		) | rpl::on_next([=](const TextWithEntities &text) {
-			buttonLabel->setMarkedText(text);
-		}, buttonLabel->lifetime());
-		buttonLabel->setTextColorOverride(
-			box->getDelegate()->style().button.textFg->c);
-		button->sizeValue(
-		) | rpl::on_next([=](const QSize &size) {
-			buttonLabel->moveToLeft(
-				(size.width() - buttonLabel->width()) / 2,
-				(size.height() - buttonLabel->height()) / 2);
-		}, buttonLabel->lifetime());
-		buttonLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
-	}
+	button->setText(args.submit(state->chosen.value()));
 
-	box->widthValue(
-	) | rpl::on_next([=](int width) {
-		const auto &padding = st::paidReactBox.buttonPadding;
-		button->resizeToWidth(width
-			- padding.left()
-			- padding.right());
-		button->moveToLeft(padding.left(), button->y());
-	}, button->lifetime());
-
-	{
-		const auto balance = Settings::AddBalanceWidget(
-			content,
-			args.session,
-			std::move(args.balanceValue),
-			false);
-		rpl::combine(
-			balance->sizeValue(),
-			box->widthValue()
-		) | rpl::on_next([=] {
-			balance->moveToLeft(
-				st::creditsHistoryRightSkip * 2,
-				st::creditsHistoryRightSkip);
-			balance->update();
-		}, balance->lifetime());
-	}
+	AddStarSelectBalance(
+		box,
+		args.session,
+		std::move(args.balanceValue),
+		dark);
 }
 
 object_ptr<BoxContent> MakePaidReactionBox(PaidReactionBoxArgs &&args) {

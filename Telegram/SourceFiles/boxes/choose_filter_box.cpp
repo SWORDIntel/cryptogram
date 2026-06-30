@@ -304,7 +304,7 @@ void FillChooseFilterMenu(
 			menu->menu(),
 			menu->st().menu,
 			Ui::Menu::CreateAction(
-				menu->menu().get(),
+				menu.get(),
 				Ui::Text::FixAmpersandInAction(title.text.text),
 				std::move(callback)),
 			contains ? &st::mediaPlayerMenuCheck : nullptr,

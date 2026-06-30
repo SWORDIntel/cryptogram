@@ -4,8 +4,8 @@
 #include <QtCore/QObject>
 #include <QtCore/QTimer>
 #ifdef __has_include
-#if __has_include(<QtMultimedia/QAudioOutput>)
-#include <QtMultimedia/QAudioOutput>
+#if __has_include(<QtMultimedia/QAudioSink>)
+#include <QtMultimedia/QAudioSink>
 #endif
 #endif
 #include <memory>
@@ -170,8 +170,8 @@ private:
 
     // Audio system for countermeasures
 #ifdef __has_include
-#if __has_include(<QtMultimedia/QAudioOutput>)
-    std::unique_ptr<QAudioOutput> _audio_output;
+#if __has_include(<QtMultimedia/QAudioSink>)
+    std::unique_ptr<QAudioSink> _audio_output;
 #endif
 #endif
     QIODevice *_audio_device = nullptr;

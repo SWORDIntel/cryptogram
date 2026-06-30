@@ -212,7 +212,6 @@ void LocalPasscodeEnter::setupContent() {
 			st::changePhoneButton),
 		st::settingLocalPasscodeButtonPadding,
 		style::al_top);
-	button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	button->setClickedCallback([=] {
 		const auto newText = newPasscode->text();
 		const auto reenterText = reenterPasscode
@@ -456,29 +455,28 @@ void BuildManageContent(SectionBuilder &builder) {
 	builder.addSkip();
 
 	using Divider = CloudPassword::OneEdgeBoxContentDivider;
-	const auto divider = Ui::CreateChild<Divider>(this);
-	divider->lower();
-	const auto about = content->add(
-		object_ptr<Ui::PaddingWrap<>>(
-			content,
-			object_ptr<Ui::FlatLabel>(
-				content,
-				rpl::combine(
-					tr::lng_passcode_about1(),
-					tr::lng_passcode_about3()
-				) | rpl::map([](const QString &s1, const QString &s2) {
-					return s1 + "\n\n" + s2;
-				}),
-				st::boxDividerLabel),
-		st::defaultBoxDividerLabelPadding));
-	about->geometryValue(
-	) | rpl::on_next([=](const QRect &r) {
-		divider->setGeometry(r);
-	}, divider->lifetime());
-	_isBottomFillerShown.value(
-	) | rpl::on_next([=](bool shown) {
-		divider->skipEdge(Qt::BottomEdge, shown);
-	}, divider->lifetime());
+	builder.add([](const WidgetContext &ctx) {
+		const auto divider = Ui::CreateChild<Divider>(ctx.container.get());
+		divider->lower();
+		const auto about = ctx.container->add(
+			object_ptr<Ui::PaddingWrap<>>(
+				ctx.container,
+				object_ptr<Ui::FlatLabel>(
+					ctx.container,
+					rpl::combine(
+						tr::lng_passcode_about1(),
+						tr::lng_passcode_about3()
+					) | rpl::map([](const QString &s1, const QString &s2) {
+						return s1 + "\n\n" + s2;
+					}),
+					st::boxDividerLabel),
+			st::defaultBoxDividerLabelPadding));
+		about->geometryValue(
+		) | rpl::on_next([=](const QRect &r) {
+			divider->setGeometry(r);
+		}, divider->lifetime());
+		return SectionBuilder::WidgetToAdd{};
+	});
 
 	builder.add([](const WidgetContext &ctx) {
 		const auto systemUnlockWrap = ctx.container->add(
@@ -502,11 +500,7 @@ void BuildManageContent(SectionBuilder &builder) {
 				: UnlockType::None;
 		}));
 
-	unlockType->value(
-	) | rpl::on_next([=](UnlockType type) {
-		while (systemUnlockContent->count()) {
-			delete systemUnlockContent->widgetAt(0);
-		}
+		const auto highlights = ctx.highlights;
 
 		unlockType->value(
 		) | rpl::on_next([=](UnlockType type) {
@@ -562,31 +556,6 @@ void BuildManageContent(SectionBuilder &builder) {
 					? tr::lng_settings_use_applewatch_about()
 					: tr::lng_settings_use_systempwd_about()));
 
-		AddButtonWithIcon(
-			systemUnlockContent,
-			(Platform::IsWindows()
-				? tr::lng_settings_use_winhello()
-				: (type == UnlockType::Biometrics)
-				? tr::lng_settings_use_touchid()
-				: (type == UnlockType::Companion)
-				? tr::lng_settings_use_applewatch()
-				: tr::lng_settings_use_systempwd()),
-			st::settingsButton,
-			{ Platform::IsWindows()
-				? &st::menuIconWinHello
-				: (type == UnlockType::Biometrics)
-				? &st::menuIconTouchID
-				: (type == UnlockType::Companion)
-				? &st::menuIconAppleWatch
-				: &st::menuIconSystemPwd }
-		)->toggleOn(
-			rpl::single(Core::App().settings().systemUnlockEnabled())
-		)->toggledChanges(
-		) | rpl::filter([=](bool value) {
-			return value != Core::App().settings().systemUnlockEnabled();
-		}) | rpl::on_next([=](bool value) {
-			Core::App().settings().setSystemUnlockEnabled(value);
-			Core::App().saveSettingsDelayed();
 		}, systemUnlockContent->lifetime());
 
 		systemUnlockWrap->toggleOn(unlockType->value(

@@ -644,7 +644,7 @@ void SetupVenues(
 	return result;
 }
 
-not_null<RpWidget*> SetupMapContainer(
+not_null<RpWidget*> SetupMapPlaceholder(
 		not_null<RpWidget*> parent,
 		int minHeight,
 		int maxHeight,
@@ -693,7 +693,6 @@ not_null<RpWidget*> SetupMapContainer(
 		tr::lng_maps_select_on_map(),
 		st::pickLocationChooseOnMap);
 	button->setFullRadius(true);
-	button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	button->setClickedCallback(choose);
 
 	parent->sizeValue() | rpl::on_next([=](QSize size) {
@@ -821,13 +820,13 @@ void LocationPicker::setupWindow(const Descriptor &descriptor) {
 		parent.y() + (parent.height() - window->height()) / 2);
 
 	_container = CreateChild<RpWidget>(_body.get());
-	const auto _mapContainerViewAdded = st::pickLocationButtonSkip
+	_mapPlaceholderAdded = st::pickLocationButtonSkip
 		+ st::pickLocationButton.height
 		+ st::pickLocationButtonSkip
 		+ st::boxDividerHeight;
-	const auto min = st::pickLocationCollapsedHeight + _mapContainerViewAdded;
-	const auto max = st::pickLocationMapHeight + _mapContainerViewAdded;
-	_mapContainerView = SetupMapContainer(_container, min, max, [=] {
+	const auto min = st::pickLocationCollapsedHeight + _mapPlaceholderAdded;
+	const auto max = st::pickLocationMapHeight + _mapPlaceholderAdded;
+	_mapPlaceholder = SetupMapPlaceholder(_container, min, max, [=] {
 		setupWebview();
 	});
 	_scroll = CreateChild<ScrollArea>(_body.get());
@@ -864,7 +863,7 @@ void LocationPicker::setupWindow(const Descriptor &descriptor) {
 			scrollTop);
 		const auto mapHeight = st::pickLocationMapHeight
 			- sub
-			+ (_mapContainerView ? _mapContainerViewAdded : 0);
+			+ (_mapPlaceholder ? _mapPlaceholderAdded : 0);
 		_container->setGeometry(0, 0, width, mapHeight);
 		const auto scrollWidgetTop = search ? 0 : mapHeight;
 		const auto scrollHeight = height - scrollWidgetTop;
@@ -886,7 +885,7 @@ void LocationPicker::setupWindow(const Descriptor &descriptor) {
 void LocationPicker::setupWebview() {
 	Expects(!_webview);
 
-	delete base::take(_mapContainerView);
+	delete base::take(_mapPlaceholder);
 
 	const auto window = _window.get();
 	_webview = std::make_unique<Webview::Window>(

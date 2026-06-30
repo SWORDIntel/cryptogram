@@ -340,42 +340,6 @@ void ShowLanguagesBox(Window::SessionController *controller) {
 	Guard = LanguageBox::Show(controller);
 }
 
-void ShowPhonePrivacyBox(Window::SessionController *controller) {
-	static auto Guard = base::binary_guard();
-	auto guard = base::binary_guard();
-
-	using Privacy = Api::UserPrivacy;
-	const auto key = Privacy::Key::PhoneNumber;
-	controller->session().api().userPrivacy().reload(key);
-
-	const auto weak = base::make_weak(controller);
-	auto shared = std::make_shared<base::binary_guard>(
-		guard.make_guard());
-	auto lifetime = std::make_shared<rpl::lifetime>();
-	controller->session().api().userPrivacy().value(
-		key
-	) | rpl::take(
-		1
-	) | rpl::on_next([=](const Privacy::Rule &value) mutable {
-		using namespace ::Settings;
-		const auto show = shared->alive();
-		if (lifetime) {
-			base::take(lifetime)->destroy();
-		}
-		if (show) {
-			if (const auto controller = weak.get()) {
-				controller->show(Box<EditPrivacyBox>(
-					controller,
-					std::make_unique<PhoneNumberPrivacyController>(
-						controller),
-					value));
-			}
-		}
-	}, *lifetime);
-
-	Guard = std::move(guard);
-}
-
 bool SetLanguage(
 		Window::SessionController *controller,
 		const Match &match,

@@ -765,7 +765,7 @@ void Tasks::initTaskField(not_null<Task*> task, TextWithEntities text) {
 		_scrollToWidget.fire_copy(field);
 	}, field->lifetime());
 	field->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		const auto index = findField(field);
 		if (index + 1 < _list.size()) {
 			_list[index + 1]->setFocus();
@@ -1043,7 +1043,7 @@ object_ptr<Ui::RpWidget> EditTodoListBox::setupContent() {
 			st::createPollLimitPadding));
 
 	title->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		tasks->focusFirst();
 		*handled = true;
 	}, title->lifetime());

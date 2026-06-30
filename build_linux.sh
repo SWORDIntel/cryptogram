@@ -227,10 +227,10 @@ echo "Build time: $((DURATION / 60))m $((DURATION % 60))s"
 echo "Build type: $BUILD_TYPE"
 echo ""
 echo "Binary location:"
-if [ -f "$BUILD_DIR/bin/Telegram" ]; then
-    echo "  $BUILD_DIR/bin/Telegram"
-elif [ -f "$BUILD_DIR/Telegram" ]; then
-    echo "  $BUILD_DIR/Telegram"
+if [ -f "$BUILD_DIR/bin/cryptogram-desktop" ]; then
+    echo "  $BUILD_DIR/bin/cryptogram-desktop"
+elif [ -f "$BUILD_DIR/cryptogram-desktop" ]; then
+    echo "  $BUILD_DIR/cryptogram-desktop"
 else
     echo "  (Check $BUILD_DIR for binaries)"
 fi
@@ -240,7 +240,7 @@ echo "NEXT STEPS"
 echo "═══════════════════════════════════════════════════════════════════"
 echo ""
 echo "Run CRYPTOGRAM:"
-echo "  $BUILD_DIR/bin/Telegram"
+echo "  $BUILD_DIR/bin/cryptogram-desktop"
 echo ""
 echo "═══════════════════════════════════════════════════════════════════"
 echo ""

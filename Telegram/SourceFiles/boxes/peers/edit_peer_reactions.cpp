@@ -459,7 +459,7 @@ object_ptr<Ui::RpWidget> AddReactionsSelector(
 	using SelectorState = ReactionsSelectorState;
 	std::move(
 		args.stateValue
-	) | rpl::on_next([=](SelectorState value) {
+	) | rpl::on_next([=, all = args.all](SelectorState value) {
 		switch (value) {
 		case SelectorState::Active:
 			state->overlay = nullptr;

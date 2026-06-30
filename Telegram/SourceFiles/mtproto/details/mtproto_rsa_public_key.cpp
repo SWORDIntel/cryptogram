@@ -8,12 +8,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/details/mtproto_rsa_public_key.h"
 
 #include "base/openssl_help.h"
-#include "core/utils.h"
-
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/rsa.h>
-#include <openssl/err.h>
 
 namespace MTP::details {
 namespace {
@@ -97,6 +91,8 @@ RSAPublicKey::Private::Private(bytes::const_span nBytes, bytes::const_span eByte
 		const auto n = openssl::BigNum(nBytes).takeRaw();
 		const auto e = openssl::BigNum(eBytes).takeRaw();
 		const auto valid = (n != nullptr) && (e != nullptr);
+		// We still pass both values to RSA_set0_key() so that even
+		// if only one of them is valid RSA would take ownership of it.
 		if (!RSA_set0_key(_rsa, n, e, nullptr) || !valid) {
 			RSA_free(base::take(_rsa));
 		} else {
@@ -159,8 +155,8 @@ bytes::vector RSAPublicKey::Private::decrypt(bytes::const_span data) const {
 		return {};
 	} else if (auto zeroBytes = kDecryptSize - res) {
 		auto resultBytes = gsl::make_span(result);
-		bytes::move(resultBytes.subspan(zeroBytes, res), resultBytes.subspan(0, res));
-		bytes::set_with_const(resultBytes.subspan(0, zeroBytes), gsl::byte{});
+		bytes::move(resultBytes.subspan(zeroBytes - res, res), resultBytes.subspan(0, res));
+		bytes::set_with_const(resultBytes.subspan(0, zeroBytes - res), gsl::byte{});
 	}
 	return result;
 }

@@ -213,32 +213,30 @@ void PostsSearchIntro::setup() {
 		} else if (state.freeSearchesLeft > 0) {
 			_button->setText(rpl::single(QString()));
 
-				SetSearchButtonLabel(_button, tr::lng_posts_search_button(
-					lt_query,
-					rpl::single(Ui::Text::Colorized(state.query.trimmed())),
-					Ui::Text::WithEntities));
+			SetSearchButtonLabel(_button, tr::lng_posts_search_button(
+				lt_query,
+				rpl::single(Ui::Text::Colorized(state.query.trimmed())),
+				tr::marked));
 		} else {
 			_button->setText(rpl::single(QString()));
 
 			Ui::SetButtonTwoLabels(
 				_button,
-					tr::lng_posts_limit_search_paid(
-						lt_cost,
-						rpl::single(Ui::Text::IconEmoji(
-							&st::starIconEmoji
-						).append(
-							Lang::FormatCountDecimal(state.starsPerPaidSearch))),
-						Ui::Text::WithEntities),
-					tr::lng_posts_limit_unlocks(
-						lt_duration,
-						FormatCountdownTill(
-							state.nextFreeSearchTime
-						) | rpl::map([](const QString &text) {
-							return TextWithEntities{ text };
-						}),
-						Ui::Text::WithEntities),
-					st::resaleButtonTitle,
-					st::resaleButtonSubtitle);
+				tr::lng_posts_limit_search_paid(
+					lt_cost,
+					rpl::single(Ui::Text::IconEmoji(
+						&st::starIconEmoji
+					).append(
+						Lang::FormatCountDecimal(state.starsPerPaidSearch))),
+					tr::marked),
+				tr::lng_posts_limit_unlocks(
+					lt_duration,
+					FormatCountdownTill(
+						state.nextFreeSearchTime
+					) | rpl::map(tr::marked),
+					tr::marked),
+				st::resaleButtonTitle,
+				st::resaleButtonSubtitle);
 		}
 		_button->resize(_button->width(), st::postsSearchIntroButton.height);
 		_content->resizeToWidth(width());

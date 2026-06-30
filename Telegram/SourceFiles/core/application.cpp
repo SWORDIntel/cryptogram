@@ -30,8 +30,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "core/enhanced_settings.h"
 #include "core/proxy_rotation_manager.h"
 #include "core/ui_integration.h"
-#include "core/peer_trust.h"
-#include "core/tsm_client.h"
 #include "chat_helpers/emoji_keywords.h"
 #include "chat_helpers/stickers_emoji_image_loader.h"
 #include "base/platform/base_platform_global_shortcuts.h"
@@ -48,7 +46,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "iv/iv_delegate_impl.h"
 #include "iv/iv_instance.h"
 #include "iv/iv_data.h"
-// #include "lang/lang_translator.h"  // Not available
+#include "lang/lang_translator.h"
 #include "lang/lang_cloud_manager.h"
 #include "lang/lang_hardcoded.h"
 #include "lang/lang_instance.h"
@@ -95,6 +93,7 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "ui/boxes/confirm_box.h"
 #include "core/cached_webview_availability.h"
 #include "styles/style_window.h"
+#include "core/peer_trust.h"
 
 #include <QtCore/QStandardPaths>
 #include <QtCore/QMimeDatabase>
@@ -175,13 +174,11 @@ Application::Application()
 , _langCloudManager(std::make_unique<Lang::CloudManager>(langpack()))
 , _emojiKeywords(std::make_unique<ChatHelpers::EmojiKeywords>())
 , _tray(std::make_unique<Tray>())
-, _peerTrustManager(std::make_unique<PeerTrustManager>())
-, _tsmClient(std::make_unique<TSMClient>())
+, _setupEmailLock(false)
 , _autoLockTimer([=] { checkAutoLock(); }) {
 	Ui::Integration::Set(&_private->uiIntegration);
 	_private->proxyRotation = std::make_unique<ProxyRotationManager>();
 
-	_tsmClient->connect();
 	_platformIntegration->init();
 
 	passcodeLockChanges(
@@ -296,8 +293,8 @@ void Application::run() {
 		return;
 	}
 
-	// _translator = std::make_unique<Lang::Translator>();
-	// QCoreApplication::instance()->installTranslator(_translator.get());
+	_translator = std::make_unique<Lang::Translator>();
+	QCoreApplication::instance()->installTranslator(_translator.get());
 
 	style::StartManager(cScale());
 	Ui::Accessible::Init();
@@ -1921,7 +1918,7 @@ void Application::RegisterUrlScheme() {
 		.arguments = arguments,
 		.protocol = u"tg"_q,
 		.protocolName = u"Telegram Link"_q,
-		.shortAppName = u"Cryptogram"_q,
+		.shortAppName = u"64Gram"_q,
 		.longAppName = QCoreApplication::applicationName(),
 		.displayAppName = AppName.utf16(),
 		.displayAppDescription = AppName.utf16(),
@@ -1932,7 +1929,7 @@ void Application::RegisterUrlScheme() {
 		.arguments = arguments,
 		.protocol = u"tonsite"_q,
 		.protocolName = u"TonSite Link"_q,
-		.shortAppName = u"cryptogram"_q,
+		.shortAppName = u"tdesktop"_q,
 		.longAppName = QCoreApplication::applicationName(),
 		.displayAppName = AppName.utf16(),
 		.displayAppDescription = AppName.utf16(),

@@ -740,7 +740,7 @@ void MainWindow::validateWindowTheme(bool native, bool night) {
 	// See "https://osdn.net/projects/tortoisesvn/scm/svn/blobs/28812/"
 	// "trunk/src/TortoiseIDiff/MainWindow.cpp"
 	//
-	// Currently functions correctly with the implemented subset.
+	// But for now it works event with a small part of that.
 	//
 
 	//const auto updateWindowTheme = [&] {

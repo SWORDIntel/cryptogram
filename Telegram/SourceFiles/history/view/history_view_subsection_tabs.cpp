@@ -159,7 +159,7 @@ void SubsectionTabs::setupHorizontal(
 		return true;
 	});
 
-	_horizontal->sizeValue(
+	widget->sizeValue(
 	) | rpl::on_next([=](QSize size) {
 		const auto togglew = toggle->width();
 		const auto height = size.height();
@@ -167,8 +167,11 @@ void SubsectionTabs::setupHorizontal(
 		shadow->setGeometry(togglew, 0, st::lineWidth, height);
 	}, scroll->lifetime());
 
-	_horizontal->paintRequest() | rpl::on_next([=](QRect clip) {
-		QPainter(_horizontal).fillRect(
+	widget->paintRequest() | rpl::on_next([=](QRect clip) {
+		auto p = QPainter(widget);
+
+		const auto line = st::lineWidth;
+		p.fillRect(
 			clip.intersected(
 				widget->rect().marginsRemoved(
 					{ 0, bottom ? line : 0, 0, bottom ? 0 : line })),

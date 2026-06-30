@@ -173,31 +173,6 @@ QString FileNameUnsafe(
 		path = dir.absolutePath() + '/';
 	}
 
-	// Add automatic file type sorting into folders
-	QString typeFolder;
-	if (prefix == u"audio"_q) {
-		typeFolder = u"Audio/"_q;
-	} else if (prefix == u"video"_q) {
-		typeFolder = u"Video/"_q;
-	} else if (prefix == u"doc"_q) {
-		// Determine if it's an image based on extension
-		const auto lowerName = name.toLower();
-		if (lowerName.endsWith(u".jpg"_q) || lowerName.endsWith(u".jpeg"_q) ||
-			lowerName.endsWith(u".png"_q) || lowerName.endsWith(u".gif"_q) ||
-			lowerName.endsWith(u".bmp"_q) || lowerName.endsWith(u".webp"_q) ||
-			lowerName.endsWith(u".svg"_q) || lowerName.endsWith(u".tiff"_q)) {
-			typeFolder = u"Images/"_q;
-		} else {
-			typeFolder = u"Documents/"_q;
-		}
-	}
-
-	// Create the type-specific subdirectory if needed
-	if (!typeFolder.isEmpty()) {
-		path = path + typeFolder;
-		if (!QDir().exists(path)) QDir().mkpath(path);
-	}
-
 	QString nameStart, extension;
 	int32 extPos = name.lastIndexOf('.');
 	if (extPos >= 0) {
@@ -695,11 +670,7 @@ auto DocumentData::resolveQualities(HistoryItem *context) const
 	static const auto empty = std::vector<not_null<DocumentData*>>();
 	const auto info = video();
 	const auto media = context ? context->media() : nullptr;
-	if (!info || !media) {
-		return empty;
-	}
-	const auto mediaDocument = media->document();
-	if (mediaDocument != this) {
+	if (!info || !media || media->document() != this) {
 		return empty;
 	}
 	return media->hasQualitiesList() ? info->qualities : empty;
@@ -758,23 +729,34 @@ void DocumentData::setDataAndCache(const QByteArray &data) {
 				base::duplicate(data),
 				cacheTag()));
 	}
-	_cachedData = data;
 }
 
 QByteArray DocumentData::data() const {
-	return _cachedData;
+	if (const auto media = activeMediaView()) {
+		const auto &bytes = media->bytes();
+		if (!bytes.isEmpty()) {
+			return bytes;
+		}
+	}
+	if (const auto path = filepath(true); !path.isEmpty()) {
+		QFile file(path);
+		if (file.open(QIODevice::ReadOnly)) {
+			return file.readAll();
+		}
+	}
+	return {};
 }
 
-void DocumentData::setSecureVoiceToken(const QByteArray &token) {
-	_secureVoiceToken = token;
+bool DocumentData::hasSecureVoiceToken() const {
+	return !_secureVoiceToken.isEmpty();
 }
 
 QByteArray DocumentData::secureVoiceToken() const {
 	return _secureVoiceToken;
 }
 
-bool DocumentData::hasSecureVoiceToken() const {
-	return !_secureVoiceToken.isEmpty();
+void DocumentData::setSecureVoiceToken(const QByteArray &token) {
+	_secureVoiceToken = token;
 }
 
 bool DocumentData::checkWallPaperProperties() {
@@ -1370,7 +1352,7 @@ void DocumentData::handleLoaderUpdates() {
 				Core::App().settings().setDownloadPathBookmark(QByteArray());
 				Core::App().settings().setDownloadPath(QString());
 				Core::App().saveSettingsDelayed();
-				crl::on_main([] {
+				InvokeQueued(qApp, [] {
 					Ui::show(
 						Ui::MakeInformBox(
 							tr::lng_download_path_failed(tr::now)));
@@ -2029,12 +2011,12 @@ PhotoData *LookupVideoCover(
 		HistoryItem *item) {
 	const auto media = item ? item->media() : nullptr;
 	if (const auto webpage = media ? media->webpage() : nullptr) {
-		if (webpage->document == document.get() && webpage->photoIsVideoCover) {
+		if (webpage->document == document && webpage->photoIsVideoCover) {
 			return webpage->photo;
 		}
 		return nullptr;
 	}
-	return (media && media->document() == document.get())
+	return (media && media->document() == document)
 		? media->videoCover()
 		: nullptr;
 }

@@ -107,7 +107,7 @@ void Viewport::setup() {
 
 	_content->sizeValue(
 	) | rpl::filter([=] {
-		return wide();
+		return wide() || videoStream();
 	}) | rpl::on_next([=] {
 		updateTilesGeometry();
 	}, lifetime());

@@ -478,8 +478,7 @@ void FillBotUsepic(
 			- (icon ? icon->width() + st::lineWidth : 0));
 	}, title->lifetime());
 	if (icon) {
-		title->paintRequest(
-		) | rpl::on_next([=] {
+		title->paintRequest() | rpl::on_next([=] {
 			auto p = Painter(title);
 			p.fillRect(title->rect(), Qt::transparent);
 			const auto x = std::min(

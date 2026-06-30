@@ -32,10 +32,9 @@ QString NormalizePath(const Settings &settings) {
 		return result;
 	}
 	const auto date = QDate::currentDate();
-	// Format: ChatExport-YYYY-MM-DD or DataExport-YYYY-MM-DD
 	const auto base = QString(settings.onlySinglePeer()
-		? "ChatExport-%1"
-		: "DataExport-%1"
+		? "ChatExport_%1"
+		: "DataExport_%1"
 	).arg(date.toString(Qt::ISODate));
 	const auto add = [&](int i) {
 		return base + (i ? " (" + QString::number(i) + ')' : QString());

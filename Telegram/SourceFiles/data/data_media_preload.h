@@ -7,7 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #pragma once
 
-#include "data/data_document.h"
 #include "storage/download_manager_mtproto.h"
 
 namespace Data {

@@ -22,24 +22,9 @@ MusicButton::MusicButton(
 	MusicButtonData data,
 	Fn<void()> handler)
 : RippleButton(parent, st::infoMusicButtonRipple)
-, _performer(std::make_unique<Ui::FlatLabel>(
-	this,
-	u"- "_q + data.performer,
-	st::infoMusicButtonPerformer))
-, _title(std::make_unique<Ui::FlatLabel>(
-		this,
-		data.title,
-		st::infoMusicButtonTitle)) {
-	rpl::combine(
-		_title->naturalWidthValue(),
-		_performer->naturalWidthValue()
-	) | rpl::on_next([=] {
-		resizeToWidth(widthNoMargins());
-	}, lifetime());
-
-	_title->setAttribute(Qt::WA_TransparentForMouseEvents);
-	_performer->setAttribute(Qt::WA_TransparentForMouseEvents);
-
+, _noteSymbol(u"\u266B"_q + QChar(' '))
+, _noteWidth(st::normalFont->width(_noteSymbol)) {
+	updateData(std::move(data));
 	setClickedCallback(std::move(handler));
 }
 

@@ -266,7 +266,6 @@ void Controller::Unsupported::setup(not_null<PeerData*> peer) {
 		wrap,
 		tr::lng_update_telegram(),
 		st::storiesUnsupportedUpdate);
-	_button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	_button->show();
 
 	rpl::combine(

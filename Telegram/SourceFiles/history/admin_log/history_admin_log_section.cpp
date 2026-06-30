@@ -120,13 +120,10 @@ FixedBar::FixedBar(
 	_search->setClickedCallback([=] { showSearch(); });
 	_cancel->setClickedCallback([=] { cancelSearch(); });
 	_field->hide();
-	_filter->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
-	_field->cancelled(
-	) | rpl::on_next([=] {
+	_field->cancelled() | rpl::on_next([=] {
 		cancelSearch();
 	}, _field->lifetime());
-	_field->changes(
-	) | rpl::on_next([=] {
+	_field->changes() | rpl::on_next([=] {
 		searchUpdated();
 	}, _field->lifetime());
 	_field->submits(
@@ -304,10 +301,6 @@ Widget::Widget(
 , _scrollDown(_scroll, st::historyToDown) {
 	_fixedBar->move(0, 0);
 	_fixedBar->resizeToWidth(width());
-	_fixedBar->showFilterRequests(
-	) | rpl::on_next([=] {
-		showFilter();
-	}, lifetime());
 	_fixedBar->searchCancelRequests(
 	) | rpl::on_next([=] {
 		setInnerFocus();
@@ -348,8 +341,7 @@ Widget::Widget(
 
 	_scroll->move(0, _fixedBar->height());
 	_scroll->show();
-	_scroll->scrolls(
-	) | rpl::on_next([=] {
+	_scroll->scrolls() | rpl::on_next([=] {
 		onScroll();
 	}, lifetime());
 

@@ -1,5 +1,5 @@
 /*
-This file is part of CRYPTOGRAM Desktop,
+This file is part of 64Gram Desktop,
 the unofficial app based on Telegram Desktop.
 For license and copyright information please follow this link:
 https://github.com/TDesktop-x64/tdesktop/blob/dev/LEGAL
@@ -571,29 +571,6 @@ namespace Settings {
 			SetEnhancedValue("hide_stories", enabled);
 			EnhancedSettings::Write();
 		}, container->lifetime());
-
-		auto value = rpl::single(
-				RecentDisplayLimitController::Label(GetEnhancedInt("recent_display_limit"))
-		) | rpl::then(
-				_BitrateChanged.events()
-		) | rpl::map([=] {
-			return RecentDisplayLimitController::Label(GetEnhancedInt("recent_display_limit"));
-		});
-
-		auto btn = AddButtonWithLabel(
-				container,
-				tr::lng_settings_recent_display_limit(),
-				std::move(value),
-				st::settingsButtonNoIcon
-		);
-		btn->events(
-		) | rpl::on_next([=](not_null<QEvent*> e) {
-			const auto event = e->type();
-			if (event == QEvent::UpdateLater) _BitrateChanged.fire({});
-		}, container->lifetime());
-		btn->addClickHandler([=] {
-			Ui::show(Box<RecentDisplayLimitController>());
-		});
 
 		AddSkip(container);
 	}

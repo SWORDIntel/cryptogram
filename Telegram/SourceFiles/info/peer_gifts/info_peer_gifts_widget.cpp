@@ -390,14 +390,7 @@ InnerWidget::InnerWidget(
 
 	_descriptor.value(
 	) | rpl::on_next([=](Descriptor now) {
-		const auto id = now.collectionId;
-		_collectionsLoadedCallback = nullptr;
-		_api.request(base::take(_loadMoreRequestId)).cancel();
-		_entries = id ? &_perCollection[id] : &_all;
-		_list = &_entries->list;
-		refreshButtons();
-		refreshAbout();
-		loadMore();
+		switchTo(now.collectionId);
 	}, lifetime());
 }
 
@@ -1318,8 +1311,6 @@ void InnerWidget::refreshAbout() {
 		) | rpl::map([](const QString &text) {
 			return Ui::Text::IconEmoji(&st::collectionAddIcon).append(text);
 		}));
-		button->setTextTransform(
-			Ui::RoundButtonTextTransform::NoTransform);
 		button->setClickedCallback([=] {
 			editCollectionGifts(collectionId);
 		});
@@ -2503,7 +2494,6 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 		bottom,
 		rpl::single(QString()),
 		st::collectionEditBox.button);
-	button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	button->setText(tr::lng_gift_collection_add_button(
 	) | rpl::map([](const QString &text) {
 		return Ui::Text::IconEmoji(&st::collectionAddIcon).append(text);

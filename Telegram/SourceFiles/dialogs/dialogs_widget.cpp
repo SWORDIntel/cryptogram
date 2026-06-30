@@ -397,13 +397,13 @@ Widget::Widget(
 		_scroll->heightValue(),
 		_topBarSuggestionHeightChanged.events_starting_with(0)
 	) | rpl::on_next([=](int height, int topBarHeight) {
-		innerList->setMinimumHeight(height);
+		_innerList->setMinimumHeight(height);
 		_inner->setMinimumHeight(height - topBarHeight);
 		_inner->refresh();
-	}, innerList->lifetime());
+	}, _innerList->lifetime());
 	_scroll->widthValue() | rpl::on_next([=](int width) {
-		innerList->resizeToWidth(width);
-	}, innerList->lifetime());
+		_innerList->resizeToWidth(width);
+	}, _innerList->lifetime());
 	_scrollToTop->raise();
 	_lockUnlock->toggle(false, anim::type::instant);
 
@@ -553,6 +553,20 @@ Widget::Widget(
 
 	_search->submits(
 	) | rpl::on_next([=] { submit(); }, _search->lifetime());
+
+	_search->setMimeDataHook([=](
+			not_null<const QMimeData*> data,
+			Ui::InputField::MimeAction action) {
+		if (data->hasFormat(u"application/x-telegram-dialog"_q)) {
+			if (const auto history = HistoryFromMimeData(data, &session())) {
+				if (action != Ui::InputField::MimeAction::Check) {
+					controller->searchInChat(history);
+				}
+				return true;
+			}
+		}
+		return false;
+	});
 
 	QObject::connect(
 		_search->rawTextEdit().get(),
@@ -1080,8 +1094,9 @@ void Widget::setupTopBarSuggestions() {
 		return;
 	}
 	using namespace rpl::mappers;
-	crl::on_main(&session(), [=, session = &session()] {
-		session->api().authorizations().unreviewedChanges(
+	crl::on_main(_innerList, [=] {
+		const auto owner = &session().data();
+		session().api().authorizations().unreviewedChanges(
 		) | rpl::on_next([=] {
 			updateForceDisplayWide();
 		}, lifetime());
@@ -1110,7 +1125,12 @@ void Widget::setupTopBarSuggestions() {
 					&& !searchInPeer
 					&& (id == owner->chatsFilters().defaultId());
 			});
-			return TopBarSuggestionValue(dialogs, session, std::move(on));
+			return TopBarSuggestionValue(
+				this,
+				&session(),
+				std::move(on),
+				_childListShown.value(),
+				_prepareTopBarSnapshot.events());
 		}) | rpl::flatten_latest() | rpl::on_next([=](
 				Ui::SlideWrap<Ui::RpWidget> *raw) {
 			if (raw) {

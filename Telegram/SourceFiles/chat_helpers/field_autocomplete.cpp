@@ -1802,7 +1802,6 @@ void InitFieldAutocomplete(
 	field->tabbed(
 	) | rpl::on_next([=](not_null<bool*> handled) {
 		if (!raw->isHidden()) {
-			*handled = true;
 			raw->chooseSelected(FieldAutocomplete::ChooseMethod::ByTab);
 			*handled = true;
 		}

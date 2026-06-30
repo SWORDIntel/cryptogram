@@ -1103,6 +1103,9 @@ void ListenWrap::initPlayButton() {
 	const auto showPause = _lifetime.make_state<rpl::variable<bool>>(false);
 	showPause->changes(
 	) | rpl::on_next([=](bool pause) {
+		_playPauseButton->setAccessibleName(pause
+			? tr::lng_record_lock_pause(tr::now)
+			: tr::lng_record_lock_play(tr::now));
 		_playPause.setState(pause
 			? PlayButtonLayout::State::Pause
 			: PlayButtonLayout::State::Play);
@@ -1177,13 +1180,13 @@ void ListenWrap::initPlayProgress() {
 		instance()->startsPlay(voice) | rpl::map_to(true),
 		instance()->stops(voice) | rpl::map_to(false)
 	) | rpl::on_next([=](bool play) {
-		_parent->setMouseTracking(isInPlayer() && play);
+		_parent->setMouseTracking(canTrim() || (isInPlayer() && play));
 		updateCursor(_parent->mapFromGlobal(QCursor::pos()));
 	}, _lifetime);
 
 	instance()->updatedNotifier(
 	) | rpl::on_next([=](const State &state) {
-		if (!isInPlayer(state)) {
+		if (*trimPlaybackSeekInProgress) {
 			return;
 		}
 		if (!isInPlayer(state)) {
@@ -1246,20 +1249,13 @@ void ListenWrap::initPlayProgress() {
 	};
 	animation->init(std::move(animationCallback));
 
-	const auto isPressed = _lifetime.make_state<bool>(false);
-
-	isPointer->changes(
-	) | rpl::on_next([=](bool pointer) {
-		_parent->setCursor(pointer ? style::cur_pointer : style::cur_default);
-	}, _lifetime);
-
 	_parent->events(
 	) | rpl::filter([=](not_null<QEvent*> e) {
 		return (e->type() == QEvent::MouseMove
 			|| e->type() == QEvent::MouseButtonPress
 			|| e->type() == QEvent::MouseButtonRelease);
 	}) | rpl::on_next([=](not_null<QEvent*> e) {
-		if (!isInPlayer()) {
+		if (!isInPlayer() && !canTrim()) {
 			return;
 		}
 
@@ -2378,6 +2374,9 @@ void VoiceRecordBar::init() {
 
 	_paused.value() | rpl::distinct_until_changed(
 	) | rpl::on_next([=](bool paused) {
+		_lock->setAccessibleName(paused
+			? tr::lng_record_lock_resume(tr::now)
+			: tr::lng_record_lock(tr::now));
 		if (!paused) {
 			return;
 		}

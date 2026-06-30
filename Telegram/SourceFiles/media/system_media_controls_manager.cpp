@@ -90,9 +90,14 @@ SystemMediaControlsManager::SystemMediaControlsManager()
 	}, _lifetime);
 
 	rpl::merge(
-		mediaPlayer->stops(type) | rpl::map_to(false),
-		mediaPlayer->startsPlay(type) | rpl::map_to(true)
+		mediaPlayer->stops(AudioMsgId::Type::Song) | rpl::map_to(false),
+		mediaPlayer->startsPlay(AudioMsgId::Type::Song) | rpl::map_to(true),
+		mediaPlayer->stops(AudioMsgId::Type::Voice) | rpl::map_to(false),
+		mediaPlayer->startsPlay(AudioMsgId::Type::Voice) | rpl::map_to(true)
 	) | rpl::distinct_until_changed() | rpl::on_next([=](bool audio) {
+		const auto type = mediaPlayer->current(AudioMsgId::Type::Song)
+			? AudioMsgId::Type::Song
+			: AudioMsgId::Type::Voice;
 		_controls->setEnabled(audio);
 		if (audio) {
 			_controls->setIsNextEnabled(mediaPlayer->nextAvailable(type));
@@ -234,9 +239,12 @@ SystemMediaControlsManager::SystemMediaControlsManager()
 		_lastAudioMsgId = current;
 	}, _lifetime);
 
-	mediaPlayer->playlistChanges(
-		type
-	) | rpl::on_next([=] {
+	rpl::merge(
+		mediaPlayer->playlistChanges(AudioMsgId::Type::Song)
+			| rpl::map_to(AudioMsgId::Type::Song),
+		mediaPlayer->playlistChanges(AudioMsgId::Type::Voice)
+			| rpl::map_to(AudioMsgId::Type::Voice)
+	) | rpl::on_next([=](AudioMsgId::Type type) {
 		_controls->setIsNextEnabled(mediaPlayer->nextAvailable(type));
 		_controls->setIsPreviousEnabled(mediaPlayer->previousAvailable(type));
 	}, _lifetime);
@@ -259,6 +267,7 @@ SystemMediaControlsManager::SystemMediaControlsManager()
 
 	_controls->commandRequests(
 	) | rpl::on_next([=](Command command) {
+		const auto type = mediaPlayer->getActiveType();
 		switch (command) {
 		case Command::PlayPause: mediaPlayer->playPause(type); break;
 		case Command::Play: mediaPlayer->play(type); break;
@@ -314,11 +323,13 @@ SystemMediaControlsManager::SystemMediaControlsManager()
 
 		_controls->seekRequests(
 		) | rpl::on_next([=](float64 progress) {
+			const auto type = mediaPlayer->getActiveType();
 			mediaPlayer->finishSeeking(type, progress);
 		}, _lifetime);
 
 		_controls->updatePositionRequests(
 		) | rpl::on_next([=] {
+			const auto type = mediaPlayer->getActiveType();
 			_controls->setPosition(mediaPlayer->getState(type).position);
 		}, _lifetime);
 	}

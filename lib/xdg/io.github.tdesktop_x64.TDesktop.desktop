@@ -1,15 +1,15 @@
 [Desktop Entry]
-Name=64Gram Desktop
-Comment=Unofficial desktop version of Telegram messaging app
-TryExec=Telegram
-Exec=Telegram -- %U
-Icon=org.telegram.desktop
+Name=CRYPTOGRAM
+Comment=Advanced OPSEC Messaging application with Double Ratchet E2EE and Post-Quantum Cryptography
+TryExec=cryptogram-desktop
+Exec=cryptogram-desktop -- %U
+Icon=cryptogram
 Terminal=false
-StartupWMClass=64Gram
+StartupWMClass=Cryptogram
 Type=Application
 Categories=Chat;Network;InstantMessaging;Qt;
 MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;
-Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
+Keywords=cryptogram;chat;im;messaging;messenger;secure;opsec;
 Actions=quit;
 DBusActivatable=true
 SingleMainWindow=true
@@ -17,6 +17,6 @@ X-GNOME-UsesNotifications=true
 X-GNOME-SingleWindow=true
 
 [Desktop Action quit]
-Exec=Telegram -quit
-Name=Quit Telegram
+Exec=cryptogram-desktop -quit
+Name=Quit CRYPTOGRAM
 Icon=application-exit

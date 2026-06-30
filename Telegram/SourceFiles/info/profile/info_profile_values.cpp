@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
 
@@ -73,7 +73,7 @@ auto PlainPrimaryUsernameValue(not_null<PeerData*> peer) {
 	}) | rpl::flatten_latest();
 }
 
-[[maybe_unused]] void StripExternalLinks(TextWithEntities &text) {
+void StripExternalLinks(TextWithEntities &text) {
 	const auto local = [](const QString &url) {
 		return !UrlRequiresConfirmation(QUrl::fromUserInput(url));
 	};

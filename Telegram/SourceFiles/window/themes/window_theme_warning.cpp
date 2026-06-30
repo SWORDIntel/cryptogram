@@ -31,8 +31,6 @@ WarningWidget::WarningWidget(QWidget *parent)
 , _secondsLeft(kWaitBeforeRevertMs / 1000)
 , _keepChanges(this, tr::lng_theme_keep_changes(), st::defaultBoxButton)
 , _revert(this, tr::lng_theme_revert(), st::defaultBoxButton) {
-	using TextTransform = Ui::RoundButtonTextTransform;
-	_keepChanges->setTextTransform(TextTransform::NoTransform);
 	_keepChanges->setClickedCallback([] { KeepApplied(); });
 	_revert->setClickedCallback([] { Revert(); });
 	updateText();

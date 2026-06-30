@@ -7,7 +7,6 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 */
 #include "data/data_signal_protocol.h"
 #include "data/data_signal_transport.h"
-#include "data/data_tsm_factory.h"
 #include "core/peer_trust_encryption.h"
 
 #include <openssl/evp.h>
@@ -74,7 +73,7 @@ inline const unsigned char *asConstUChar(const bytes::vector &value) {
 
 // Helper to create storage paths
 QString signalStoragePath(not_null<Session*> session) {
-    const auto basePath = session->local().basePath();
+    const auto basePath = QString::fromUtf8("cryptogram_data");
     QDir dir(basePath);
     if (!dir.exists(kSignalStoragePath)) {
         dir.mkdir(kSignalStoragePath);
@@ -368,20 +367,9 @@ bytes::vector x25519(const bytes::const_span &privateKey, const bytes::const_spa
 SignalProtocol::SignalProtocol(not_null<Session*> session)
 : _session(session) {
     // Initialize device ID
-    _localDevice.identifier = QString::number(session->userId().bare) + "_device";
+    _localDevice.identifier = QString::number(session->session().userId().bare) + "_device";
     _localDevice.registrationId = base::RandomValue<uint64>();
 
-    // Initialize TSM integration
-    _tsmIntegration = std::make_unique<SignalTSMIntegration>(session);
-    auto tsmResult = _tsmIntegration->initializeWithSignalProtocol();
-    if (tsmResult == TSMResult::Success) {
-        _tsmEnabled = true;
-        LOG(("Signal Protocol: TSM integration enabled successfully"));
-    } else {
-        LOG(("Signal Protocol: TSM integration failed, using software fallback"));
-        _tsmEnabled = false;
-    }
-    
     // Generate identity keys if none exist
     auto keyPath = signalStoragePath(session) + kSignalKeyDbName;
     QFile keyFile(keyPath);
@@ -401,7 +389,7 @@ SignalProtocol::SignalProtocol(not_null<Session*> session)
             auto keyVersion = obj.value("keyVersion").toInt(1); // Default to version 1
             if (keyVersion >= 2) {
                 // Decrypt private key using PBKDF2
-                auto passwordData = QString::number(session->userId().bare) +
+                auto passwordData = QString::number(session->session().userId().bare) +
                                    _localDevice.identifier +
                                    QString::number(_localDevice.registrationId);
 
@@ -457,7 +445,7 @@ void SignalProtocol::saveIdentityKeys() {
         QJsonObject obj;
 
         // Create a strong password from session data
-        auto passwordData = QString::number(_session->userId().bare) +
+        auto passwordData = QString::number(_session->session().userId().bare) +
                            _localDevice.identifier +
                            QString::number(_localDevice.registrationId);
 
@@ -2313,61 +2301,6 @@ std::pair<bytes::vector, bytes::vector> SignalProtocol::generateEd25519KeyPair()
     publicKey.resize(pubKeyLen);
 
     return {privateKey, publicKey};
-}
-
-// TSM Integration Methods
-void SignalProtocol::enableTSMIntegration(bool enabled) {
-    if (!_tsmIntegration) {
-        LOG(("Signal Protocol Error: TSM integration not initialized"));
-        return;
-    }
-
-    if (enabled && !_tsmEnabled) {
-        // Enable TSM integration
-        auto result = _tsmIntegration->initializeWithSignalProtocol();
-        if (result == TSMResult::Success) {
-            _tsmEnabled = true;
-            LOG(("Signal Protocol: TSM integration enabled"));
-
-            // Generate hardware-backed identity key if none exists
-            if (_tsmIntegration->isHardwareBackedSecurity()) {
-                auto identityResult = _tsmIntegration->generateSignalIdentityKeyPair();
-                if (identityResult.has_value()) {
-                    // Update identity key with hardware-backed version
-                    _identityKeyPublic = identityResult.value();
-                    LOG(("Signal Protocol: Hardware-backed identity key generated"));
-                    saveIdentityKeys();
-                }
-            }
-        } else {
-            LOG(("Signal Protocol Warning: Failed to enable TSM integration, error: %1").arg((int)result));
-        }
-    } else if (!enabled && _tsmEnabled) {
-        // Disable TSM integration - fall back to software
-        _tsmEnabled = false;
-        LOG(("Signal Protocol: TSM integration disabled, using software fallback"));
-    }
-}
-
-bool SignalProtocol::isTSMEnabled() const {
-    return _tsmEnabled && _tsmIntegration && _tsmIntegration->isHardwareBackedSecurity();
-}
-
-TSMPlatform SignalProtocol::getTSMPlatform() const {
-    if (!_tsmIntegration) {
-        return TSMPlatform::SoftwareFallback;
-    }
-
-    auto capabilities = _tsmIntegration->getTSMCapabilities();
-    return capabilities.platform;
-}
-
-TSMCapabilities SignalProtocol::getTSMCapabilities() const {
-    if (!_tsmIntegration) {
-        return TSMCapabilities{};
-    }
-
-    return _tsmIntegration->getTSMCapabilities();
 }
 
 // Session serialization implementation

@@ -62,8 +62,16 @@ void SetButtonTwoLabels(
 	rpl::combine(
 		button->sizeValue(),
 		buttonTitle->sizeValue(),
-		buttonSubtitle->sizeValue()
-	) | rpl::on_next([=](QSize outer, QSize title, QSize subtitle) {
+		buttonSubtitle->sizeValue(),
+		std::move(subtitle)
+	) | rpl::on_next([=](
+			QSize outer,
+			QSize title,
+			QSize subtitle,
+			const TextWithEntities &subtitleText) {
+		const auto withSubtitle = !subtitleText.empty();
+		buttonSubtitle->setVisible(withSubtitle);
+
 		const auto two = title.height() + subtitle.height();
 		const auto titleTop = withSubtitle
 			? (outer.height() - two) / 2

@@ -139,11 +139,6 @@ History::History(not_null<Data::Session*> owner, PeerId peerId)
 
 History::~History() = default;
 
-// Implement the pure virtual owningHistory() from Data::Thread
-not_null<::History*> History::owningHistory() {
-	return not_null<::History*>(this);
-}
-
 void History::clearLastKeyboard() {
 	if (lastKeyboardId) {
 		if (lastKeyboardId == lastKeyboardHiddenId) {

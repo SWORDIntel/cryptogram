@@ -68,8 +68,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_todo_list.h"
 #include "data/data_stories.h"
 #include "data/data_web_page.h"
-#include "data/data_signal_protocol.h"
-#include "data/data_signal_transport.h"
 #include "chat_helpers/stickers_gift_box_pack.h"
 #include "payments/payments_checkout_process.h" // CheckoutProcess::Start.
 #include "payments/payments_non_panel_process.h" // ProcessNonPanelPaymentFormFactory.
@@ -531,53 +529,10 @@ HistoryItem::HistoryItem(
 
 		createComponents(data, isBlocked);
 
-		// CRYPTOGRAM: intercept incoming X3DH key-exchange bundles.
-		// If the message carries CRKE entities, extract the KeyBundle(s),
-		// register them with SignalProtocol, and strip them from the entity
-		// list so stock rendering never shows garbled payload text.
-		{
-			if (const auto rawEntities = data.ventities()) {
-				auto mutableEntities = rawEntities->v;
-				const auto msgText = qs(data.vmessage());
-				auto bundles = Data::SignalProtocolTransport::
-					extractAndStripBundles(mutableEntities, msgText);
-				if (!bundles.empty()) {
-					Data::SignalProtocol signalProto(&history->session().data());
-					const auto peer = history->peer;
-					for (auto &bundle : bundles) {
-						signalProto.registerRemoteKeyBundle(peer, bundle);
-						if (!signalProto.hasSession(peer)) {
-							signalProto.createSession(peer, bundle);
-						}
-					}
-				}
-			}
-		}
-
-		auto textWithEntities = TextWithEntities();
-		
-		auto blkMsg = Lang::GetOriginalValue(tr::lng_blocked_user_hint.base);
-		auto msg = blkMsg + qs(data.vmessage());
-
-		if (GetEnhancedBool("blocked_user_spoiler_mode")) {
-			_blockMsg = TextWithEntities{
-					msg,
-					Api::EntitiesFromMTP(
-							&history->session(),
-							data.ventities().value_or_empty(),
-							blkMsg.length(), qs(data.vmessage()).length())
-			};
-
-			_originalMsg = TextWithEntities{
-					qs(data.vmessage()),
-					Api::EntitiesFromMTP(
-							&history->session(),
-							data.ventities().value_or_empty())
-			};
-		}
-
-		if ((GetEnhancedBool("blocked_user_spoiler_mode") && blockExist(peerId.value)) || (GetEnhancedBool("blocked_user_spoiler_mode") && user && user->isBlocked())) {
-			textWithEntities = _blockMsg;
+		if (const auto richMessage = data.vrich_message()) {
+			const auto richPage = Iv::ParseRichPage(&history->session(), *richMessage);
+			setRichPage(richPage);
+			setText(Iv::FlattenRichPageSummary(richPage));
 		} else {
 			auto textWithEntities = TextWithEntities();
 			
@@ -3078,6 +3033,8 @@ bool HistoryItem::allowsReschedule() const {
 bool HistoryItem::allowsForward() const {
 	return !isService()
 		&& isRegular()
+		&& !forbidsForward()
+		&& history()->peer->allowsForwarding()
 		&& (!_media || _media->allowsForward());
 }
 
@@ -3139,13 +3096,13 @@ bool HistoryItem::canStopPoll() const {
 }
 
 bool HistoryItem::forbidsForward() const {
-	// Forwarding restrictions disabled - always allow
-	return false;
+	return (_flags & MessageFlag::NoForwards);
 }
 
 bool HistoryItem::forbidsSaving() const {
-	// Forwarding restrictions disabled
-	if (const auto invoice = _media ? _media->invoice() : nullptr) {
+	if (forbidsForward()) {
+		return true;
+	} else if (const auto invoice = _media ? _media->invoice() : nullptr) {
 		return HasExtendedMedia(*invoice);
 	}
 	return false;

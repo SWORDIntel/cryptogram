@@ -54,25 +54,26 @@ rpl::producer<QString> StartsWhenText(rpl::producer<TimeId> date) {
 			std::move(today)
 		) | rpl::then(base::timer_once(
 			std::min(tillAfter, kDay) * crl::time(1000)
-		) | rpl::map([=](auto&&) {
-		        return rpl::duplicate(exact);
+		) | rpl::map([=] {
+			return rpl::duplicate(exact);
 		})) | rpl::flatten_latest() | rpl::type_erased;
 
 		auto tomorrowAndAfter = rpl::single(
-		        std::move(tomorrow)
+			std::move(tomorrow)
 		) | rpl::then(base::timer_once(
-		        std::min(tillToday, kDay) * crl::time(1000)
-		) | rpl::map([=](auto&&) {
-		        return rpl::duplicate(todayAndAfter);
+			std::min(tillToday, kDay) * crl::time(1000)
+		) | rpl::map([=] {
+			return rpl::duplicate(todayAndAfter);
 		})) | rpl::flatten_latest() | rpl::type_erased;
 
 		auto full = rpl::single(
-		        rpl::duplicate(exact)
+			rpl::duplicate(exact)
 		) | rpl::then(base::timer_once(
-		        tillTomorrow * crl::time(1000)
-		) | rpl::map([=](auto&&) {
-		        return rpl::duplicate(tomorrowAndAfter);
+			tillTomorrow * crl::time(1000)
+		) | rpl::map([=] {
+			return rpl::duplicate(tomorrowAndAfter);
 		})) | rpl::flatten_latest() | rpl::type_erased;
+
 		if (tillTomorrow > 0) {
 			return full;
 		} else if (tillToday > 0) {

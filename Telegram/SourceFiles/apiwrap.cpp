@@ -56,10 +56,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "data/data_saved_sublist.h"
 #include "data/data_search_controller.h"
 #include "data/data_session.h"
-#include "data/data_signal_protocol.h"
-#include "data/data_group_encryption.h"
-#include "data/data_signal_transport.h"
-#include "data/data_stylometry_shield.h"
 #include "data/data_channel.h"
 #include "data/data_chat.h"
 #include "data/data_user.h"
@@ -552,10 +548,11 @@ void ApiWrap::sendMessageFail(
 			}
 		}
 	} else if (show && error == u"CHAT_FORWARDS_RESTRICTED"_q) {
-		// Forwarding restrictions disabled - silently allow
-		// show->showToast(peer->isBroadcast()
-		//	? tr::lng_error_noforwards_channel(tr::now)
-		//	: tr::lng_error_noforwards_group(tr::now), kJoinErrorDuration);
+		show->showToast(peer->isBroadcast()
+			? tr::lng_error_noforwards_channel(tr::now)
+			: peer->isUser()
+			? tr::lng_error_noforwards_user(tr::now)
+			: tr::lng_error_noforwards_group(tr::now), kJoinErrorDuration);
 	} else if (error == u"PREMIUM_ACCOUNT_REQUIRED"_q) {
 		Settings::ShowPremium(&session(), "premium_stickers");
 	} else if (error == u"SCHEDULE_TOO_MUCH"_q) {
@@ -4242,55 +4239,6 @@ void ApiWrap::sendMessage(
 	const auto peer = history->peer;
 	auto &textWithTags = message.textWithTags;
 
-	// Apply stylometry shield anonymization before encryption,
-	// so the writing style is obfuscated before any downstream processing.
-	if (const auto shield = peer->session().data().stylometryShield()) {
-		if (shield->isEnabled()) {
-			textWithTags.text = shield->anonymizeText(textWithTags.text);
-		}
-	}
-
-	auto keyBundlePayloadLength = 0;
-	if (const auto e2e = peer->session().data().e2eController()) {
-		textWithTags = e2e->processOutgoingMessage(peer, textWithTags);
-		// If no session exists yet, attach our key bundle for initial exchange
-		if (!e2e->hasSession(peer) && e2e->isEnabled()) {
-			// Convert to TextWithEntities for bundle attachment
-			auto textWithEntities = TextWithEntities{
-				textWithTags.text,
-				TextUtilities::ConvertTextTagsToEntities(textWithTags.tags)
-			};
-			textWithEntities = e2e->attachKeyBundleIfNeeded(peer, textWithEntities);
-			textWithTags.text = textWithEntities.text;
-			keyBundlePayloadLength = e2e->lastKeyBundlePayloadLength();
-			// Convert entities back to tags
-			textWithTags.tags = TextUtilities::ConvertEntitiesToTextTags(
-				textWithEntities.entities);
-		}
-	}
-
-	// MLS group encryption for group chats and channels.
-	// If the group has MLS encryption enabled, encrypt the message text
-	// so only CRYPTOGRAM users in the group can read it.
-	auto mlsCiphertextLength = 0;
-	if ((peer->isChat() || peer->isChannel())
-			&& !peer->isUser()
-			&& Data::GetGroupEncryption()) {
-		const auto groupEncryption = Data::GetGroupEncryption();
-		if (groupEncryption->isEncrypted(peer)) {
-			const auto ciphertext = groupEncryption->encryptGroupMessage(
-				peer, textWithTags.text);
-			if (!ciphertext.empty()) {
-				// Encode ciphertext as ZW payload so stock clients see blank text
-				const auto *ptr = reinterpret_cast<const char*>(ciphertext.data());
-				const QByteArray rawBytes(ptr, ciphertext.size());
-				const auto zwText = Data::SignalProtocolTransport::bytesToZeroWidth(rawBytes);
-				mlsCiphertextLength = zwText.size();
-				textWithTags.text = zwText;
-				textWithTags.tags = TextWithTags::Tags();
-			}
-		}
-	}
 	auto action = message.action;
 	action.generateLocal = true;
 	sendAction(action);
@@ -4401,28 +4349,10 @@ void ApiWrap::sendMessage(
 			sendFlags |= MTPmessages_SendMessage::Flag::f_silent;
 			mediaFlags |= MTPmessages_SendMedia::Flag::f_silent;
 		}
-		auto sentEntities = Api::EntitiesToMTP(
+		const auto sentEntities = Api::EntitiesToMTP(
 			_session,
 			sending.entities,
 			Api::ConvertOption::SkipLocal);
-		// If a key bundle was attached, add the MTP entity for it
-		if (keyBundlePayloadLength > 0) {
-			auto &vec = sentEntities.v;
-			vec.push_back(MTP_messageEntityUnknown(
-				MTP_int(0),
-				MTP_int(keyBundlePayloadLength)));
-			sendFlags |= MTPmessages_SendMessage::Flag::f_entities;
-			mediaFlags |= MTPmessages_SendMedia::Flag::f_entities;
-		}
-		// If MLS ciphertext was encoded, add the MTP entity for it
-		if (mlsCiphertextLength > 0) {
-			auto &vec = sentEntities.v;
-			vec.push_back(MTP_messageEntityUnknown(
-				MTP_int(0),
-				MTP_int(mlsCiphertextLength)));
-			sendFlags |= MTPmessages_SendMessage::Flag::f_entities;
-			mediaFlags |= MTPmessages_SendMedia::Flag::f_entities;
-		}
 		if (!sentEntities.v.isEmpty()) {
 			sendFlags |= MTPmessages_SendMessage::Flag::f_entities;
 			mediaFlags |= MTPmessages_SendMedia::Flag::f_entities;

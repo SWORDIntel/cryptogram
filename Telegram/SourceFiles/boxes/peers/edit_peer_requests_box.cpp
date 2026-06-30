@@ -589,7 +589,7 @@ void RequestsBoxController::RowHelper::rowPaintBan(
 		std::unique_ptr<Ui::RippleAnimation> &ripple,
 		int outerWidth,
 		bool over) {
-	_banRect.setColor(st::lightButtonBg);
+	_banRect.setColor(st::banButtonBg);
 	paintButton(
 		p,
 		geometry,

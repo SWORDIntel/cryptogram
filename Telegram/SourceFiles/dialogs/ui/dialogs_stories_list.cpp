@@ -48,33 +48,6 @@ constexpr auto kMaxTooltipNames = 3;
 	return full.photoLeft * 2 + full.photo - 2 * skip;
 }
 
-[[nodiscard]] object_ptr<Ui::RpWidget> MakeTooltipContent(
-		not_null<QWidget*> parent,
-		rpl::producer<TextWithEntities> text,
-		Fn<void()> hide) {
-	const auto size = st::dialogsStoriesTooltipHide.width;
-	const auto skip = st::defaultImportantTooltip.padding.right();
-	auto result = object_ptr<Ui::PaddingWrap<Ui::FlatLabel>>(
-		parent,
-		Ui::MakeNiceTooltipLabel(
-			parent,
-			std::move(text),
-			st::dialogsStoriesTooltipMaxWidth,
-			st::dialogsStoriesTooltipLabel),
-		(st::defaultImportantTooltip.padding
-			+ QMargins(0, 0, skip + size, 0)));
-	const auto button = Ui::CreateChild<Ui::IconButton>(
-		result.data(),
-		st::dialogsStoriesTooltipHide);
-	result->sizeValue(
-	) | rpl::on_next([=](QSize size) {
-		button->resize(button->width(), size.height());
-		button->moveToRight(0, 0, size.width());
-	}, button->lifetime());
-	button->setClickedCallback(std::move(hide));
-	return result;
-}
-
 } // namespace
 
 struct List::Layout {

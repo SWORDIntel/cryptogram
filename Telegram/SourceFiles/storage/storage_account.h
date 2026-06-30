@@ -116,8 +116,6 @@ public:
 		Cache::Database::SettingsUpdate &update,
 		Cache::Database::SettingsUpdate &updateBig);
 
-	[[nodiscard]] QString basePath() const;
-
 	[[nodiscard]] EncryptionKey cacheBigFileKey() const;
 	[[nodiscard]] QString cacheBigFilePath() const;
 	[[nodiscard]] Cache::Database::Settings cacheBigFileSettings() const;
@@ -358,7 +356,7 @@ private:
 	FileKey _featuredCustomEmojiKey = 0;
 	FileKey _archivedCustomEmojiKey = 0;
 	FileKey _searchSuggestionsKey = 0;
-	FileKey _roundDefaultKey = 0;
+	FileKey _roundPlaceholderKey = 0;
 	FileKey _inlineBotsDownloadsKey = 0;
 	FileKey _mediaLastPlaybackPositionsKey = 0;
 

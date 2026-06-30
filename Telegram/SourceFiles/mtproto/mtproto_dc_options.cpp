@@ -145,12 +145,11 @@ void DcOptions::readBuiltInPublicKeys() {
 		: gsl::make_span(kPublicRSAKeys);
 	for (const auto key : builtin) {
 		const auto keyBytes = bytes::make_span(key, strlen(key));
-		auto rsaKey = RSAPublicKey(keyBytes);
-		if (rsaKey.valid()) {
-			LOG(("MTP Debug: built-in RSA key fingerprint: %1, N size: %2").arg(rsaKey.fingerprint()).arg(rsaKey.getN().size()));
-			_publicKeys.emplace(rsaKey.fingerprint(), std::move(rsaKey));
+		auto parsed = RSAPublicKey(keyBytes);
+		if (parsed.valid()) {
+			_publicKeys.emplace(parsed.fingerprint(), std::move(parsed));
 		} else {
-			LOG(("MTP Error: could not read this public key:"));
+			LOG(("MTP Error: could not read this public RSA key:"));
 			LOG((key));
 		}
 	}
@@ -623,7 +622,7 @@ void DcOptions::setCDNConfig(const MTPDcdnConfig &config) {
 					key.fingerprint(),
 					std::move(key));
 			} else {
-				LOG(("MTP Error: could not read this public key:"));
+				LOG(("MTP Error: could not read this public RSA key:"));
 				LOG((qs(data.vpublic_key())));
 			}
 		});

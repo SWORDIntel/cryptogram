@@ -337,8 +337,7 @@ QByteArray VoiceSecurityManager::processVoiceData(const QByteArray &voiceData) {
 
 void VoiceSecurityManager::startRealTimeProcessing() {
     _realTimeProcessingActive = true;
-    
-    // Hook into the audio capture system
+
     Media::Audio::SetVoiceProcessingCallback([this](QByteArray &data) {
         if (_realTimeProcessingActive && _settings.enabled) {
             data = processVoiceData(data);
@@ -348,42 +347,24 @@ void VoiceSecurityManager::startRealTimeProcessing() {
 
 void VoiceSecurityManager::stopRealTimeProcessing() {
     _realTimeProcessingActive = false;
-    Media::Audio::SetVoiceProcessingCallback(nullptr);
+    Media::Audio::ClearVoiceProcessingCallback();
 }
 
 void VoiceSecurityManager::processExistingVoiceMessage(gsl::not_null<DocumentData*> voiceMessage) {
-    if (!_settings.enabled || 
+    if (!_settings.enabled ||
         _settings.mode == VoiceSecurityMode::Disabled ||
         !voiceMessage->isVoiceMessage()) {
         return;
     }
-    
-    // Fetch voice message data
+
     const auto bytes = voiceMessage->data();
     if (bytes.isEmpty()) {
-        // Need to load the file first
-        auto &session = voiceMessage->session();
-        auto origin = Data::FileOrigin();
-        
-        session.downloader().loadDocument(
-            voiceMessage,
-            origin,
-            false);
-            
-        // Process when download is complete
-        // This is just a sketch - real implementation would need more robust handling
         return;
     }
-    
-    // Process the voice data
+
     const auto processed = processVoiceData(bytes);
-    
-    // Create verification token
     const auto token = createVerificationToken(processed);
     voiceMessage->setSecureVoiceToken(token);
-    
-    // Here we would save the processed version and update the voice message
-    // This would require integration with Telegram's document storage system
 }
 
 QByteArray VoiceSecurityManager::createVerificationToken(const QByteArray &processedData) const {
@@ -1362,9 +1343,8 @@ void VoiceSecurityManager::previewVoiceMessageWithSecurity(gsl::not_null<Documen
     
     const auto bytes = document->data();
     if (bytes.isEmpty()) {
-        auto &session = document->session();
         auto origin = Data::FileOrigin();
-        session.downloader().loadDocument(document, origin, false);
+        document->save(origin, QString(), LoadFromCloudOrLocal, false);
         return;
     }
     

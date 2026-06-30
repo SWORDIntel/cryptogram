@@ -392,23 +392,7 @@ void Widget::historyMove(StackAction action, Animate animate) {
 	if (_terms) {
 		hideAndDestroy(std::exchange(_terms, { nullptr }));
 	}
-	{
-		getStep()->nextButtonStyle(
-		) | rpl::on_next([=](const style::RoundButton *st) {
-			const auto nextStyle = st ? st : &st::introNextButton;
-			if (_nextStyle != nextStyle) {
-				_nextStyle = nextStyle;
-				const auto wasShown = _next->toggled();
-				_next.destroy();
-				_next.create(
-					this,
-					object_ptr<Ui::RoundButton>(this, nullptr, *nextStyle));
-				showControls();
-				updateControlsGeometry();
-				_next->toggle(wasShown, anim::type::instant);
-			}
-		}, _next->lifetime());
-	}
+	setupStep();
 
 	getStep()->prepareShowAnimated(wasStep);
 	if (wasStep->hasCover() != getStep()->hasCover()) {
@@ -742,8 +726,6 @@ void Widget::showControls() {
 
 void Widget::setupNextButton() {
 	_next->entity()->setClickedCallback([=] { getStep()->submit(); });
-	_next->entity()->setTextTransform(
-		Ui::RoundButtonTextTransform::NoTransform);
 
 	_next->entity()->setText(getStep()->nextButtonText(
 	) | rpl::filter([](const QString &text) {

@@ -469,6 +469,7 @@ void MessageField::createControls(PeerData *peer) {
 	) | rpl::filter(
 		rpl::mappers::_1 > 0
 	) | rpl::on_next([=](int newWidth) {
+		const auto &st = st::storiesComposeControls;
 		const auto fieldWidth = newWidth
 			- st.padding.top()
 			- _emojiToggle->width()
@@ -529,7 +530,8 @@ void MessageField::updateEmojiPanelGeometry() {
 
 void MessageField::setupBackground() {
 	_wrap->paintRequest() | rpl::on_next([=] {
-		const auto radius = st::historySendSize.height() / 2.;
+		const auto &st = st::storiesComposeControls;
+		const auto radius = st.attach.height / 2.;
 		auto p = QPainter(_wrap.get());
 		auto hq = PainterHighQualityEnabler(p);
 

@@ -895,6 +895,16 @@ void ContactStatus::setupCloseHandler(not_null<PeerData*> peer) {
 	) | rpl::filter([=] {
 		return !(*request);
 	}) | rpl::on_next([=] {
+		if (_state.type == State::Type::SetBotPhoto) {
+			if (const auto user = peer->asUser()) {
+				if (const auto info = user->botInfo.get()) {
+					info->setBotPhotoHidden = true;
+				}
+			}
+			_state = {};
+			_bar.toggleContent(false);
+			return;
+		}
 		peer->setBarSettings(0);
 		*request = peer->session().api().request(
 			MTPmessages_HidePeerSettingsBar(peer->input())
@@ -1009,8 +1019,6 @@ BusinessBotStatus::Bar::Bar(QWidget *parent)
 	_name->setAttribute(Qt::WA_TransparentForMouseEvents);
 	_status->setAttribute(Qt::WA_TransparentForMouseEvents);
 	_togglePaused->setFullRadius(true);
-	_togglePaused->setTextTransform(
-		Ui::RoundButtonTextTransform::NoTransform);
 	_settings->setClickedCallback([=] {
 		showMenu();
 	});

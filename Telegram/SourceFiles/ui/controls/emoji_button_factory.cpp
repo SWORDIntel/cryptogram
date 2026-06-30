@@ -48,15 +48,19 @@ namespace Ui {
 			}
 			fade->paint(p);
 		}, fadeTarget->lifetime());
-		rpl::single(false) | rpl::then(
-			field->focusedChanges()
-		) | rpl::on_next([=](bool shown) {
-			if (shown) {
-				fade->fadeIn(st::universalDuration);
-			} else {
-				fade->fadeOut(st::universalDuration);
-			}
-		}, emojiToggle->lifetime());
+		if (fadeOnFocusChange) {
+			rpl::single(false) | rpl::then(
+				field->focusedChanges()
+			) | rpl::on_next([=](bool shown) {
+				crl::on_main(emojiToggle, [=] {
+					if (shown) {
+						fade->fadeIn(st::universalDuration);
+					} else if (emojiToggle->isVisible()) {
+						fade->fadeOut(st::universalDuration);
+					}
+				});
+			}, emojiToggle->lifetime());
+		}
 		fade->fadeOut(1);
 		fade->finish();
 	}

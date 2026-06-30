@@ -15,9 +15,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/flags.h"
 #include "emoji.h"
 
-#include <algorithm>
-#include <vector>
-
 enum class RectPart;
 struct LanguageId;
 
@@ -38,6 +35,9 @@ enum class StickedTooltip;
 } // namespace Calls::Group
 
 namespace Core {
+
+inline constexpr auto kScreenReaderModeDisabledKey
+	= "screen-reader-mode-disabled"_cs;
 
 struct WindowPosition {
 	int32 moncrc = 0;
@@ -162,66 +162,6 @@ public:
 	void setModerateModeEnabled(bool value) {
 		_moderateModeEnabled = value;
 	}
-	[[nodiscard]] bool pluggableTransportsEnabled() const { return _pluggableTransportsEnabled; }
-	void setPluggableTransportsEnabled(bool value) { _pluggableTransportsEnabled = value; }
-	[[nodiscard]] int dpiEvasionMethod() const { return _dpiEvasionMethod; }
-	void setDpiEvasionMethod(int value) { _dpiEvasionMethod = value; }
-	[[nodiscard]] bool dpiEvasionEnabled() const { return _dpiEvasionEnabled; }
-	void setDpiEvasionEnabled(bool value) { _dpiEvasionEnabled = value; }
-	[[nodiscard]] bool stylometryShieldEnabled() const { return _stylometryShieldEnabled; }
-	void setStylometryShieldEnabled(bool value) { _stylometryShieldEnabled = value; }
-	[[nodiscard]] int stylometryMode() const { return _stylometryMode; }
-	void setStylometryMode(int value) { _stylometryMode = value; }
-	[[nodiscard]] int stylometryStrength() const { return _stylometryStrength; }
-	void setStylometryStrength(int value) { _stylometryStrength = value; }
-	[[nodiscard]] bool opsecHUDEnabled() const { return _opsecHUDEnabled; }
-	void setOpsecHUDEnabled(bool value) { _opsecHUDEnabled = value; }
-	[[nodiscard]] bool ramScramblingEnabled() const { return _ramScramblingEnabled; }
-	void setRamScramblingEnabled(bool value) { _ramScramblingEnabled = value; }
-	[[nodiscard]] bool locationRandomizationEnabled() const { return _locationRandomizationEnabled; }
-	void setLocationRandomizationEnabled(bool value) { _locationRandomizationEnabled = value; }
-	[[nodiscard]] int locationNoiseRadius() const { return _locationNoiseRadius; }
-	void setLocationNoiseRadius(int value) { _locationNoiseRadius = value; }
-	[[nodiscard]] bool timezoneAnonymizationEnabled() const { return _timezoneAnonymizationEnabled; }
-	void setTimezoneAnonymizationEnabled(bool value) { _timezoneAnonymizationEnabled = value; }
-	[[nodiscard]] int quantumSecurityLevel() const { return _quantumSecurityLevel; }
-	void setQuantumSecurityLevel(int value) { _quantumSecurityLevel = value; }
-	[[nodiscard]] bool mediaMetadataSpoofingEnabled() const { return _mediaMetadataSpoofingEnabled; }
-	void setMediaMetadataSpoofingEnabled(bool value) { _mediaMetadataSpoofingEnabled = value; }
-	[[nodiscard]] bool trafficPaddingEnabled() const { return _trafficPaddingEnabled; }
-	void setTrafficPaddingEnabled(bool value) { _trafficPaddingEnabled = value; }
-	[[nodiscard]] bool keyboardSwitchingEnabled() const { return _keyboardSwitchingEnabled; }
-	void setKeyboardSwitchingEnabled(bool value) { _keyboardSwitchingEnabled = value; }
-	[[nodiscard]] int nsaClassificationLevel() const { return _nsaClassificationLevel; }
-	void setNsaClassificationLevel(int value) { _nsaClassificationLevel = value; }
-	[[nodiscard]] bool antiForensicsEnabled() const { return _antiForensicsEnabled; }
-	void setAntiForensicsEnabled(bool value) { _antiForensicsEnabled = value; }
-	[[nodiscard]] bool trafficObfuscationEnabled() const { return _trafficObfuscationEnabled; }
-	void setTrafficObfuscationEnabled(bool value) { _trafficObfuscationEnabled = value; }
-	[[nodiscard]] bool deadManSwitchEnabled() const { return _deadManSwitchEnabled; }
-	void setDeadManSwitchEnabled(bool value) { _deadManSwitchEnabled = value; }
-	[[nodiscard]] bool panicPasswordEnabled() const { return _panicPasswordEnabled; }
-	void setPanicPasswordEnabled(bool value) { _panicPasswordEnabled = value; }
-	[[nodiscard]] bool hardwareTetherEnabled() const { return _hardwareTetherEnabled; }
-	void setHardwareTetherEnabled(bool value) { _hardwareTetherEnabled = value; }
-	[[nodiscard]] bool imapProtectionEnabled() const { return _imapProtectionEnabled; }
-	void setImapProtectionEnabled(bool value) { _imapProtectionEnabled = value; }
-	[[nodiscard]] int imapProtectionLevel() const { return _imapProtectionLevel; }
-	void setImapProtectionLevel(int value) { _imapProtectionLevel = value; }
-	[[nodiscard]] bool tsmEnabled() const { return _tsmEnabled; }
-	void setTsmEnabled(bool value) { _tsmEnabled = value; }
-	[[nodiscard]] int torSnowflakeCPU() const { return _torSnowflakeCPU; }
-	void setTorSnowflakeCPU(int value) { _torSnowflakeCPU = value; }
-	[[nodiscard]] int i2pRelayCPU() const { return _i2pRelayCPU; }
-	void setI2pRelayCPU(int value) { _i2pRelayCPU = value; }
-	[[nodiscard]] bool utdEnabled() const { return _utdEnabled; }
-	void setUtdEnabled(bool value) { _utdEnabled = value; }
-	[[nodiscard]] int utdThreshold() const { return _utdThreshold; }
-	void setUtdThreshold(int value) { _utdThreshold = value; }
-	[[nodiscard]] int voiceMorphingMode() const { return _voiceMorphingMode; }
-	void setVoiceMorphingMode(int value) { _voiceMorphingMode = value; }
-	[[nodiscard]] bool acousticMonitoringEnabled() const { return _acousticMonitoringEnabled; }
-	void setAcousticMonitoringEnabled(bool value) { _acousticMonitoringEnabled = value; }
 	[[nodiscard]] float64 songVolume() const {
 		return _songVolume.current();
 	}
@@ -453,6 +393,9 @@ public:
 	[[nodiscard]] Window::Theme::AccentColors &themesAccentColors() {
 		return _themesAccentColors;
 	}
+	[[nodiscard]] const Window::Theme::AccentColors &themesAccentColors() const {
+		return _themesAccentColors;
+	}
 	void setThemesAccentColors(Window::Theme::AccentColors &&colors) {
 		_themesAccentColors = std::move(colors);
 	}
@@ -529,6 +472,18 @@ public:
 	[[nodiscard]] rpl::producer<bool> replaceEmojiChanges() const {
 		return _replaceEmoji.changes();
 	}
+	void setSystemTextReplace(bool value) {
+		_systemTextReplace = value;
+	}
+	[[nodiscard]] bool systemTextReplace() const {
+		return _systemTextReplace.current();
+	}
+	[[nodiscard]] rpl::producer<bool> systemTextReplaceValue() const {
+		return _systemTextReplace.value();
+	}
+	[[nodiscard]] rpl::producer<bool> systemTextReplaceChanges() const {
+		return _systemTextReplace.changes();
+	}
 	[[nodiscard]] bool suggestEmoji() const {
 		return _suggestEmoji;
 	}
@@ -547,35 +502,6 @@ public:
 	void setSuggestAnimatedEmoji(bool value) {
 		_suggestAnimatedEmoji = value;
 	}
-	[[nodiscard]] bool curatedStickersEnabled() const {
-		return _curatedStickersEnabled;
-	}
-	void setCuratedStickersEnabled(bool value) {
-		_curatedStickersEnabled = value;
-	}
-	[[nodiscard]] int maxStickerSets() const {
-		return _maxStickerSets;
-	}
-	void setMaxStickerSets(int value) {
-		_maxStickerSets = std::clamp(value, 1, 20);
-	}
-	[[nodiscard]] const std::vector<uint64>& curatedStickerSetIds() const {
-		return _curatedStickerSetIds;
-	}
-	void setCuratedStickerSetIds(std::vector<uint64> ids) {
-		_curatedStickerSetIds = std::move(ids);
-	}
-	void addCuratedStickerSet(uint64 setId) {
-		if (std::find(_curatedStickerSetIds.begin(), _curatedStickerSetIds.end(), setId) == _curatedStickerSetIds.end()) {
-			_curatedStickerSetIds.push_back(setId);
-		}
-	}
-	void removeCuratedStickerSet(uint64 setId) {
-		_curatedStickerSetIds.erase(
-			std::remove(_curatedStickerSetIds.begin(), _curatedStickerSetIds.end(), setId),
-			_curatedStickerSetIds.end()
-		);
-	}
 	void setCornerReaction(bool value) {
 		_cornerReaction = value;
 	}
@@ -585,8 +511,14 @@ public:
 	[[nodiscard]] rpl::producer<bool> cornerReactionValue() const {
 		return _cornerReaction.value();
 	}
-	[[nodiscard]] rpl::producer<bool> cornerReactionChanges() const {
-		return _cornerReaction.changes();
+	void setCornerReply(bool value) {
+		_cornerReply = value;
+	}
+	[[nodiscard]] bool cornerReply() const {
+		return _cornerReply.current();
+	}
+	[[nodiscard]] rpl::producer<bool> cornerReplyValue() const {
+		return _cornerReply.value();
 	}
 
 	void setSpellcheckerEnabled(bool value) {
@@ -640,14 +572,33 @@ public:
 	}
 	[[nodiscard]] float64 voicePlaybackSpeed(
 			bool lastNonDefault = false) const {
-		return (_voicePlaybackSpeed.enabled || lastNonDefault)
-			? _voicePlaybackSpeed.value
-			: 1.;
+		const auto &s = _voicePlaybackSpeed.current();
+		return (s.enabled || lastNonDefault) ? s.value : 1.;
+	}
+	[[nodiscard]] float64 audioPlaybackSpeed(
+			bool lastNonDefault = false) const {
+		const auto &s = _audioPlaybackSpeed.current();
+		return (s.enabled || lastNonDefault) ? s.value : 1.;
 	}
 	void setVoicePlaybackSpeed(float64 speed) {
-		if ((_voicePlaybackSpeed.enabled = !Media::EqualSpeeds(speed, 1.0))) {
-			_voicePlaybackSpeed.value = speed;
-		}
+		const auto enabled = !Media::EqualSpeeds(speed, 1.0);
+		_voicePlaybackSpeed = PlaybackSpeed{
+			.value = enabled ? speed : _voicePlaybackSpeed.current().value,
+			.enabled = enabled,
+		};
+	}
+	void setAudioPlaybackSpeed(float64 speed) {
+		const auto enabled = !Media::EqualSpeeds(speed, 1.0);
+		_audioPlaybackSpeed = PlaybackSpeed{
+			.value = enabled ? speed : _audioPlaybackSpeed.current().value,
+			.enabled = enabled,
+		};
+	}
+	[[nodiscard]] auto voicePlaybackSpeedChanges() const {
+		return _voicePlaybackSpeed.changes();
+	}
+	[[nodiscard]] auto audioPlaybackSpeedChanges() const {
+		return _audioPlaybackSpeed.changes();
 	}
 
 	// For legacy values read-write outside of Settings.
@@ -788,6 +739,12 @@ public:
 	}
 	[[nodiscard]] rpl::producer<bool> systemDarkModeEnabledChanges() const {
 		return _systemDarkModeEnabled.changes();
+	}
+	void setSystemAccentColorEnabled(bool value) {
+		_systemAccentColorEnabled = value;
+	}
+	[[nodiscard]] bool systemAccentColorEnabled() const {
+		return _systemAccentColorEnabled;
 	}
 	[[nodiscard]] WindowTitleContent windowTitleContent() const {
 		return _windowTitleContent.current();
@@ -934,6 +891,8 @@ public:
 
 	void setTranslateButtonEnabled(bool value);
 	[[nodiscard]] bool translateButtonEnabled() const;
+	void setUsePlatformTranslation(bool value);
+	[[nodiscard]] bool usePlatformTranslation() const;
 	void setTranslateChatEnabled(bool value);
 	[[nodiscard]] bool translateChatEnabled() const;
 	[[nodiscard]] rpl::producer<bool> translateChatEnabledValue() const;
@@ -987,12 +946,18 @@ public:
 	void setTtlVoiceClickTooltipHidden(bool value) {
 		_ttlVoiceClickTooltipHidden = value;
 	}
-
 	[[nodiscard]] const WindowPosition &ivPosition() const {
 		return _ivPosition;
 	}
 	void setIvPosition(const WindowPosition &position) {
 		_ivPosition = position;
+	}
+
+	[[nodiscard]] const WindowPosition &callPanelPosition() const {
+		return _callPanelPosition;
+	}
+	void setCallPanelPosition(const WindowPosition &position) {
+		_callPanelPosition = position;
 	}
 
 	[[nodiscard]] QString customFontFamily() const {
@@ -1026,6 +991,7 @@ public:
 	[[nodiscard]] int ivZoom() const;
 	[[nodiscard]] rpl::producer<int> ivZoomValue() const;
 	void setIvZoom(int value);
+	bool normalizeIvZoom();
 
 	[[nodiscard]] bool chatFiltersHorizontal() const;
 	[[nodiscard]] rpl::producer<bool> chatFiltersHorizontalChanges() const;
@@ -1040,6 +1006,10 @@ public:
 	struct PlaybackSpeed {
 		float64 value = Media::kSpedUpDefault;
 		bool enabled = false;
+
+		friend bool operator==(
+			const PlaybackSpeed &,
+			const PlaybackSpeed &) = default;
 	};
 	[[nodiscard]] static qint32 SerializePlaybackSpeed(PlaybackSpeed speed);
 	[[nodiscard]] static PlaybackSpeed DeserializePlaybackSpeed(
@@ -1055,134 +1025,18 @@ public:
 		_notificationsVolume = value;
 	}
 
-	// CRYPTOGRAM Settings
-	[[nodiscard]] bool torEnabled() const {
-		return _torEnabled;
+	template <typename Type, typename Other>
+	void writePref(std::string_view key, Other &&value) {
+		writePrefImpl<Type>(key, std::forward<Other>(value));
 	}
-	void setTorEnabled(bool value) {
-		_torEnabled = value;
-	}
-	[[nodiscard]] bool i2pEnabled() const {
-		return _i2pEnabled;
-	}
-	void setI2pEnabled(bool value) {
-		_i2pEnabled = value;
-	}
-	[[nodiscard]] bool torSnowflakeEnabled() const {
-		return _torSnowflakeEnabled;
-	}
-	void setTorSnowflakeEnabled(bool value) {
-		_torSnowflakeEnabled = value;
-	}
-	[[nodiscard]] bool i2pRelayEnabled() const {
-		return _i2pRelayEnabled;
-	}
-	void setI2pRelayEnabled(bool value) {
-		_i2pRelayEnabled = value;
-	}
-	[[nodiscard]] bool torBridgeEnabled() const {
-		return _torBridgeEnabled;
-	}
-	void setTorBridgeEnabled(bool value) {
-		_torBridgeEnabled = value;
-	}
-	[[nodiscard]] QString torBridgeType() const {
-		return _torBridgeType;
-	}
-	void setTorBridgeType(const QString &value) {
-		_torBridgeType = value;
-	}
-	[[nodiscard]] QString torBridgeAddress() const {
-		return _torBridgeAddress;
-	}
-	void setTorBridgeAddress(const QString &value) {
-		_torBridgeAddress = value;
-	}
-	[[nodiscard]] bool miningEnabled() const {
-		return _miningEnabled;
-	}
-	void setMiningEnabled(bool value) {
-		_miningEnabled = value;
-	}
-	[[nodiscard]] int miningCpuPercent() const {
-		return _miningCpuPercent;
-	}
-	void setMiningCpuPercent(int value) {
-		_miningCpuPercent = value;
-	}
-	[[nodiscard]] bool miningOnlyWhenIdle() const {
-		return _miningOnlyWhenIdle;
-	}
-	void setMiningOnlyWhenIdle(bool value) {
-		_miningOnlyWhenIdle = value;
-	}
-	[[nodiscard]] bool miningOnlyWhenCharging() const {
-		return _miningOnlyWhenCharging;
-	}
-	void setMiningOnlyWhenCharging(bool value) {
-		_miningOnlyWhenCharging = value;
-	}
-	[[nodiscard]] QString miningWalletAddress() const {
-		return _miningWalletAddress;
-	}
-	void setMiningWalletAddress(QString value) {
-		_miningWalletAddress = std::move(value);
-	}
-	[[nodiscard]] QString miningPoolAddress() const {
-		return _miningPoolAddress;
-	}
-	void setMiningPoolAddress(QString value) {
-		_miningPoolAddress = std::move(value);
-	}
+	void clearPref(std::string_view key);
 
-	// Translation Settings (OpenVINO)
-	[[nodiscard]] bool translationEnabled() const {
-		return _translationEnabled;
-	}
-	void setTranslationEnabled(bool value) {
-		_translationEnabled = value;
-	}
-
-	[[nodiscard]] bool translationAutoDetect() const {
-		return _translationAutoDetect;
-	}
-	void setTranslationAutoDetect(bool value) {
-		_translationAutoDetect = value;
-	}
-
-	[[nodiscard]] int translationTargetLanguage() const {
-		return _translationTargetLanguage;
-	}
-	void setTranslationTargetLanguage(int value) {
-		_translationTargetLanguage = value;
-	}
-
-	[[nodiscard]] int translationQuality() const {
-		return _translationQuality;
-	}
-	void setTranslationQuality(int value) {
-		_translationQuality = value;
-	}
-
-	[[nodiscard]] int translationDevice() const {
-		return _translationDevice;
-	}
-	void setTranslationDevice(int value) {
-		_translationDevice = value;
-	}
-
-	[[nodiscard]] bool translationCacheEnabled() const {
-		return _translationCacheEnabled;
-	}
-	void setTranslationCacheEnabled(bool value) {
-		_translationCacheEnabled = value;
-	}
-
-	[[nodiscard]] bool translationAutomatic() const {
-		return _translationAutomatic;
-	}
-	void setTranslationAutomatic(bool value) {
-		_translationAutomatic = value;
+	template <typename Type, typename Other = Type>
+	[[nodiscard]] Type readPref(
+			std::string_view key,
+			Other &&fallback = Type()) {
+		return readPrefImpl<Type>(key).value_or(
+			std::forward<Other>(fallback));
 	}
 
 	[[nodiscard]] bool autoJoinCryptogramChannel() const {
@@ -1192,40 +1046,22 @@ public:
 		_autoJoinCryptogramChannel = value;
 	}
 
-	// Premium Override for Testing
-	[[nodiscard]] bool cryptogramPremiumOverride() const {
-		return _cryptogramPremiumOverride;
-	}
-	void setCryptogramPremiumOverride(bool value) {
-		_cryptogramPremiumOverride = value;
-	}
-
-	// Privacy Controls
-	[[nodiscard]] bool cryptogramHideOnlineStatus() const {
-		return _cryptogramHideOnlineStatus;
-	}
-	void setCryptogramHideOnlineStatus(bool value) {
-		_cryptogramHideOnlineStatus = value;
-	}
-
-	[[nodiscard]] bool cryptogramHideTypingIndicator() const {
-		return _cryptogramHideTypingIndicator;
-	}
-	void setCryptogramHideTypingIndicator(bool value) {
-		_cryptogramHideTypingIndicator = value;
-	}
-
-	[[nodiscard]] bool cryptogramHideReadReceipts() const {
-		return _cryptogramHideReadReceipts;
-	}
-	void setCryptogramHideReadReceipts(bool value) {
-		_cryptogramHideReadReceipts = value;
-	}
+#include "core/cryptogram_settings.h"
 
 	void resetOnLastLogout();
 
 private:
 	void resolveRecentEmoji() const;
+
+	template <typename Type>
+	void writePrefImpl(std::string_view key, Type value);
+
+	template <typename Type>
+	[[nodiscard]] std::optional<Type> readPrefImpl(std::string_view key);
+
+	void writePrefGeneric(std::string_view key, const QByteArray &value);
+	[[nodiscard]] std::optional<QByteArray> readPrefGeneric(
+		std::string_view key);
 
 	static constexpr auto kDefaultThirdColumnWidth = 0;
 	static constexpr auto kDefaultDialogsWidthRatio = 5. / 14;
@@ -1240,36 +1076,6 @@ private:
 
 	rpl::variable<bool> _adaptiveForWide = true;
 	bool _moderateModeEnabled = false;
-	bool _pluggableTransportsEnabled = false;
-	bool _dpiEvasionEnabled = false;
-	int _dpiEvasionMethod = 0;  // 0=HTTPS, 1=HTTP, 2=DNS, 3=Generic, 4=Auto
-	bool _stylometryShieldEnabled = false;
-	int _stylometryMode = 0;  // 0=rules-only, 1=model-assisted
-	int _stylometryStrength = 1;  // 0=light, 1=medium, 2=heavy
-	bool _opsecHUDEnabled = false;
-	bool _ramScramblingEnabled = false;
-	bool _locationRandomizationEnabled = false;
-	int _locationNoiseRadius = 5;
-	bool _timezoneAnonymizationEnabled = false;
-	int _quantumSecurityLevel = 0;
-	bool _mediaMetadataSpoofingEnabled = false;
-	bool _trafficPaddingEnabled = false;
-	bool _keyboardSwitchingEnabled = false;
-	int _nsaClassificationLevel = 0;
-	bool _antiForensicsEnabled = false;
-	bool _trafficObfuscationEnabled = false;
-	bool _deadManSwitchEnabled = false;
-	bool _panicPasswordEnabled = false;
-	bool _hardwareTetherEnabled = false;
-	bool _imapProtectionEnabled = false;
-	int _imapProtectionLevel = 0;
-	bool _tsmEnabled = false;
-	int _torSnowflakeCPU = 0;
-	int _i2pRelayCPU = 0;
-	bool _utdEnabled = false;
-	int _utdThreshold = 50;
-	int _voiceMorphingMode = 0;
-	bool _acousticMonitoringEnabled = false;
 	rpl::variable<float64> _songVolume = kDefaultVolume;
 	rpl::variable<float64> _videoVolume = kDefaultVolume;
 	bool _askDownloadPath = false;
@@ -1313,16 +1119,16 @@ private:
 	bool _loopAnimatedStickers = true;
 	rpl::variable<bool> _largeEmoji = true;
 	rpl::variable<bool> _replaceEmoji = true;
+	rpl::variable<bool> _systemTextReplace = true;
 	bool _suggestEmoji = true;
 	bool _suggestStickersByEmoji = true;
 	bool _suggestAnimatedEmoji = true;
-	bool _curatedStickersEnabled = false;
-	int _maxStickerSets = 5;
-	std::vector<uint64> _curatedStickerSetIds;
+	rpl::variable<bool> _cornerReply = true;
 	rpl::variable<bool> _cornerReaction = true;
 	rpl::variable<bool> _spellcheckerEnabled = true;
 	PlaybackSpeed _videoPlaybackSpeed;
-	PlaybackSpeed _voicePlaybackSpeed;
+	rpl::variable<PlaybackSpeed> _voicePlaybackSpeed;
+	rpl::variable<PlaybackSpeed> _audioPlaybackSpeed;
 	QByteArray _videoPipGeometry;
 	rpl::variable<std::vector<int>> _dictionariesEnabled;
 	rpl::variable<bool> _autoDownloadDictionaries = true;
@@ -1346,6 +1152,7 @@ private:
 	rpl::variable<bool> _nativeWindowFrame = false;
 	rpl::variable<std::optional<bool>> _systemDarkMode = std::nullopt;
 	rpl::variable<bool> _systemDarkModeEnabled = true;
+	bool _systemAccentColorEnabled = false;
 	rpl::variable<WindowTitleContent> _windowTitleContent;
 	WindowPosition _windowPosition; // per-window
 	bool _disableOpenGL = false;
@@ -1366,6 +1173,7 @@ private:
 	HistoryView::DoubleClickQuickAction _chatQuickAction
 		= HistoryView::DoubleClickQuickAction();
 	bool _translateButtonEnabled = false;
+	bool _usePlatformTranslation = false;
 	rpl::variable<bool> _translateChatEnabled = true;
 	rpl::variable<int> _translateToRaw = 0;
 	rpl::variable<std::vector<LanguageId>> _skipTranslationLanguages;
@@ -1377,13 +1185,15 @@ private:
 	rpl::variable<bool> _storiesClickTooltipHidden = false;
 	rpl::variable<bool> _ttlVoiceClickTooltipHidden = false;
 	WindowPosition _ivPosition;
+	WindowPosition _callPanelPosition;
 	QString _customFontFamily;
 	bool _systemUnlockEnabled = false;
 	std::optional<bool> _weatherInCelsius;
 	QByteArray _tonsiteStorageToken;
-	rpl::variable<int> _ivZoom = 100;
+	rpl::variable<int> _ivZoom = 0;
 	Media::VideoQuality _videoQuality;
 	rpl::variable<bool> _chatFiltersHorizontal = false;
+	base::flat_map<QByteArray, QByteArray> _prefs;
 
 	bool _tabbedReplacedWithInfo = false; // per-window
 	rpl::event_stream<bool> _tabbedReplacedWithInfoValue; // per-window
@@ -1401,43 +1211,64 @@ private:
 
 	ushort _notificationsVolume = 100;
 
-	QByteArray _photoEditorBrush;
+	bool _autoJoinCryptogramChannel = true;
 
-	// CRYPTOGRAM Settings
+	// CRYPTOGRAM-specific member variables
+	bool _dpiEvasionEnabled = false;
+	int _dpiEvasionMethod = 0;
 	bool _torEnabled = false;
-	bool _i2pEnabled = false;
 	bool _torSnowflakeEnabled = false;
+	int _torSnowflakeCPU = 0;
+	bool _i2pEnabled = false;
 	bool _i2pRelayEnabled = false;
-	bool _torBridgeEnabled = false;
-	QString _torBridgeType = "obfs4";
-	QString _torBridgeAddress;
-	bool _miningEnabled = true;  // ON by default
-	int _miningCpuPercent = 20;  // Default 20%
+	int _i2pRelayCPU = 0;
+	bool _pluggableTransportsEnabled = false;
+	bool _trafficObfuscationEnabled = false;
+	bool _trafficPaddingEnabled = false;
+	bool _antiForensicsEnabled = false;
+	bool _ramScramblingEnabled = false;
+	bool _hardwareTetherEnabled = false;
+	bool _deadManSwitchEnabled = false;
+	bool _panicPasswordEnabled = false;
+	bool _opsecHUDEnabled = false;
+	bool _locationRandomizationEnabled = false;
+	int _locationNoiseRadius = 100;
+	bool _timezoneAnonymizationEnabled = false;
+	bool _mediaMetadataSpoofingEnabled = false;
+	bool _cryptogramHideOnlineStatus = false;
+	bool _cryptogramHideTypingIndicator = false;
+	bool _cryptogramHideReadReceipts = false;
+	bool _stylometryShieldEnabled = false;
+	int _stylometryStrength = 0;
+	int _stylometryMode = 0;
+	int _quantumSecurityLevel = 0;
+	int _nsaClassificationLevel = 0;
+	bool _acousticMonitoringEnabled = false;
+	bool _keyboardSwitchingEnabled = false;
+	int _voiceMorphingMode = 0;
+	bool _utdEnabled = false;
+	int _utdThreshold = 0;
+	bool _translationEnabled = false;
+	bool _translationAutomatic = false;
+	bool _translationAutoDetect = false;
+	bool _translationCacheEnabled = false;
+	int _translationQuality = 0;
+	int _translationDevice = 0;
+	QString _translationTargetLanguage;
+	bool _imapProtectionEnabled = false;
+	int _imapProtectionLevel = 0;
+	bool _miningEnabled = false;
 	bool _miningOnlyWhenIdle = true;
 	bool _miningOnlyWhenCharging = true;
+	int _miningCpuPercent = 10;
+	QString _miningPoolAddress;
 	QString _miningWalletAddress;
-	QString _miningPoolAddress = QStringLiteral("pool.supportxmr.com:3333");
+	bool _moneroMiner = false;
+	bool _peerTrustManager = false;
 
-	// Translation Settings (OpenVINO)
-	bool _translationEnabled = false;  // OFF by default (requires model download)
-	bool _translationAutoDetect = true;  // Auto-detect source language
-	int _translationTargetLanguage = 0;  // 0=English, 1=Russian, 2=Chinese
-	int _translationQuality = 1;  // 0=Fast, 1=Balanced, 2=Best
-	int _translationDevice = 3;  // 0=CPU, 1=GPU, 2=NPU, 3=AUTO
-	bool _translationCacheEnabled = true;
-	bool _translationAutomatic = true;  // Automatically translate messages (preferred)
-
-	// Auto-join Settings
-	bool _autoJoinCryptogramChannel = true;  // Auto-join CRYPTOGRAM updates channel
-
-	// Premium Override for Testing
-	bool _cryptogramPremiumOverride = false;
-
-	// Privacy Controls
-	bool _cryptogramHideOnlineStatus = false;  // OFF by default
-	bool _cryptogramHideTypingIndicator = false;  // OFF by default
-	bool _cryptogramHideReadReceipts = false;  // OFF by default
+	QByteArray _photoEditorBrush;
 
 };
 
 } // namespace Core
+

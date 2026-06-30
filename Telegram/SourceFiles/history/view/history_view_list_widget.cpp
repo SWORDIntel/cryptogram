@@ -495,9 +495,9 @@ ListWidget::ListWidget(
 
 	_scrollDateHideTimer.setCallback([this] { scrollDateHideByTimer(); });
 	_session->data().viewRepaintRequest(
-	) | rpl::on_next([this](auto view) {
-		if (view->delegate() == this) {
-			repaintItem(view);
+	) | rpl::on_next([this](Data::RequestViewRepaint data) {
+		if (data.view->delegate() == this) {
+			repaintItem(data.view, data.rect);
 		}
 	}, lifetime());
 	_session->data().viewResizeRequest(

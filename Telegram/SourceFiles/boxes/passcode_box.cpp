@@ -607,7 +607,7 @@ void PasscodeBox::validateEmail(
 	box->boxClosing(
 	) | rpl::filter([=] {
 		return !*set;
-	}) | rpl::on_next([=, weak = base::make_weak(this)] {
+	}) | on_next([=, weak = base::make_weak(this)] {
 		if (weak) {
 			weak->_clearUnconfirmedPassword.fire({});
 		}

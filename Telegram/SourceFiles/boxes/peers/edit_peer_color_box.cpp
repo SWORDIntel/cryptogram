@@ -239,47 +239,6 @@ private:
 
 };
 
-ColorSample::ColorSample(
-	not_null<QWidget*> parent,
-	not_null<Main::Session*> session,
-	std::shared_ptr<Ui::ChatStyle> style,
-	rpl::producer<uint8> colorIndex,
-	rpl::producer<std::shared_ptr<Ui::ColorCollectible>> collectible,
-	const QString &name)
-: AbstractButton(parent)
-, _style(style) {
-	rpl::combine(
-		std::move(colorIndex),
-		std::move(collectible)
-	) | rpl::on_next([=](
-			uint8 index,
-			std::shared_ptr<Ui::ColorCollectible> collectible) {
-		_index = index;
-		_collectible = std::move(collectible);
-		if (const auto raw = _collectible.get()) {
-			_name.setMarkedText(
-				st::semiboldTextStyle,
-				Data::SingleCustomEmoji(raw->giftEmojiId),
-				kMarkupTextOptions,
-				Core::TextContext({
-					.session = session,
-					.repaint = [=] { update(); },
-				}));
-		} else {
-			_name.setText(st::semiboldTextStyle, name);
-		}
-		setNaturalWidth([&] {
-			if (_name.isEmpty() || _style->colorPatternIndex(_index)) {
-				return st::settingsColorSampleSize;
-			}
-			const auto padding = st::settingsColorSamplePadding;
-			return std::max(
-				padding.left() + _name.maxWidth() + padding.right(),
-				padding.top() + st::semiboldFont->height + padding.bottom());
-		}());
-		update();
-	}, lifetime());
-}
 
 
 PreviewWrap::PreviewWrap(
@@ -376,8 +335,8 @@ PreviewWrap::PreviewWrap(
 
 	const auto session = &_history->session();
 	session->data().viewRepaintRequest(
-	) | rpl::on_next([=](not_null<const Element*> view) {
-		if (view == _element.get()) {
+	) | rpl::on_next([=](Data::RequestViewRepaint data) {
+		if (data.view == _element.get()) {
 			update();
 		}
 	}, lifetime());
@@ -745,102 +704,6 @@ void Apply(
 }
 
 
-private:
-	void fillFrom(std::vector<uint8> indices);
-
-	int resizeGetHeight(int newWidth) override;
-
-	const std::shared_ptr<Ui::ChatStyle> _style;
-	std::vector<std::unique_ptr<ColorSample>> _samples;
-	const Fn<void(uint8)> _callback;
-	rpl::variable<uint8> _index;
-
-};
-
-ColorSelector::ColorSelector(
-	not_null<Ui::GenericBox*> box,
-	std::shared_ptr<Ui::ChatStyle> style,
-	rpl::producer<std::vector<uint8>> indices,
-	rpl::producer<uint8> index,
-	Fn<void(uint8)> callback)
-: RpWidget(box)
-, _style(style)
-, _callback(std::move(callback))
-, _index(std::move(index)) {
-	std::move(
-		indices
-	) | rpl::on_next([=](std::vector<uint8> indices) {
-		fillFrom(std::move(indices));
-	}, lifetime());
-}
-
-void ColorSelector::fillFrom(std::vector<uint8> indices) {
-	auto samples = std::vector<std::unique_ptr<ColorSample>>();
-	const auto initial = _index.current();
-	const auto add = [&](uint8 index) {
-		auto i = ranges::find(_samples, index, &ColorSample::index);
-		if (i != end(_samples)) {
-			samples.push_back(std::move(*i));
-			_samples.erase(i);
-		} else {
-			samples.push_back(std::make_unique<ColorSample>(
-				this,
-				_style,
-				index,
-				index == initial));
-			samples.back()->show();
-			samples.back()->setClickedCallback([=] {
-				_callback(index);
-			});
-		}
-	};
-	for (const auto index : indices) {
-		add(index);
-	}
-	if (initial != kUnsetColorIndex && !ranges::contains(indices, initial)) {
-		add(initial);
-	}
-	_samples = std::move(samples);
-	if (width() > 0) {
-		resizeToWidth(width());
-	}
-
-	_index.value(
-	) | rpl::combine_previous(
-	) | rpl::on_next([=](uint8 was, uint8 now) {
-		const auto i = ranges::find(_samples, was, &ColorSample::index);
-		if (i != end(_samples)) {
-			i->get()->setSelected(false);
-		}
-		const auto j = ranges::find(_samples, now, &ColorSample::index);
-		if (j != end(_samples)) {
-			j->get()->setSelected(true);
-		}
-	}, lifetime());
-}
-
-int ColorSelector::resizeGetHeight(int newWidth) {
-	if (newWidth <= 0) {
-		return 0;
-	}
-	const auto count = int(_samples.size());
-	const auto columns = Ui::kSimpleColorIndexCount;
-	const auto skip = st::settingsColorRadioSkip;
-	const auto size = (newWidth - skip * (columns - 1)) / float64(columns);
-	const auto isize = int(base::SafeRound(size));
-	auto top = 0;
-	auto left = 0.;
-	for (auto i = 0; i != count; ++i) {
-		_samples[i]->resize(isize, isize);
-		_samples[i]->move(int(base::SafeRound(left)), top);
-		left += size + skip;
-		if (!((i + 1) % columns)) {
-			top += isize + skip;
-			left = 0.;
-		}
-	}
-	return (top - skip) + ((count % columns) ? (isize + skip) : 0);
-}
 
 [[nodiscard]] auto ButtonStyleWithAddedPadding(
 		not_null<Ui::RpWidget*> parent,
@@ -899,7 +762,7 @@ int ColorSelector::resizeGetHeight(int newWidth) {
 	}, right->lifetime());
 
 	const auto session = &show->session();
-	const auto added = st::normalFont->spacew;
+	const auto added = st::lineWidth * 2;
 	std::move(emojiIdValue) | rpl::on_next([=](DocumentId emojiId) {
 		state->emojiId = emojiId;
 		state->emoji = emojiId
@@ -1526,24 +1389,8 @@ void AddGiftSelector(
 			}
 		}
 
-		state->selected.value(
-		) | rpl::combine_previous() | rpl::on_next([=](
-				const std::optional<Ui::ColorCollectible> &was,
-				const std::optional<Ui::ColorCollectible> &now) {
-			const auto wasId = was ? was->collectibleId : 0;
-			const auto nowId = now ? now->collectibleId : 0;
-			const auto find = [&](uint64 id) -> GiftButton* {
-				if (!id) {
-					return nullptr;
-				}
-				for (auto i = 0, count = int(state->current->list.size())
-					; i != count
-					; ++i) {
-					const auto &gift = state->current->list[i];
-					if (gift.info.unique->id == id) {
-						return state->buttons[i].get();
-					}
-				}
+		const auto find = [=](uint64 id) -> GiftButton* {
+			if (!id) {
 				return nullptr;
 			}
 			const auto count = int(state->current->list.size());
@@ -1644,6 +1491,127 @@ void AddGiftSelector(
 	state->visibleRange = raw->visibleRange();
 	state->visibleRange.value(
 	) | rpl::on_next(state->rebuild, raw->lifetime());
+}
+
+Fn<void(int)> CreateTabsWidget(
+		not_null<Ui::VerticalLayout*> container,
+		const std::vector<QString> &labels,
+		const std::vector<Fn<void()>> &callbacks) {
+	const auto tabs = container->add(
+		object_ptr<Ui::PillTabs>(
+			container,
+			labels,
+			0,
+			st::giftBoxPillTabs),
+		st::boxRowPadding,
+		style::al_top);
+
+	tabs->activeIndexChanges(
+	) | rpl::on_next([=](int index) {
+		if (index >= 0 && index < int(callbacks.size()) && callbacks[index]) {
+			callbacks[index]();
+		}
+	}, tabs->lifetime());
+
+	return [=](int index) {
+		tabs->setActiveIndex(index);
+		if (index >= 0 && index < int(callbacks.size()) && callbacks[index]) {
+			callbacks[index]();
+		}
+	};
+}
+
+not_null<Info::Profile::TopBar*> CreateProfilePreview(
+		not_null<Ui::GenericBox*> box,
+		not_null<Ui::VerticalLayout*> container,
+		std::shared_ptr<ChatHelpers::Show> show,
+		not_null<PeerData*> peer) {
+	const auto preview = container->add(
+		object_ptr<Info::Profile::TopBar>(
+			container,
+			Info::Profile::TopBar::Descriptor {
+				.controller = show->resolveWindow(),
+				.key = Info::Key(peer),
+				.wrap = rpl::single(Info::Wrap::Side),
+				.source = Info::Profile::TopBar::Source::Preview,
+				.peer = peer,
+				.backToggles = rpl::single(false),
+				.showFinished = box->showFinishes(),
+			}
+		));
+	preview->resize(
+		container->width(),
+		st::infoProfileTopBarNoActionsHeightMax);
+	preview->setAttribute(Qt::WA_TransparentForMouseEvents);
+	return preview;
+}
+
+void ProcessButton(not_null<Ui::RoundButton*> button) {
+	// Raise to be above right emoji from buttons.
+	crl::on_main(button, [=] { button->raise(); });
+}
+
+void CreateBoostLevelContainer(
+		not_null<Ui::VerticalLayout*> container,
+		int levelHint,
+		rpl::producer<std::optional<QColor>> colorProducer,
+		Fn<void()> callback) {
+	const auto boostLevelContainer = container->add(
+		object_ptr<Ui::RpWidget>(container));
+	boostLevelContainer->resize(
+		0,
+		st::infoProfileTopBarBoostFooter.style.font->height * 1.5);
+
+	struct State {
+		base::unique_qptr<Ui::FlatLabel> label;
+		std::optional<QColor> currentColor;
+	};
+	const auto state = boostLevelContainer->lifetime().make_state<State>();
+
+	boostLevelContainer->paintRequest() | rpl::on_next([=] {
+		auto p = QPainter(boostLevelContainer);
+		const auto bg = state->currentColor.value_or(st::boxDividerBg->c);
+		p.fillRect(boostLevelContainer->rect(), bg);
+		p.fillRect(boostLevelContainer->rect(), st::shadowFg);
+	}, boostLevelContainer->lifetime());
+
+	std::move(colorProducer) | rpl::on_next([=](
+			std::optional<QColor> color) {
+		const auto colorChanged = (state->currentColor != color)
+			|| !state->label;
+		state->currentColor = color;
+		boostLevelContainer->update();
+
+		if (colorChanged) {
+			const auto &style = color
+				? st::infoProfileTopBarBoostFooterColored
+				: st::infoProfileTopBarBoostFooter;
+			state->label = base::make_unique_q<Ui::FlatLabel>(
+				boostLevelContainer,
+				tr::lng_settings_color_group_boost_footer(
+					lt_count,
+					rpl::single(levelHint) | tr::to_count(),
+					lt_link,
+					tr::lng_settings_color_group_boost_footer_link(
+					) | rpl::map([=](QString t) {
+						using namespace Ui::Text;
+						return Link(std::move(t), u"internal:"_q);
+					}),
+					tr::rich),
+				style);
+			state->label->show();
+			boostLevelContainer->sizeValue(
+			) | rpl::on_next([=](QSize s) {
+				state->label->moveToLeft(
+					(s.width() - state->label->width()) / 2,
+					(s.height() - state->label->height()) / 2);
+			}, state->label->lifetime());
+			state->label->setClickHandlerFilter([=](auto...) {
+				callback();
+				return false;
+			});
+		}
+	}, boostLevelContainer->lifetime());
 }
 
 } // namespace
@@ -2636,7 +2604,10 @@ void SetupPeerColorSample(
 	rpl::combine(
 		button->widthValue(),
 		rpl::duplicate(label),
-		rpl::duplicate(colorIndexValue)
+		rpl::duplicate(colorIndexValue),
+		rpl::duplicate(colorProfileIndexValue),
+		rpl::duplicate(emojiStatusIdValue),
+		rpl::duplicate(name)
 	) | rpl::on_next([=](
 			int width,
 			const QString &buttonText,
@@ -2701,8 +2672,17 @@ void SetupPeerColorSample(
 	rpl::combine(
 		button->sizeValue(),
 		sample->sizeValue(),
-		std::move(colorIndexValue)
-	) | rpl::on_next([=](QSize outer, QSize inner, int colorIndex) {
+		rpl::duplicate(colorIndexValue),
+		rpl::duplicate(colorProfileIndexValue),
+		rpl::duplicate(emojiStatusIdValue)
+	) | rpl::on_next([=](
+			QSize outer,
+			QSize inner,
+			int colorIndex,
+			std::optional<uint8> profileIndex,
+			EmojiStatusId emojiStatusId) {
+		const auto hasColor = (colorIndex != 0);
+
 		const auto right = st::settingsColorButton.padding.right()
 			- st::settingsColorSampleSkip
 			- st::settingsColorSampleSize

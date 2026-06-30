@@ -8,7 +8,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "mtproto/connection_tcp.h"
 
 #include "mtproto/details/mtproto_abstract_socket.h"
-#include "data/data_network_security.h"
 #include "base/bytes.h"
 #include "base/openssl_help.h"
 #include "base/random.h"
@@ -159,8 +158,7 @@ void TcpConnection::Protocol::Version1::prepareKey(
 		bytes::span key,
 		bytes::const_span source) {
 	const auto payload = bytes::concatenate(source, _secret);
-	auto sha256 = openssl::Sha256(payload);
-	bytes::copy(key, bytes::make_span(sha256).subspan(0, key.size()));
+	bytes::copy(key, openssl::Sha256(payload));
 }
 
 QString TcpConnection::Protocol::Version1::debugPostfix() const {
@@ -442,21 +440,7 @@ void TcpConnection::sendData(mtpBuffer &&buffer) {
 	CONNECTION_LOG_INFO(u"TCP Info: write packet %1 bytes."_q
 		.arg(bytes.size()));
 	aesCtrEncrypt(bytes, _sendKey, &_sendState);
-
-	// Apply DPI evasion wrapping if active
-	const auto writeBytes = [&]() -> QByteArray {
-		const auto raw = QByteArray(
-			reinterpret_cast<const char*>(bytes.data()),
-			bytes.size());
-		if (Data::IsGlobalDPIEvasionActive()) {
-			return Data::ApplyGlobalDPIEvasion(raw);
-		}
-		return raw;
-	}();
-
-	_socket->write(connectionStartPrefix, bytes::make_span(
-		reinterpret_cast<const char*>(writeBytes.constData()),
-		writeBytes.size()));
+	_socket->write(connectionStartPrefix, bytes);
 }
 
 bytes::const_span TcpConnection::prepareConnectionStartPrefix(

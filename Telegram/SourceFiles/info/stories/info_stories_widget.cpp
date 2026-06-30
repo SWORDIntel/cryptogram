@@ -81,8 +81,42 @@ Widget::Widget(
 	_inner->setScrollHeightValue(scrollHeightValue());
 	_inner->scrollToRequests(
 	) | rpl::on_next([this](Ui::ScrollToRequest request) {
-		scrollTo(request);
-	}, _inner->lifetime());
+		if (request.ymin < 0) {
+			scrollTopRestore(
+				qMin(scrollTopSave(), request.ymax));
+		} else {
+			scrollTo(request);
+		}
+	}, lifetime());
+
+	if (_pinnedToTop) {
+		_inner->widthValue(
+		) | rpl::on_next([=](int w) {
+			_pinnedToTop->resizeToWidth(w);
+			setScrollTopSkip(_pinnedToTop->height());
+		}, _pinnedToTop->lifetime());
+
+		_pinnedToTop->heightValue(
+		) | rpl::on_next([=](int h) {
+			setScrollTopSkip(h);
+		}, _pinnedToTop->lifetime());
+	}
+
+	if (_pinnedToTop
+		&& _pinnedToTop->minimumHeight()
+		&& _inner->hasFlexibleTopBar()) {
+		_flexibleScrollHelper = std::make_unique<FlexibleScrollHelper>(
+			scroll(),
+			_inner,
+			_pinnedToTop.get(),
+			[=](QMargins margins) {
+				ContentWidget::setPaintPadding(std::move(margins));
+			},
+			[=](rpl::producer<not_null<QEvent*>> &&events) {
+				ContentWidget::setViewport(std::move(events));
+			},
+			_flexibleScroll);
+	}
 
 	rpl::combine(
 		_albumId.value(),
@@ -197,7 +231,6 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 		bottom,
 		rpl::single(QString()),
 		st::collectionEditBox.button);
-	button->setTextTransform(Ui::RoundButtonTextTransform::NoTransform);
 	button->setText(tr::lng_stories_album_add_button(
 	) | rpl::map([](const QString &text) {
 		return Ui::Text::IconEmoji(&st::collectionAddIcon).append(text);
@@ -224,22 +257,6 @@ void Widget::setupBottomButton(int wasBottomHeight) {
 	button->heightValue() | rpl::on_next([=](int height) {
 		bottom->resize(bottom->width(), st::boxRadius + height);
 	}, button->lifetime());
-
-	const auto processHeight = [=] {
-		setScrollBottomSkip(wrap->height());
-		wrap->moveToLeft(wrap->x(), height() - wrap->height());
-	};
-
-	_inner->sizeValue(
-	) | rpl::on_next([=](const QSize &s) {
-		wrap->resizeToWidth(s.width());
-		crl::on_main(wrap, processHeight);
-	}, wrap->lifetime());
-
-	rpl::combine(
-		wrap->heightValue(),
-		heightValue()
-	) | rpl::on_next(processHeight, wrap->lifetime());
 
 	if (_shown) {
 		wrap->toggle(

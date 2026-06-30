@@ -45,15 +45,13 @@ namespace {
 		0,
 		kMsgIdPosition * sizeof(mtpPrime)));
 
-	const auto hashFull = openssl::Sha1(bytes::make_span(*serialized).subspan(
+	const auto hash = openssl::Sha1(bytes::make_span(*serialized).subspan(
 		0,
 		sizeInBytes - padding));
-	const auto hash = bytes::make_span(hashFull).subspan(4, 16);
-	
 	auto msgKey = MTPint128();
 	bytes::copy(
 		bytes::object_as_span(&msgKey),
-		hash);
+		bytes::make_span(hash).subspan(4));
 
 	constexpr auto kAuthKeyIdBytes = 2 * sizeof(mtpPrime);
 	constexpr auto kMessageKeyPosition = kAuthKeyIdBytes;

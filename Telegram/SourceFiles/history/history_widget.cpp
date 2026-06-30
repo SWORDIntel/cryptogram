@@ -418,11 +418,21 @@ HistoryWidget::HistoryWidget(
 	}, _field->lifetime());
 	_field->cancelled(
 	) | rpl::on_next([=] {
+		if (_peer->amMonoforumAdmin()) {
+			QWidget::setEnabled(false);
+			crl::on_main([=] {
+				QWidget::setEnabled(true);
+				QWidget::setFocus();
+			});
+		}
 		escape();
 	}, _field->lifetime());
 	_field->tabbed(
-	) | rpl::on_next([=] {
-		fieldTabbed();
+	) | rpl::on_next([=](not_null<bool*> handled) {
+		if (_supportAutocomplete) {
+			_supportAutocomplete->activate(_field.data());
+			*handled = true;
+		}
 	}, _field->lifetime());
 	_field->heightChanges(
 	) | rpl::on_next([=] {
@@ -2378,6 +2388,7 @@ void HistoryWidget::setupGiftToChannelButton() {
 	_giftToChannel = Ui::CreateChild<Ui::IconButton>(
 		_muteUnmute.data(),
 		st::historyGiftToChannel);
+	_giftToChannel->setAccessibleName(tr::lng_gift_channel_title(tr::now));
 	widthValue() | rpl::on_next([=](int width) {
 		_giftToChannel->moveToRight(0, 0, width);
 	}, _giftToChannel->lifetime());
@@ -2406,6 +2417,7 @@ void HistoryWidget::setupDirectMessageButton() {
 	_directMessage = Ui::CreateChild<Ui::IconButton>(
 		_muteUnmute.data(),
 		st::historyDirectMessage);
+		_directMessage->setAccessibleName(tr::lng_profile_direct_messages(tr::now));
 	widthValue() | rpl::on_next([=](int width) {
 		_directMessage->moveToLeft(0, 0, width);
 	}, _directMessage->lifetime());
@@ -3509,8 +3521,9 @@ void HistoryWidget::refreshSuggestPostToggle() {
 
 void HistoryWidget::setupSendAsToggle() {
 	session().sendAsPeers().updated(
-	) | rpl::filter([=](not_null<PeerData*> peer) {
-		return (peer == _peer);
+	) | rpl::filter([=](Main::SendAsKey key) {
+		return (key.peer == _peer)
+			&& (key.type == Main::SendAsType::Message);
 	}) | rpl::on_next([=] {
 		refreshSendAsToggle();
 		updateControlsVisibility();
@@ -6112,8 +6125,6 @@ bool HistoryWidget::updateCmdStartShown() {
 			st::historyBotMenuButton);
 		orderWidgets();
 
-		_botMenu.button->setTextTransform(
-			Ui::RoundButtonTextTransform::NoTransform);
 		_botMenu.button->setFullRadius(true);
 		_botMenu.button->setClickedCallback([=] {
 			const auto user = _peer ? _peer->asUser() : nullptr;

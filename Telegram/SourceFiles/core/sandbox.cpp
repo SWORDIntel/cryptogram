@@ -73,7 +73,7 @@ int Sandbox::start() {
 	{
 		const auto d = QFile::encodeName(QDir(cWorkingDir()).absolutePath());
 		char h[33] = { 0 };
-		hashLegacyHex(d.constData(), d.size(), h);
+		hashMd5Hex(d.constData(), d.size(), h);
 		_localServerName = Platform::SingleInstanceLocalServerName(h);
 	}
 
@@ -81,7 +81,7 @@ int Sandbox::start() {
 		const auto d = QFile::encodeName(cExeDir() + cExeName());
 		QByteArray h;
 		h.resize(32);
-		hashLegacyHex(d.constData(), d.size(), h.data());
+		hashMd5Hex(d.constData(), d.size(), h.data());
 		_lockFile = std::make_unique<QLockFile>(QDir::tempPath() + '/' + h + '-' + cGUIDStr());
 		_lockFile->setStaleLockTime(0);
 		if (!_lockFile->tryLock()

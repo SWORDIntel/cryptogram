@@ -699,7 +699,9 @@ object_ptr<Ui::RpWidget> LastSeenPrivacyController::setupBelowWidget(
 		content,
 		tr::lng_edit_lastseen_hide_read_time(),
 		st::settingsButtonNoIcon
-	))->toggleOn(privacy->hideReadTime())->toggledValue(
+	));
+	_hideReadTimeButton = hideReadTimeButton;
+	hideReadTimeButton->toggleOn(privacy->hideReadTime())->toggledValue(
 	) | rpl::on_next([=](bool value) {
 		_hideReadTime = value;
 	}, content->lifetime());
@@ -1600,9 +1602,7 @@ object_ptr<Ui::RpWidget> BirthdayPrivacyController::setupAboveWidget(
 						tr::url(u"internal:edit_birthday"_q)),
 					tr::marked),
 				st::boxDividerLabel),
-			st::defaultBoxDividerLabelPadding,
-			st::defaultDividerBar
-			));
+			st::defaultBoxDividerLabelPadding));
 	result->toggleOn(session->changes().peerFlagsValue(
 		user,
 		Data::PeerUpdate::Flag::Birthday

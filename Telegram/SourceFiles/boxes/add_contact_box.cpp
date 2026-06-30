@@ -1,4 +1,4 @@
-/*
+﻿/*
 This file is part of Telegram Desktop,
 the official desktop application for the Telegram messaging service.
 
@@ -1569,16 +1569,13 @@ void EditNameBox::prepare() {
 	_last->submits(
 	) | rpl::on_next([=] { submit(); }, _last->lifetime());
 
-
 	_first->tabbed(
 	) | rpl::on_next([=](not_null<bool*> handled) {
-		*handled = true;
 		_last->setFocus();
 		*handled = true;
 	}, _first->lifetime());
 	_last->tabbed(
 	) | rpl::on_next([=](not_null<bool*> handled) {
-		*handled = true;
 		_first->setFocus();
 		*handled = true;
 	}, _last->lifetime());

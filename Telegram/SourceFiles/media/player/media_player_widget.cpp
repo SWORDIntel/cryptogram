@@ -160,7 +160,14 @@ Widget::Widget(
 
 	_speedController->saved(
 	) | rpl::on_next([=] {
-		instance()->updateVoicePlaybackSpeed();
+		instance()->updatePlaybackSpeed();
+	}, lifetime());
+
+	rpl::merge(
+		Core::App().settings().voicePlaybackSpeedChanges() | rpl::to_empty,
+		Core::App().settings().audioPlaybackSpeedChanges() | rpl::to_empty
+	) | rpl::on_next([=] {
+		_speedController->reloadFromLookup();
 	}, lifetime());
 
 	instance()->trackChanged(
@@ -172,10 +179,13 @@ Widget::Widget(
 		updateLabelsGeometry();
 	}, lifetime());
 
-	instance()->tracksFinished(
-	) | rpl::filter([=](AudioMsgId::Type type) {
-		return (type == AudioMsgId::Type::Voice);
-	}) | rpl::on_next([=](AudioMsgId::Type type) {
+	rpl::merge(
+		instance()->tracksFinished(
+		) | rpl::filter([=](AudioMsgId::Type type) {
+			return (type == AudioMsgId::Type::Voice);
+		}) | rpl::to_empty,
+		instance()->stops(AudioMsgId::Type::Voice)
+	) | rpl::on_next([=] {
 		_voiceIsActive = false;
 		const auto currentSong = instance()->current(AudioMsgId::Type::Song);
 		const auto songState = instance()->getState(AudioMsgId::Type::Song);

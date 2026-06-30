@@ -78,11 +78,7 @@ Subsection::Subsection(
 , _dummyAction(Ui::CreateChild<QAction>(parent)) {
 	setPointerCursor(false);
 
-	std::move(
-		parent->sizeValue()
-	) | rpl::on_next([=](QSize size) {
-		resizeToWidth(size.width());
-	}, lifetime());
+	fitToMenuWidth();
 
 	_text->resizeToWidth(st::callDeviceSelectionLabel.minWidth);
 	_text->moveToLeft(st.itemPadding.left(), st.itemPadding.top());
@@ -114,11 +110,7 @@ Selector::Selector(
 , _dummyAction(Ui::CreateChild<QAction>(parent)) {
 	setPointerCursor(false);
 
-	std::move(
-		parent->sizeValue()
-	) | rpl::on_next([=](QSize size) {
-		resizeToWidth(size.width());
-	}, lifetime());
+	fitToMenuWidth();
 
 	const auto padding = st.itemPadding;
 	const auto group = std::make_shared<Ui::RadiobuttonGroup>();
@@ -222,7 +214,10 @@ void AddDeviceSelection(
 		Unexpected("Type in AddDeviceSelection.");
 	}();
 	menu->addAction(
-		base::make_unique_q<Subsection>(menu->menu(), menu->st().menu, title));
+		base::make_unique_q<Subsection>(
+			menu->menu(),
+			menu->st().menu,
+			title));
 	menu->addAction(
 		base::make_unique_q<Selector>(
 			menu->menu(),

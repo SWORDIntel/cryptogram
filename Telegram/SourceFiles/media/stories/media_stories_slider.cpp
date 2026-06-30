@@ -55,7 +55,8 @@ void Slider::show(SliderData data) {
 
 	raw->paintRequest(
 	) | rpl::filter([=] {
-		return (raw->width() >= st::storiesSliderWidth);
+		return !_data.videoStream
+			&& (raw->width() >= st::storiesSliderWidth);
 	}) | rpl::on_next([=](QRect clip) {
 		paint(QRectF(clip));
 	}, raw->lifetime());

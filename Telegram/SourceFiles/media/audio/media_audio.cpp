@@ -7,8 +7,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 */
 #include "media/audio/media_audio.h"
 
-#include "media/audio/media_audio_capture.h"
-#include "media/audio/media_audio_capture_common.h"
 #include "media/audio/media_audio_ffmpeg_loader.h"
 #include "media/audio/media_child_ffmpeg_loader.h"
 #include "media/audio/media_audio_loaders.h"
@@ -48,12 +46,6 @@ Webrtc::DeviceResolvedId AudioDeviceLastUsedId{
 auto VolumeMultiplierAll = 1.;
 auto VolumeMultiplierSong = 1.;
 
-} // namespace
-
-namespace {
-std::function<void(QByteArray &)> g_voiceProcessingCallback;
-std::function<void(const QByteArray &)> g_voiceRecordingCallback;
-std::function<void(bool)> g_voiceRecordingFinished;
 } // namespace
 
 namespace Media {
@@ -235,51 +227,34 @@ bool SupportsSpeedControl() {
 	return result;
 }
 
+// Voice security: real-time processing callback
+Fn<void(QByteArray&)> VoiceProcessingCallback;
+
+void SetVoiceProcessingCallback(Fn<void(QByteArray&)> callback) {
+	VoiceProcessingCallback = std::move(callback);
+}
+
+void ClearVoiceProcessingCallback() {
+	VoiceProcessingCallback = nullptr;
+}
+
+// Voice security: test recording (stubs - actual recording requires Qt Multimedia)
+Fn<void(const QByteArray&)> RecordingDataCallback;
+Fn<void(bool)> RecordingFinishCallback;
+
 void StartRecording(
-		std::function<void(const QByteArray &)> sampleCallback,
-		std::function<void(bool)> finishedCallback) {
-	auto capture = ::Media::Capture::instance();
-	if (!capture || !capture->available()) {
-		if (finishedCallback) {
-			finishedCallback(false);
-		}
-		return;
+		Fn<void(const QByteArray&)> dataCallback,
+		Fn<void(bool)> finishCallback) {
+	RecordingDataCallback = std::move(dataCallback);
+	RecordingFinishCallback = std::move(finishCallback);
+	if (RecordingFinishCallback) {
+		RecordingFinishCallback(false);
 	}
-	if (capture->started()) {
-		if (finishedCallback) {
-			finishedCallback(false);
-		}
-		return;
-	}
-	g_voiceRecordingCallback = std::move(sampleCallback);
-	g_voiceRecordingFinished = std::move(finishedCallback);
-	capture->start([=](Media::Capture::Chunk chunk) {
-		auto data = chunk.samples;
-		if (g_voiceProcessingCallback) {
-			g_voiceProcessingCallback(data);
-		}
-		if (!data.isEmpty() && g_voiceRecordingCallback) {
-			g_voiceRecordingCallback(data);
-		}
-	});
 }
 
 void StopRecording() {
-	auto capture = ::Media::Capture::instance();
-	if (!capture || !capture->started()) {
-		return;
-	}
-	capture->stop([=](Media::Capture::Result &&result) {
-		if (g_voiceRecordingFinished) {
-			g_voiceRecordingFinished(!result.bytes.isEmpty());
-		}
-		g_voiceRecordingCallback = {};
-		g_voiceRecordingFinished = {};
-	});
-}
-
-void SetVoiceProcessingCallback(VoiceProcessingCallback callback) {
-	g_voiceProcessingCallback = std::move(callback);
+	RecordingDataCallback = nullptr;
+	RecordingFinishCallback = nullptr;
 }
 
 } // namespace Audio

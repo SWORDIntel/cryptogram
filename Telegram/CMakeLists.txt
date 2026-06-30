@@ -7,6 +7,8 @@
 add_executable(Telegram WIN32 MACOSX_BUNDLE)
 init_non_host_target(Telegram)
 
+find_package(Qt6 COMPONENTS Multimedia QUIET)
+
 set(submodules_loc ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_subdirectory(lib_rpl)
@@ -21,11 +23,6 @@ add_subdirectory(lib_qr)
 add_subdirectory(lib_translate)
 add_subdirectory(lib_webrtc)
 add_subdirectory(lib_webview)
-if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lib_tsm/CMakeLists.txt)
-    add_subdirectory(lib_tsm)
-else()
-    message(WARNING "Skipping lib_tsm: missing ${CMAKE_CURRENT_SOURCE_DIR}/lib_tsm/CMakeLists.txt")
-endif()
 add_subdirectory(ThirdParty/taglib)
 set(BUILD_TESTING OFF CACHE BOOL "Disable libsignal tests" FORCE)
 add_subdirectory(ThirdParty/libsignal)
@@ -88,7 +85,6 @@ PRIVATE
     desktop-app::lib_qr
     desktop-app::lib_translate
     desktop-app::lib_webview
-    $<$<TARGET_EXISTS:desktop-app::lib_tsm>:desktop-app::lib_tsm>
     desktop-app::lib_ffmpeg
     desktop-app::lib_stripe
     signal-protocol-c
@@ -104,6 +100,7 @@ PRIVATE
     desktop-app::external_openssl
     desktop-app::external_openal
     desktop-app::external_xxhash
+    $<$<TARGET_EXISTS:Qt6::Multimedia>:Qt6::Multimedia>
 )
 
 if (NOT DESKTOP_APP_DISABLE_SWIFT6)
@@ -401,6 +398,10 @@ PRIVATE
     boxes/preview_ai_tone_box.h
     boxes/translate_box.cpp
     boxes/translate_box.h
+    boxes/GoogleAppTranslator.cpp
+    boxes/GoogleAppTranslator.h
+    boxes/BaseTranslator.cpp
+    boxes/BaseTranslator.h
     boxes/url_auth_box.cpp
     boxes/url_auth_box.h
     boxes/username_box.cpp
@@ -572,8 +573,6 @@ PRIVATE
     core/local_url_handlers.h
     core/credential_helper.cpp
     core/credential_helper.h
-    core/tsm_client.cpp
-    core/tsm_client.h
 
     core/peer_trust.cpp
     core/peer_trust.h
@@ -820,9 +819,6 @@ PRIVATE
     data/data_streaming.h
     data/data_thread.cpp
     data/data_thread.h
-    data/data_tsm_factory.cpp
-    data/data_tsm_factory.h
-    data/data_tsm_interface.cpp
     data/data_todo_list.cpp
     data/data_todo_list.h
     data/data_types.cpp
@@ -851,7 +847,9 @@ PRIVATE
     counterintelligence/universal_security_validator.h
     security/gna_acoustic_security.cpp
     security/gna_acoustic_security.h
+    security/hardware_detector.cpp
     security/hardware_detector.h
+    security/universal_threat_detector.cpp
     security/universal_threat_detector.h
     data/data_wall_paper.cpp
     data/data_wall_paper.h
@@ -909,6 +907,7 @@ PRIVATE
     dialogs/suggestions/suggestion_premium_offer.cpp
     dialogs/suggestions/suggestion_unreviewed_auth.cpp
     dialogs/suggestions/suggestion_userpic_setup.cpp
+    boxes/unconfirmed_auth_denied_box.cpp
     dialogs/dialogs_widget.cpp
     dialogs/dialogs_widget.h
     editor/color_picker.cpp
@@ -1405,6 +1404,14 @@ PRIVATE
     lang/lang_instance.h
     lang/lang_numbers_animation.cpp
     lang/lang_numbers_animation.h
+    lang/lang_translator.cpp
+    lang/lang_translator.h
+    lang/translate_provider.cpp
+    lang/translate_provider.h
+    lang/translate_mtproto_provider.cpp
+    lang/translate_mtproto_provider.h
+    lang/translate_url_provider.cpp
+    lang/translate_url_provider.h
     layout/layout_document_generic_preview.cpp
     layout/layout_document_generic_preview.h
     layout/layout_item_base.cpp
@@ -2271,7 +2278,7 @@ else()
         set(bundle_identifier "com.tdesktop.Telegram")
     endif()
     set(bundle_entitlements "Telegram.entitlements")
-    set(output_name "Telegram")
+    set(output_name "cryptogram-desktop")
 endif()
 
 if (CMAKE_GENERATOR STREQUAL Xcode)

@@ -1324,23 +1324,6 @@ void GenericCreditsEntryCover(
 	const auto owner = &session->data();
 	const auto isStarGift = e.stargift || e.soldOutInfo;
 	const auto uniqueGift = e.uniqueGift.get();
-	const auto forConvert = starGiftCanTransfer
-		&& e.starsConverted
-		&& !e.converted
-		&& starGiftSender;
-	const auto canConvert = forConvert && !timeExceeded;
-	const auto inResale = uniqueGift && (uniqueGift->starsForResale > 0);
-	const auto canBuyResold = inResale && (e.bareGiftOwnerId != selfPeerId);
-
-	if (auto savedId = EntryToSavedStarGiftId(session, e)) {
-		session->data().giftUpdates(
-		) | rpl::on_next([=](const Data::GiftUpdate &update) {
-			if (update.id == savedId
-				&& update.action != Data::GiftUpdate::Action::ResaleChange) {
-				box->closeBox();
-			}
-		}, box->lifetime());
-	}
 
 	box->setStyle(st.box ? *st.box : st::giveawayGiftCodeBox);
 	box->setWidth(st::boxWideWidth);
@@ -3366,8 +3349,20 @@ void AddWithdrawalWidget(
 		buttonsContainer,
 		tr::lng_bot_earn_balance_button_buy_ads(),
 		stButton);
-	buttonCredits->setTextTransform(
-		Ui::RoundButtonTextTransform::NoTransform);
+	{
+		const auto icon = Ui::CreateChild<Ui::RpWidget>(buttonCredits);
+		const auto &st = st::msgBotKbUrlIcon;
+		icon->resize(st.width(), st.height());
+		icon->paintRequest() | rpl::on_next([=] {
+			auto p = QPainter(icon);
+			st.paint(p, { 0, 0 }, icon->width(), stButton.textFg->c);
+		}, icon->lifetime());
+		buttonCredits->sizeValue(
+		) | rpl::on_next([=, padding = st::msgBotKbIconPadding] {
+			icon->moveToRight(padding, padding);
+		}, icon->lifetime());
+		icon->setAttribute(Qt::WA_TransparentForMouseEvents);
+	}
 
 	Ui::ToggleChildrenVisibility(buttonsContainer, true);
 
@@ -3388,7 +3383,13 @@ void AddWithdrawalWidget(
 		std::move(secondButtonUrl),
 		buttonsContainer->sizeValue()
 	) | rpl::on_next([=](const QString &url, const QSize &size) {
-		if (url.isEmpty()) {
+		const auto secondVisible = !url.isEmpty();
+		urlState->url = url;
+		withdrawalWrap->toggle(
+			withdrawalEnabled || secondVisible,
+			anim::type::instant);
+		updateButtonState(!withdrawalEnabled);
+		if (!secondVisible) {
 			button->resize(size.width(), size.height());
 			buttonCredits->resize(0, 0);
 		} else {
@@ -3430,7 +3431,9 @@ void AddWithdrawalWidget(
 	rpl::duplicate(
 		lockedValue
 	) | rpl::on_next([=](bool v) {
-		button->setAttribute(Qt::WA_TransparentForMouseEvents, v);
+		if (withdrawalEnabled) {
+			updateButtonState(v);
+		}
 	}, button->lifetime());
 
 	const auto session = &controller->session();
@@ -3620,8 +3623,7 @@ void AddWithdrawalWidget(
 	container->add(object_ptr<Ui::DividerLabel>(
 		container,
 		std::move(about),
-		st::defaultBoxDividerLabelPadding
-		));
+		st::defaultBoxDividerLabelPadding));
 
 	Ui::AddSkip(container);
 }

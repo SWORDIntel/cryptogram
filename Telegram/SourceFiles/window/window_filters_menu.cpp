@@ -492,7 +492,7 @@ void FiltersMenu::openFiltersSettings() {
 		filters->requestSuggested();
 		filters->suggestedUpdated(
 		) | rpl::take(1) | rpl::on_next([=] {
-			_session->showSettings(Settings::Folders::Id());
+			_session->showSettings(Settings::FoldersId());
 		}, _outer.lifetime());
 	}
 }

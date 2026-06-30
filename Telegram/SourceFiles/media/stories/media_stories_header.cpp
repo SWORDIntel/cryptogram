@@ -465,8 +465,10 @@ void Header::show(HeaderData data, rpl::producer<int> videoStreamViewers) {
 		createVolumeToggle();
 
 		_widget->widthValue() | rpl::on_next([=](int width) {
-			const auto playPause = st::storiesPlayButtonPosition;
-			_playPause->moveToRight(playPause.x(), playPause.y(), width);
+			if (_playPause) {
+				const auto playPause = st::storiesPlayButtonPosition;
+				_playPause->moveToRight(playPause.x(), playPause.y(), width);
+			}
 			const auto volume = st::storiesVolumeButtonPosition;
 			_volumeToggle->moveToRight(volume.x(), volume.y(), width);
 			updateTooltipGeometry();

@@ -660,7 +660,10 @@ void ChatWidget::subscribeToTopic() {
 			| Flag::UnreadPollVotes
 			| Flag::CloudDraft)
 	) | rpl::on_next([=](const Data::TopicUpdate &update) {
-		if (update.flags & (Flag::UnreadMentions | Flag::UnreadReactions)) {
+		if (update.flags
+			& (Flag::UnreadMentions
+				| Flag::UnreadReactions
+				| Flag::UnreadPollVotes)) {
 			_cornerButtons.updateUnreadThingsVisibility();
 		}
 		if (update.flags & Flag::CloudDraft) {
@@ -2679,7 +2682,10 @@ void ChatWidget::subscribeToSublist() {
 	using Flag = Data::SublistUpdate::Flag;
 	session().changes().sublistUpdates(
 		_sublist,
-		Flag::UnreadView | Flag::UnreadReactions | Flag::CloudDraft
+		(Flag::UnreadView
+			| Flag::UnreadReactions
+			| Flag::UnreadPollVotes
+			| Flag::CloudDraft)
 	) | rpl::on_next([=](const Data::SublistUpdate &update) {
 		if (update.flags & Flag::UnreadView) {
 			unreadCountUpdated();

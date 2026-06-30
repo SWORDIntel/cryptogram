@@ -76,7 +76,7 @@ void PreviewPainter::setDocument(
 	}
 
 	rpl::single() | rpl::then(
-		document->owner().session().downloaderTaskFinished()
+		document->session().downloaderTaskFinished()
 	) | rpl::on_next([=] {
 		if (!_media->loaded()) {
 			return;

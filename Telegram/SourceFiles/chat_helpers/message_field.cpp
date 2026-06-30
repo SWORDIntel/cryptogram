@@ -288,14 +288,14 @@ void EditLinkBox(
 	};
 
 	url->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		clearFullSelection(url);
 		text->setFocus();
 		*handled = true;
 	}, url->lifetime());
 
 	text->tabbed(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=](not_null<bool*> handled) {
 		if (!url->empty()) {
 			url->selectAll();
 		}
@@ -794,7 +794,7 @@ void InitMessageFieldFade(
 	}, topFade->lifetime());
 
 	field->sizeValue(
-	) | rpl::start(rpl::on_next_done([=](const QSize &size) {
+	) | rpl::on_next_done([=](const QSize &size) {
 		topFade->resizeToWidth(size.width());
 		bottomFade->resizeToWidth(size.width());
 		bottomFade->move(

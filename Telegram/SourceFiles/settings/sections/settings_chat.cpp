@@ -1424,8 +1424,8 @@ void SetupStickersEmoji(
 			auto &&handle) {
 		const auto result = inner->add(
 			checkbox(label, checked),
-			st::settingsCheckboxPadding
-		)->checkedChanges(
+			st::settingsCheckboxPadding);
+		result->checkedChanges(
 		) | rpl::on_next(
 			std::move(handle),
 			inner->lifetime());
@@ -1440,8 +1440,8 @@ void SetupStickersEmoji(
 			object_ptr<Ui::SlideWrap<Ui::Checkbox>>(
 				inner,
 				checkbox(label, checked),
-				st::settingsCheckboxPadding)
-		)->setDuration(0)->toggleOn(std::move(shown))->entity()->checkedChanges(
+				st::settingsCheckboxPadding));
+		wrap->setDuration(0)->toggleOn(std::move(shown))->entity()->checkedChanges(
 		) | rpl::on_next(
 			std::move(handle),
 			inner->lifetime());
@@ -1789,8 +1789,8 @@ void SetupMessages(
 			tr::lng_settings_chat_corner_reaction(tr::now),
 			Core::App().settings().cornerReaction(),
 			st::settingsCheckbox),
-		st::settingsCheckboxPadding
-	)->checkedChanges(
+		st::settingsCheckboxPadding);
+	cornerReaction->checkedChanges(
 	) | rpl::on_next([=](bool checked) {
 		Core::App().settings().setCornerReaction(checked);
 		Core::App().saveSettingsDelayed();

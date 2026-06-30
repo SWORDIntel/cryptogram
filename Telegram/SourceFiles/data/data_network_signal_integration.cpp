@@ -10,7 +10,6 @@ https://github.com/SWORDIntel/SpyGram/blob/main/LEGAL
 #include "data/data_session.h"
 #include "data/data_signal_hkdf.h"
 #include "data/data_signal_protocol.h"
-#include "data/data_tsm_interface.h"
 #include "base/random.h"
 #include "base/openssl_help.h"
 
@@ -25,10 +24,6 @@ void NetworkSecurity::integrateWithSignalProtocol(not_null<SignalProtocol*> sign
     _signalProtocol = signalProtocol;
 }
 
-void NetworkSecurity::integrateWithTSM(std::shared_ptr<TSMInterface> tsm) {
-    _tsmInterface = tsm;
-}
-
 base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::secureNetworkKey(
         const bytes::const_span &networkKey) {
     if (!_signalProtocol) {
@@ -39,34 +34,6 @@ base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::secureNetw
         // Use basic derivation logic since deriveKey is private
         const auto derivedKey = bytes::vector(networkKey.begin(), networkKey.end());
 
-        // If TSM is available, further secure the key
-        if (_tsmInterface) {
-            const auto tsmResult = _tsmInterface->encrypt(
-                "network-master-key",
-                derivedKey,
-                bytes::const_span{}
-            );
-
-            if (tsmResult) {
-                // Return TSM-encrypted key
-                bytes::vector securedKey;
-                securedKey.reserve(
-                    tsmResult->ciphertext.size() +
-                    tsmResult->iv.size() +
-                    tsmResult->authTag.size()
-                );
-
-                securedKey.insert(securedKey.end(),
-                    tsmResult->iv.begin(), tsmResult->iv.end());
-                securedKey.insert(securedKey.end(),
-                    tsmResult->ciphertext.begin(), tsmResult->ciphertext.end());
-                securedKey.insert(securedKey.end(),
-                    tsmResult->authTag.begin(), tsmResult->authTag.end());
-
-                return securedKey;
-            }
-        }
-
         return derivedKey;
 
     } catch (...) {
@@ -75,44 +42,9 @@ base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::secureNetw
 }
 
 base::expected<bytes::vector, NetworkSecurityResult> NetworkSecurity::generateNetworkKeys() {
-    if (!_tsmInterface) {
-        // Fallback to software key generation
-        bytes::vector networkKey(32);
-        base::RandomFill(networkKey);
-        return deriveSignalHKDF(networkKey, "SpyGram-Network-Security-v1", 64);
-    }
-
-    try {
-        // Generate network master key using TSM
-        const auto keyResult = _tsmInterface->generateKey(
-            TSMKeyType::CustomEncryption,
-            "spygram-network-master"
-        );
-
-        if (!keyResult) {
-            return base::make_unexpected(NetworkSecurityResult::TunnelCreationFailed);
-        }
-
-        // Derive actual network keys from master key
-        const auto derivedKeys = _tsmInterface->deriveKey(
-            keyResult->keyId,
-            "network-security-keys-v1",
-            64  // 32 bytes for obfuscation + 32 bytes for mesh networking
-        );
-
-        if (!derivedKeys) {
-            return base::make_unexpected(NetworkSecurityResult::TunnelCreationFailed);
-        }
-
-        const auto finalKeys = deriveSignalHKDF(*derivedKeys, "SpyGram-Network-Security-v1", 64);
-        if (!finalKeys.empty()) {
-            return finalKeys;
-        }
-        return *derivedKeys;
-
-    } catch (...) {
-        return base::make_unexpected(NetworkSecurityResult::TunnelCreationFailed);
-    }
+    bytes::vector networkKey(32);
+    base::RandomFill(networkKey);
+    return deriveSignalHKDF(networkKey, "SpyGram-Network-Security-v1", 64);
 }
 
 // Universal Network Security Implementation
@@ -140,7 +72,7 @@ NetworkSecurityResult UniversalNetworkSecurity::initializeUniversalSecurity() {
         // Get available features for this tier
         _availableFeatures = NetworkSecurityFactory::getAvailableFeatures(_detectedTier);
 
-        // // // // emit universalSecurityReady(_detectedTier, _availableFeatures);
+        // // // // Q_EMIT universalSecurityReady(_detectedTier, _availableFeatures);
         return NetworkSecurityResult::Success;
 
     } catch (...) {
@@ -258,7 +190,7 @@ NetworkSecurityResult UniversalNetworkSecurity::detectAndMitigateThreats() {
     for (const auto &threat : threats) {
         // Apply tier-appropriate mitigation
         // const auto mitigation = ...;
-        // // // // emit universalThreatMitigated(threat.threatType, mitigation);
+        // // // // Q_EMIT universalThreatMitigated(threat.threatType, mitigation);
     }
 
     return NetworkSecurityResult::Success;
@@ -275,7 +207,7 @@ void UniversalNetworkSecurity::optimizeForCurrentHardware() {
         // Reinitialize with new tier
         initializeUniversalSecurity();
 
-        // // // // emit tierAdaptationCompleted(oldTier, newTier);
+        // // // // Q_EMIT tierAdaptationCompleted(oldTier, newTier);
     }
 }
 

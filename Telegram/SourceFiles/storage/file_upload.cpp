@@ -13,8 +13,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "storage/file_download.h"
 #include "data/data_document.h"
 #include "data/data_document_media.h"
-#include "data/data_user.h"
-#include "data/data_enhanced_privacy.h"
 #include "data/data_photo.h"
 #include "data/data_session.h"
 #include "ui/image/image_location_factory.h"
@@ -88,6 +86,8 @@ struct Uploader::Entry {
 	int64 sentSize = 0;
 	ushort partsSent = 0;
 	ushort partsWaiting = 0;
+
+	HashMd5 md5Hash;
 
 	std::unique_ptr<QFile> docFile;
 	int64 docSize = 0;
@@ -337,12 +337,6 @@ void Uploader::upload(
 					Data::kImageCacheTag));
 		}
 		if (!file->content.isEmpty()) {
-			if (file->filemime == "image/jpeg" || file->filemime == "image/png" || file->filemime == "image/webp") {
-				auto image = QImage::fromData(file->content);
-				if (!image.isNull()) {
-					Data::EnhancedPrivacy::SpoofMediaMetadata(image, file->content, "jpeg");
-				}
-			}
 			document->setDataAndCache(file->content);
 		}
 		if (!file->filepath.isEmpty()) {
@@ -444,6 +438,13 @@ void Uploader::stopSessions() {
 
 QByteArray Uploader::readDocPart(not_null<Entry*> entry) {
 	const auto checked = [&](QByteArray result) {
+		if ((entry->file->type == SendMediaType::File
+			|| entry->file->type == SendMediaType::ThemeFile
+			|| entry->file->type == SendMediaType::Audio
+			|| entry->file->type == SendMediaType::Round)
+			&& entry->docSize <= kUseBigFilesFrom) {
+			entry->md5Hash.feed(result.data(), result.size());
+		}
 		if (result.isEmpty()
 			|| (result.size() > entry->docPartSize)
 			|| ((result.size() < entry->docPartSize
@@ -895,10 +896,12 @@ void Uploader::finishFront() {
 			// because the filename from inputFile is not used anywhere.
 			photoFilename += u".jpg"_q;
 		}
-		const auto file = MTP_inputFileBig(
+		const auto md5 = entry.file->filemd5;
+		const auto file = MTP_inputFile(
 			MTP_long(entry.file->id),
 			MTP_int(entry.parts->size()),
-			MTP_string(photoFilename));
+			MTP_string(photoFilename),
+			MTP_bytes(md5));
 		auto ready = UploadedMedia{
 			.id = entry.file->id,
 			.fullId = entry.itemId,
@@ -919,20 +922,30 @@ void Uploader::finishFront() {
 		|| entry.file->type == SendMediaType::ThemeFile
 		|| entry.file->type == SendMediaType::Audio
 		|| entry.file->type == SendMediaType::Round) {
-		
-		const auto file = MTP_inputFileBig(
+		QByteArray docMd5(32, Qt::Uninitialized);
+		hashMd5Hex(entry.md5Hash.result(), docMd5.data());
+
+		const auto file = (entry.docSize > kUseBigFilesFrom)
+			? MTP_inputFileBig(
 				MTP_long(entry.file->id),
 				MTP_int(entry.docPartsCount),
-				MTP_string(entry.file->filename));
+				MTP_string(entry.file->filename))
+			: MTP_inputFile(
+				MTP_long(entry.file->id),
+				MTP_int(entry.docPartsCount),
+				MTP_string(entry.file->filename),
+				MTP_bytes(docMd5));
 		const auto thumb = [&]() -> std::optional<MTPInputFile> {
 			if (entry.parts->empty()) {
 				return std::nullopt;
 			}
 			const auto thumbFilename = entry.file->thumbname;
-			return MTP_inputFileBig(
+			const auto thumbMd5 = entry.file->thumbmd5;
+			return MTP_inputFile(
 				MTP_long(entry.file->thumbId),
 				MTP_int(entry.parts->size()),
-				MTP_string(thumbFilename));
+				MTP_string(thumbFilename),
+				MTP_bytes(thumbMd5));
 		}();
 		auto ready = UploadedMedia{
 			.id = entry.file->id,

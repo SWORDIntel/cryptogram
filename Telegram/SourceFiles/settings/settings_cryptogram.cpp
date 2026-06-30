@@ -28,7 +28,6 @@ https://github.com/SWORDOps/CRYPTOGRAM/blob/main/LICENSE
 #include "data/data_enhanced_privacy.h"
 #include "data/data_group_encryption.h"
 #include "data/data_mls_protocol.h"
-#include "data/data_tsm_factory.h"
 #include "data/data_openvino_translation.h"
 #include "main/main_session.h"
 #include "window/window_session_controller.h"
@@ -88,7 +87,7 @@ constexpr auto kStatsUpdateInterval = 2000; // 2 seconds
 Cryptogram::Cryptogram(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
-: Section(parent)
+: Section(parent, controller)
 , _controller(controller) {
 	setupContent();
 }
@@ -146,7 +145,7 @@ void Cryptogram::setupContent() {
 CryptogramNetwork::CryptogramNetwork(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
-: Section(parent)
+: Section(parent, controller)
 , _controller(controller) {
 	setupContent();
 }
@@ -168,7 +167,7 @@ void CryptogramNetwork::setupContent() {
 CryptogramSecurity::CryptogramSecurity(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
-: Section(parent)
+: Section(parent, controller)
 , _controller(controller)
 , _translationStatsTimer([=] { updateTranslationStatus(); }) {
 	if (!Data::GetGroupEncryption()) {
@@ -213,7 +212,7 @@ void CryptogramSecurity::setupContent() {
 CryptogramOPSEC::CryptogramOPSEC(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
-: Section(parent)
+: Section(parent, controller)
 , _controller(controller) {
 	setupContent();
 }
@@ -303,7 +302,7 @@ void CryptogramOPSEC::setupContent() {
 CryptogramDevelopment::CryptogramDevelopment(
 	QWidget *parent,
 	not_null<Window::SessionController*> controller)
-: Section(parent)
+: Section(parent, controller)
 , _controller(controller)
 , _miningStatsTimer([=] { updateMiningStatistics(); }) {
 	setupContent();
@@ -2358,26 +2357,9 @@ void CryptogramSecurity::createCovertChannelSettings(not_null<Ui::VerticalLayout
 	container->add(
 		object_ptr<Ui::FlatLabel>(
 			container,
-			QString("Covert channels encode messages in the timing of typing indicators. "
-				"Enable TSM (Trusted Security Module) for hardware-backed key storage."),
+			QString("Covert channels encode messages in the timing of typing indicators."),
 			st::settingsUpdateState),
 		st::settingsCheckboxPadding);
-
-	// TSM enable toggle
-	const auto tsmCheckbox = container->add(
-		object_ptr<Ui::Checkbox>(
-			container,
-			QString("Enable TSM (Hardware Key Storage)"),
-			settings->tsmEnabled(),
-			st::settingsCheckbox),
-		st::settingsCheckboxPadding);
-
-	tsmCheckbox->checkedChanges(
-	) | rpl::on_next([=](bool checked) {
-		settings->setTsmEnabled(checked);
-		Core::App().saveSettingsDelayed();
-		updateEncryptionStatus();
-	}, tsmCheckbox->lifetime());
 
 	Ui::AddSkip(container, st::settingsCheckboxesSkip);
 
@@ -2400,44 +2382,16 @@ void CryptogramSecurity::createCovertChannelSettings(not_null<Ui::VerticalLayout
 		const auto encEnabled = Data::EnhancedPrivacy::IsEncryptionEnabled();
 		const auto cryptogramUsers = Data::EnhancedPrivacy::GetCryptogramUsers();
 		const auto userCount = cryptogramUsers.size();
-		const auto tsmEnabled = settings->tsmEnabled();
-
-		QString tsmPlatformStr = "Software (no hardware TSM detected)";
-		auto tsm = Data::TSMFactory::createForPlatform();
-		if (tsm) {
-			const auto result = tsm->initialize();
-			if (result == Data::TSMResult::Success && tsm->isInitialized()) {
-				const auto caps = tsm->getCapabilities();
-				switch (caps.platform) {
-				case Data::TSMPlatform::TPM20:
-					tsmPlatformStr = "TPM 2.0 (Hardware-backed)";
-					break;
-				case Data::TSMPlatform::AndroidKeyStore:
-					tsmPlatformStr = "Android KeyStore (Hardware-backed)";
-					break;
-				case Data::TSMPlatform::AppleSecureEnclave:
-					tsmPlatformStr = "Apple Secure Enclave (Hardware-backed)";
-					break;
-				default:
-					tsmPlatformStr = "Software TSM (No hardware acceleration)";
-					break;
-				}
-			}
-		}
 
 		_controller->show(Ui::MakeInformBox(
 			QString("Covert Channel Engine Diagnostics\n\n"
 				"• Encryption backend: %1\n"
-				"• TSM module: %2\n"
-				"• TSM platform: %3\n"
-				"• GNA Engine: %4\n"
-				"• Acoustic Transport: %5\n"
-				"• Typing Pattern Encoder: %6\n"
-				"• CRYPTOGRAM peers detected: %7\n"
-				"• Session Wiring: %8")
+				"• GNA Engine: %2\n"
+				"• Acoustic Transport: %3\n"
+				"• Typing Pattern Encoder: %4\n"
+				"• CRYPTOGRAM peers detected: %5\n"
+				"• Session Wiring: %6")
 				.arg(encEnabled ? "Initialized" : "DISABLED")
-				.arg(tsmEnabled ? "Active" : "Inactive")
-				.arg(tsmPlatformStr)
 				.arg(encEnabled ? "Initialized" : "Standby")
 				.arg(encEnabled ? "Active" : "Standby")
 				.arg(encEnabled ? "Ready" : "Standby")
@@ -2531,17 +2485,14 @@ void CryptogramSecurity::updateEncryptionStatus() {
 
 	// Update covert channel status
 	if (_covertChannelStatusLabel) {
-		const auto tsmOn = settings->tsmEnabled();
-		QString tsmStr = tsmOn ? "TSM: Active" : "TSM: Inactive";
 		if (cryptogramUsers.isEmpty()) {
 			_covertChannelStatusLabel->setText(
-				QString("Status: Standby (no CRYPTOGRAM peers) | %1").arg(tsmStr)
+				QString("Status: Standby (no CRYPTOGRAM peers)")
 			);
 		} else {
 			_covertChannelStatusLabel->setText(
-				QString("Status: Ready for %1 peer(s) | %2")
+				QString("Status: Ready for %1 peer(s)")
 					.arg(cryptogramUsers.size())
-					.arg(tsmStr)
 			);
 		}
 	}
@@ -3299,7 +3250,7 @@ void CryptogramSecurity::createLanguageSettings(not_null<Ui::VerticalLayout*> co
 		st::settingsCheckboxPadding);
 
 	const auto targetLang = std::make_shared<Ui::RadiobuttonGroup>(
-		settings->translationTargetLanguage());
+		settings->translationTargetLanguage().toInt());
 
 	container->add(
 		object_ptr<Ui::Radiobutton>(
@@ -3329,7 +3280,7 @@ void CryptogramSecurity::createLanguageSettings(not_null<Ui::VerticalLayout*> co
 		st::settingsCheckboxPadding);
 
 	targetLang->setChangedCallback([=](int value) {
-		settings->setTranslationTargetLanguage(value);
+		settings->setTranslationTargetLanguage(QString::number(value));
 		Core::App().saveSettingsDelayed();
 	});
 

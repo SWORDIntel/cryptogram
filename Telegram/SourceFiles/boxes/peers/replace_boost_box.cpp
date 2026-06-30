@@ -606,8 +606,12 @@ object_ptr<Ui::RpWidget> CreateUserpicsTransfer(
 		: (PaintRoundImageCallback)(nullptr);
 
 	const auto state = raw->lifetime().make_state<State>();
-	std::move(
-		from
+	((type == Type::ChannelFutureOwner)
+		? std::move(from) | rpl::map([=](
+				const std::vector<not_null<PeerData*>> &list) {
+			return std::vector<not_null<PeerData*>>{ list.front() };
+		})
+		: std::move(from)
 	) | rpl::on_next([=](
 			const std::vector<not_null<PeerData*>> &list) {
 		auto was = base::take(state->from);

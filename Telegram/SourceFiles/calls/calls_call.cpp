@@ -171,8 +171,7 @@ constexpr auto kFingerprintDataSize = 256;
 uint64 ComputeFingerprint(bytes::const_span authKey) {
 	Expects(authKey.size() == kFingerprintDataSize);
 
-	// Upgrade to SHA-384 for fingerprinting
-	auto hash = openssl::Sha256(authKey);
+	auto hash = openssl::Sha1(authKey);
 	return (gsl::to_integer<uint64>(hash[19]) << 56)
 		| (gsl::to_integer<uint64>(hash[18]) << 48)
 		| (gsl::to_integer<uint64>(hash[17]) << 40)
@@ -304,9 +303,7 @@ void Call::generateModExpFirst(bytes::const_span randomSeed) {
 		_gb = std::move(first.modexp);
 	} else {
 		_ga = std::move(first.modexp);
-		// Use SHA-256, truncate to 32 bytes for protocol compatibility (g_a_hash)
-		auto sha256 = openssl::Sha256(_ga);
-		_gaHash = bytes::make_vector(bytes::make_span(sha256).subspan(0, 32));
+		_gaHash = openssl::Sha256(_ga);
 	}
 }
 
@@ -721,9 +718,7 @@ bytes::vector Call::getKeyShaForFingerprint() const {
 			_authKey.size(),
 			_ga.size()),
 		_ga);
-	// Use SHA-256, truncate to 32 bytes for compatibility
-	auto sha256 = openssl::Sha256(encryptedChatAuthKey);
-	return bytes::make_vector(bytes::make_span(sha256).subspan(0, 32));
+	return openssl::Sha256(encryptedChatAuthKey);
 }
 
 bool Call::handleUpdate(const MTPPhoneCall &call) {
@@ -937,10 +932,6 @@ bool Call::handleSignalingData(
 	if (data.vphone_call_id().v != _id || !_instance) {
 		return false;
 	}
-	// Discard overly large payloads to prevent parser memory issues
-	if (data.vdata().v.size() > 8192) {
-		return false;
-	}
 	auto prepared = ranges::views::all(
 		data.vdata().v
 	) | ranges::views::transform([](char byte) {
@@ -1008,9 +999,7 @@ void Call::startConfirmedCall(const MTPDphoneCall &call) {
 	Expects(!conferenceInvite());
 
 	const auto firstBytes = bytes::make_span(call.vg_a_or_b().v);
-	// Use SHA-256, truncate to 32 bytes for compatibility check
-	auto sha256 = openssl::Sha256(firstBytes);
-	if (_gaHash != bytes::make_vector(bytes::make_span(sha256).subspan(0, 32))) {
+	if (_gaHash != openssl::Sha256(firstBytes)) {
 		LOG(("Call Error: Wrong g_a hash received."));
 		finish(FinishType::Failed);
 		return;

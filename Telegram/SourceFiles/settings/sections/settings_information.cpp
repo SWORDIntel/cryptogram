@@ -1026,7 +1026,6 @@ void AccountsList::setup() {
 
 	Core::App().domain().maxAccountsChanges(
 	) | rpl::on_next([=] {
-		// Full rebuild.
 		for (auto i = _watched.begin(); i != _watched.end(); i++) {
 			i->second = nullptr;
 		}

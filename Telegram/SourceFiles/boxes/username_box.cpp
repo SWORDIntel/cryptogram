@@ -374,6 +374,9 @@ void FillUsernamesBox(
 		) | rpl::on_done([=] {
 			editor->save(
 			) | rpl::on_done([=] {
+				if (onSaved) {
+					onSaved();
+				}
 				box->closeBox();
 			}, box->lifetime());
 		}, box->lifetime());

@@ -167,7 +167,7 @@ struct State {
 	const auto inner = result->entity();
 	inner->resize(size);
 	inner->paintRequest(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=, &st] {
 		auto p = QPainter(inner);
 		auto hq = PainterHighQualityEnabler(p);
 		p.setBrush(st.logoBg);
@@ -209,45 +209,6 @@ struct State {
 			std::move(text),
 			st.about),
 		st::storiesStealthAboutMargin);
-}
-
-[[nodiscard]] object_ptr<Ui::RpWidget> MakeFeature(
-		QWidget *parent,
-		Feature feature) {
-	auto result = object_ptr<Ui::PaddingWrap<>>(
-		parent,
-		object_ptr<Ui::RpWidget>(parent),
-		st::storiesStealthFeatureMargin);
-	const auto widget = result->entity();
-	const auto icon = Ui::CreateChild<Info::Profile::FloatingIcon>(
-		widget,
-		feature.icon,
-		st::storiesStealthFeatureIconPosition);
-	const auto title = Ui::CreateChild<Ui::FlatLabel>(
-		widget,
-		feature.title,
-		st::storiesStealthFeatureTitle);
-	const auto about = Ui::CreateChild<Ui::FlatLabel>(
-		widget,
-		rpl::single(feature.about),
-		st::storiesStealthFeatureAbout);
-	icon->show();
-	title->show();
-	about->show();
-	widget->widthValue(
-	) | rpl::on_next([=](int width) {
-		const auto left = st::storiesStealthFeatureLabelLeft;
-		const auto available = width - left;
-		title->resizeToWidth(available);
-		about->resizeToWidth(available);
-		auto top = 0;
-		title->move(left, top);
-		top += title->height() + st::storiesStealthFeatureSkip;
-		about->move(left, top);
-		top += about->height();
-		widget->resize(width, top);
-	}, widget->lifetime());
-	return result;
 }
 
 [[nodiscard]] object_ptr<Ui::RoundButton> MakeButton(
@@ -294,7 +255,7 @@ struct State {
 	lock->setAttribute(Qt::WA_TransparentForMouseEvents);
 	lock->resize(st.lockIcon.size());
 	lock->paintRequest(
-	) | rpl::on_next([=] {
+	) | rpl::on_next([=, &st] {
 		auto p = QPainter(lock);
 		st.lockIcon.paintInCenter(p, lock->rect());
 	}, lock->lifetime());

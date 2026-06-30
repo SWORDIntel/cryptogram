@@ -21,9 +21,6 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 #include "base/openssl_help.h"
 #include "base/unixtime.h"
 #include "base/platform/base_platform_info.h"
-#include "data/data_signal_protocol.h"
-#include "data/data_mls_protocol.h"
-#include "data/data_signal_transport.h"
 
 #include <ksandbox.h>
 #include <zlib.h>
@@ -565,13 +562,11 @@ MTPVector<MTPJSONObjectValue> SessionPrivate::prepareInitParams() {
 	const auto rounded = base::SafeRound(std::abs(sliced) / 900.)
 		* 900
 		* sign;
-
-	auto params = std::vector<MTPJSONObjectValue>();
-	params.push_back(MTP_jsonObjectValue(
-		MTP_string("tz_offset"),
-		MTP_jsonNumber(MTP_double(rounded))));
-
-	return MTP_vector<MTPJSONObjectValue>(QVector<MTPJSONObjectValue>(params.begin(), params.end()));
+	return MTP_vector<MTPJSONObjectValue>(
+		1,
+		MTP_jsonObjectValue(
+			MTP_string("tz_offset"),
+			MTP_jsonNumber(MTP_double(rounded))));
 }
 
 void SessionPrivate::tryToSend() {
@@ -1323,16 +1318,16 @@ void SessionPrivate::handleReceived() {
 		// Can underflow, but it is an unsigned type, so we just check the range later.
 		auto paddingSize = static_cast<uint32>(encryptedBytesCount) - static_cast<uint32>(fullDataLength);
 
-		std::array<uchar, 32> shaBuffer = { { 0 } };
+		std::array<uchar, 32> sha256Buffer = { { 0 } };
 
 		SHA256_CTX msgKeyLargeContext;
 		SHA256_Init(&msgKeyLargeContext);
 		SHA256_Update(&msgKeyLargeContext, _encryptionKey->partForMsgKey(false), 32);
 		SHA256_Update(&msgKeyLargeContext, decryptedInts, encryptedBytesCount);
-		SHA256_Final(shaBuffer.data(), &msgKeyLargeContext);
+		SHA256_Final(sha256Buffer.data(), &msgKeyLargeContext);
 
 		constexpr auto kMsgKeyShift = 8U;
-		if (ConstTimeIsDifferent(&msgKey, shaBuffer.data() + kMsgKeyShift, sizeof(msgKey))) {
+		if (ConstTimeIsDifferent(&msgKey, sha256Buffer.data() + kMsgKeyShift, sizeof(msgKey))) {
 			LOG(("TCP Error: bad SHA256 hash after aesDecrypt in message"));
 			return restart();
 		}
@@ -2529,11 +2524,11 @@ DcType SessionPrivate::tryAcquireKeyCreation() {
 			releaseKeyCreationOnFail();
 			if (result.error() == Error::UnknownPublicKey) {
 				if (_realDcType == DcType::Cdn) {
-					LOG(("Warning: CDN public key not found"));
+					LOG(("Warning: CDN public RSA key not found"));
 					requestCDNConfig();
 					return;
 				}
-				LOG(("AuthKey Error: could not choose public key"));
+				LOG(("AuthKey Error: could not choose public RSA key"));
 			}
 			restart();
 			return;
