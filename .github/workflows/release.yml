@@ -383,12 +383,129 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # ============================================================================
+  # Windows Desktop Release Build
+  # ============================================================================
+  windows:
+    name: Windows Desktop
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml requests
+
+      - name: Install CMake and Ninja
+        uses: lukka/get-cmake@latest
+
+      - name: Install Qt6 via aqtinstall
+        run: |
+          pip install aqtinstall
+          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64 -m qtcore qtgui qtwidgets qtnetwork qtsvg qtopengl qtopenglwidgets qtquick qtquickwidgets
+          echo "QT_DIR=$PWD\\Qt\\6.7.3\\msvc2022_64" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$PWD\\Qt\\6.7.3\\msvc2022_64" >> $GITHUB_ENV
+
+      - name: Install NuGet CLI
+        run: |
+          choco install nuget.commandline -y
+          echo "NUGET_EXE=C:\\Program Files\\NuGet\\nuget.exe" >> $GITHUB_ENV
+
+      - name: Cache vcpkg
+        uses: actions/cache@v4
+        with:
+          path: C:\vcpkg\installed
+          key: vcpkg-windows-${{ github.sha }}
+          restore-keys: vcpkg-windows-
+
+      - name: Install vcpkg dependencies
+        run: |
+          vcpkg install --triplet x64-windows `
+            openssl:x64-windows `
+            openal-soft:x64-windows `
+            ffmpeg:x64-windows `
+            zlib:x64-windows `
+            libjpeg-turbo:x64-windows `
+            libwebp:x64-windows `
+            libvpx:x64-windows `
+            x264:x64-windows `
+            x265:x64-windows `
+            openh264:x64-windows `
+            rnnoise:x64-windows `
+            cmark:x64-windows `
+            boost-regex:x64-windows `
+            lcms:x64-windows `
+            dav1d:x64-windows `
+            xxhash:x64-windows `
+            expected-lite:x64-windows `
+            range-v3:x64-windows `
+            tg-owt:x64-windows 2>&1 || true
+          echo "VCPKG_INSTALLED_DIR=C:\\vcpkg\\installed" >> $GITHUB_ENV
+
+      - name: Build CRYPTOGRAM Desktop
+        run: |
+          $env:BUILD_TYPE = "${{ github.event.inputs.build_type || 'release' }}"
+          $env:TDESKTOP_API_ID = "17349"
+          $env:TDESKTOP_API_HASH = "344583e45741c457fe1862106095a5eb"
+          powershell -ExecutionPolicy Bypass -File build_windows.ps1 -BuildType "Release" -ApiId "17349" -ApiHash "344583e45741c457fe1862106095a5eb"
+
+      - name: Locate artifacts
+        id: locate-artifacts
+        run: |
+          $artifactsFound = "false"
+          $zipFile = Get-ChildItem -Path artifacts\windows -Filter "*.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zipFile) {
+            echo "zip=$($zipFile.FullName)" >> $env:GITHUB_OUTPUT
+            $artifactsFound = "true"
+          } else {
+            # Search for exe
+            $exe = Get-ChildItem -Path out -Recurse -Filter "Cryptogram.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $exe) {
+              $exe = Get-ChildItem -Path out -Recurse -Filter "Telegram.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            }
+            if ($exe) {
+              New-Item -ItemType Directory -Path artifacts\windows -Force | Out-Null
+              Compress-Archive -Path $exe.FullName -DestinationPath "artifacts\windows\cryptogram-windows-x64.zip"
+              echo "zip=artifacts\windows\cryptogram-windows-x64.zip" >> $env:GITHUB_OUTPUT
+              $artifactsFound = "true"
+            }
+          }
+          echo "artifacts_found=$artifactsFound" >> $env:GITHUB_OUTPUT
+
+      - name: Upload Windows artifacts
+        if: steps.locate-artifacts.outputs.artifacts_found == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cryptogram-windows
+          path: artifacts/windows/
+          retention-days: 30
+
+      - name: Upload ZIP to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') && steps.locate-artifacts.outputs.artifacts_found == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/windows/*
+          draft: true
+          name: CRYPTOGRAM ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
   # Build Summary
   # ============================================================================
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [android, debian, macos]
+    needs: [android, debian, macos, windows]
     if: always()
 
     steps:
@@ -401,6 +518,7 @@ jobs:
           echo "| Android APK | ${{ needs.android.result }} | [cryptogram-android-apks](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
           echo "| Debian Package | ${{ needs.debian.result }} | [cryptogram-debian-package](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
           echo "| macOS Desktop | ${{ needs.macos.result }} | [cryptogram-macos](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Windows Desktop | ${{ needs.windows.result }} | [cryptogram-windows](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Trigger" >> $GITHUB_STEP_SUMMARY
           echo "- **Ref**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
