@@ -1,9 +1,9 @@
 ﻿/*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "window/window_main_menu.h"
 
@@ -385,8 +385,8 @@ MainMenu::MainMenu(
 	parentResized();
 
 	_telegram->setMarkedText(tr::link(
-		u"64Gram Desktop"_q,
-		u"https://github.com/TDesktop-x64/tdesktop"_q));
+		u"Cryptogram"_q,
+		u"https://github.com/SWORDIntel/cryptogram"_q));
 	_telegram->setLinksTrusted();
 	_version->setMarkedText(
 		tr::link(

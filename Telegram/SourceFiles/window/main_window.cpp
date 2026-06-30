@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "window/main_window.h"
 
@@ -847,7 +847,7 @@ void MainWindow::updateTitle() {
 		: Dialogs::Key();
 	const auto thread = key ? key.thread() : nullptr;
 	if (!thread) {
-		setTitle((user.isEmpty() ? u"64Gram"_q : user) + added);
+		setTitle((user.isEmpty() ? u"Cryptogram"_q : user) + added);
 		return;
 	}
 	const auto history = thread->owningHistory();

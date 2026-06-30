@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "export/output/export_output_abstract.h"
 
@@ -167,7 +167,7 @@ Stats AbstractWriter::produceTestExample(
 
 	auto sessions = Data::SessionsList();
 	auto session = Data::Session();
-	session.applicationName = "Telegram Desktop";
+	session.applicationName = "Cryptogram";
 	session.applicationVersion = "1.3.8";
 	session.country = "GB";
 	session.created = date();

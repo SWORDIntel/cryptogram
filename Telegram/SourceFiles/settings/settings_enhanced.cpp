@@ -1,8 +1,8 @@
 /*
-This file is part of 64Gram Desktop,
-the unofficial app based on Telegram Desktop.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 For license and copyright information please follow this link:
-https://github.com/TDesktop-x64/tdesktop/blob/dev/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include <base/timer_rpl.h>
 #include <ui/toast/toast.h>

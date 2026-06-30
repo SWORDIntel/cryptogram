@@ -24,7 +24,7 @@ namespace Data {
 // Forward declarations
 class Session;
 
-// Signal Protocol integration for Telegram Desktop
+// Signal Protocol integration for Cryptogram
 class SignalProtocol final {
 public:
     // Identifies a specific device for Double Ratchet algorithm

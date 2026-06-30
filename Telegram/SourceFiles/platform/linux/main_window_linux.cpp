@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "platform/linux/main_window_linux.h"
 
@@ -228,7 +228,7 @@ void MainWindow::createGlobalMenu() {
 		});
 
 	auto quit = file->addAction(
-		tr::lng_mac_menu_quit_telegram(tr::now, lt_telegram, u"64Gram"_q),
+		tr::lng_mac_menu_quit_telegram(tr::now, lt_telegram, u"Cryptogram"_q),
 		this,
 		[=] { quitFromTray(); },
 		QKeySequence::Quit);
@@ -427,7 +427,7 @@ void MainWindow::createGlobalMenu() {
 		tr::lng_mac_menu_about_telegram(
 			tr::now,
 			lt_telegram,
-			u"64Gram"_q),
+			u"Cryptogram"_q),
 		[=] {
 			ensureWindowShown();
 			controller().show(Box(AboutBox));

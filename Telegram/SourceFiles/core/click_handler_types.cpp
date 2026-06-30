@@ -1,9 +1,9 @@
 ﻿/*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "core/click_handler_types.h"
 
@@ -152,7 +152,7 @@ void ExportToCalendar(TimeId date, const QString &messageText) {
 	const auto uid = base::RandomValue<uint64>();
 	const auto content = u"BEGIN:VCALENDAR\r\n"
 		"VERSION:2.0\r\n"
-		"PRODID:-//Telegram Desktop//EN\r\n"
+		"PRODID:-//Cryptogram//EN\r\n"
 		"BEGIN:VEVENT\r\n"
 		"DTSTART:%1\r\n"
 		"DTEND:%2\r\n"

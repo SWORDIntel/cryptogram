@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "core/sandbox.h"
 
@@ -348,7 +348,7 @@ void Sandbox::socketError(QLocalSocket::LocalSocketError e) {
 	}
 
 	if (e == QLocalSocket::ServerNotFoundError) {
-		LOG(("This is the only instance of Telegram, starting server and app..."));
+		LOG(("This is the only instance of Cryptogram, starting server and app..."));
 	} else {
 		LOG(("Socket connect error %1, starting server and app...").arg(e));
 	}

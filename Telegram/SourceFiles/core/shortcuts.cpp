@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "core/shortcuts.h"
 
@@ -551,7 +551,7 @@ void Manager::writeDefaultFile() {
 		return;
 	}
 	const char *defaultHeader = R"HEADER(
-// This is a list of default shortcuts for Telegram Desktop
+// This is a list of default shortcuts for Cryptogram
 // Please don't modify it, its content is not used in any way
 // You can place your own shortcuts in the 'shortcuts-custom.json' file
 
@@ -658,7 +658,7 @@ void Manager::writeCustomFile() {
 		return;
 	}
 	const char *customHeader = R"HEADER(
-// This is a list of changed shortcuts for Telegram Desktop
+// This is a list of changed shortcuts for Cryptogram
 // You can edit them in Settings > Chat Settings > Keyboard Shortcuts.
 
 )HEADER";

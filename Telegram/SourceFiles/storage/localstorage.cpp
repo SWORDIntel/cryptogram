@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "storage/localstorage.h"
 
@@ -1368,7 +1368,7 @@ void CustomLangPack::fetchFinished() {
 	auto statusCode = _chkReply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
 
 	if (statusCode == 404 && !langPackId.isEmpty() && !langPackBaseId.isEmpty() && !needFallback) {
-		LOG(("64Gram Language pack not found! Fallback to main language: %1...").arg(langPackBaseId));
+		LOG(("Cryptogram Language pack not found! Fallback to main language: %1...").arg(langPackBaseId));
 		needFallback = true;
 		_chkReply->disconnect();
 		fetchCustomLangPack("", langPackBaseId);
@@ -1396,12 +1396,12 @@ void CustomLangPack::fetchError(QNetworkReply::NetworkError e) {
 		QString langPackId = Lang::GetInstance().id();
 
 		if (!langPackId.isEmpty() && !langPackBaseId.isEmpty() && !needFallback) {
-			LOG(("64Gram Language pack not found! Fallback to main language: %1...").arg(langPackBaseId));
+			LOG(("Cryptogram Language pack not found! Fallback to main language: %1...").arg(langPackBaseId));
 			needFallback = true;
 			_chkReply->disconnect();
 			fetchCustomLangPack("", langPackBaseId);
 		} else {
-			LOG(("64Gram Language pack not found! Fallback to default language: English..."));
+			LOG(("Cryptogram Language pack not found! Fallback to default language: English..."));
 			loadDefaultLangFile();
 			_chkReply = nullptr;
 		}

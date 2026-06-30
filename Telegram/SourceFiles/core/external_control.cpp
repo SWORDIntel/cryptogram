@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "core/external_control.h"
 
@@ -110,7 +110,7 @@ void RequestEnableAutomation() {
 		FillAutomationConfirmBox(
 			box,
 			u"An external program is trying to control "
-			u"Telegram Desktop over the local socket — read open "
+			u"Cryptogram over the local socket — read open "
 			u"windows and activate them.\n\nEnable local "
 			u"automation? While it is on, anything running under your "
 			u"user account can control the app."_q,

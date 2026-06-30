@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "platform/win/windows_app_user_model_id.h"
 
@@ -28,7 +28,7 @@ const PROPERTYKEY pkey_AppUserModel_ToastActivator = { { 0x9F4C2855, 0x9F79, 0x4
 #ifdef OS_WIN_STORE
 const WCHAR AppUserModelIdBase[] = L"Telegram.TelegramDesktop.Store";
 #else // OS_WIN_STORE
-const WCHAR AppUserModelIdBase[] = L"64Gram.64GramDesktop";
+const WCHAR AppUserModelIdBase[] = L"Cryptogram.CryptogramDesktop";
 #endif // OS_WIN_STORE
 
 [[nodiscard]] QString PinnedIconsPath() {
@@ -213,7 +213,7 @@ void CleanupShortcut() {
 		return;
 	}
 
-	QString path = systemShortcutPath() + u"64Gram.lnk"_q;
+	QString path = systemShortcutPath() + u"cryptogram.lnk"_q;
 	std::wstring p = QDir::toNativeSeparators(path).toStdWString();
 
 	DWORD attributes = GetFileAttributes(p.c_str());
@@ -345,7 +345,7 @@ bool checkInstalled(QString path = {}) {
 		}
 	}
 
-	const auto installed = u"64Gram Desktop/64Gram.lnk"_q;
+	const auto installed = u"Cryptogram/cryptogram.lnk"_q;
 	const auto old = u"Telegram Win (Unofficial)/Telegram.lnk"_q;
 	return validateShortcutAt(path + installed)
 		|| validateShortcutAt(path + old);
@@ -367,7 +367,7 @@ bool ValidateShortcut() {
 			return true;
 		}
 
-		path += u"64Gram.lnk"_q;
+		path += u"cryptogram.lnk"_q;
 		if (validateShortcutAt(path)) {
 			return true;
 		}

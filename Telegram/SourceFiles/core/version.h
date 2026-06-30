@@ -1,9 +1,9 @@
 ﻿/*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #pragma once
 
@@ -20,8 +20,8 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
 // used in Updater.cpp and Setup.iss for Windows
 constexpr auto AppId = "{9DB6C981-7FD2-41B5-AEF2-20C933FD3F21}"_cs;
 constexpr auto AppNameOld = "Telegram Win (Unofficial)"_cs;
-constexpr auto AppName = "64Gram Desktop"_cs;
-constexpr auto AppFile = "64Gram"_cs;
+constexpr auto AppName = "Cryptogram"_cs;
+constexpr auto AppFile = "cryptogram-desktop"_cs;
 constexpr auto AppVersion = 1002005;
 constexpr auto AppVersionStr = "1.2.5";
 constexpr auto AppBetaVersion = false;

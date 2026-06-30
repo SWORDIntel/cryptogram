@@ -1,9 +1,9 @@
 /*
-This file is part of Telegram Desktop,
-the official desktop application for the Telegram messaging service.
+This file is part of Cryptogram,
+the official desktop application for the Cryptogram messaging service.
 
 For license and copyright information please follow this link:
-https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+https://github.com/SWORDIntel/cryptogram/blob/main/LEGAL
 */
 #include "payments/payments_form.h"
 
@@ -1195,7 +1195,7 @@ void Form::validateCard(
 	}
 	auto configuration = Stripe::PaymentConfiguration{
 		.publishableKey = method.publishableKey,
-		.companyName = "Telegram",
+		.companyName = "Cryptogram",
 	};
 	_stripe = std::make_unique<Stripe::APIClient>(std::move(configuration));
 	auto card = Stripe::CardParams{
