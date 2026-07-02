@@ -424,9 +424,9 @@ jobs:
       - name: Install Qt6 via aqtinstall
         run: |
           pip install aqtinstall
-          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64 -m qtcore qtgui qtwidgets qtnetwork qtsvg qtopengl qtopenglwidgets qtquick qtquickwidgets
-          echo "QT_DIR=$PWD\\Qt\\6.7.3\\msvc2022_64" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$PWD\\Qt\\6.7.3\\msvc2022_64" >> $GITHUB_ENV
+          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64 -m qt_imageformats qt_multimedia qt_declarative
+          echo "QT_DIR=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
 
       - name: Install NuGet CLI
         run: |
