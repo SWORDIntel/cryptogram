@@ -35,10 +35,7 @@ jobs:
 
       - name: Clone Android source
         run: |
-          git clone --depth 1 https://github.com/SWORDIntel/cryptogram-android.git telegram-android || true
-          if [ ! -d telegram-android ]; then
-            git clone --depth 1 https://github.com/SWORDIntel/cryptogram.git telegram-android
-          fi
+          git clone --depth 1 https://github.com/DrKLO/Telegram.git telegram-android
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -160,7 +157,7 @@ jobs:
             libboost-dev libboost-regex-dev \
             libasound2-dev libxi-dev libxtst-dev \
             libdav1d-dev libxxhash-dev \
-            libpipewire-0.3-dev \
+            libpipewire-0.3-dev libdrm-dev \
             libcmark-dev 2>/dev/null || true
           sudo apt-get install -y --fix-broken 2>/dev/null || true
 
@@ -444,9 +441,9 @@ jobs:
       - name: Install Qt6 via aqtinstall
         run: |
           pip install aqtinstall
-          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64
-          echo "QT_DIR=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
+          aqt install-qt windows desktop 6.5.3 win64_msvc2022_64
+          echo "QT_DIR=$PWD\Qt\6.5.3\msvc2022_64" >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=$PWD\Qt\6.5.3\msvc2022_64" >> $GITHUB_ENV
 
       - name: Install NuGet CLI
         run: |
