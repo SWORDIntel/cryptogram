@@ -158,7 +158,10 @@ $possibleBuildDirs = @(
 
 $actualBuildDir = $null
 foreach ($dir in $possibleBuildDirs) {
-    if (Test-Path (Join-Path $dir "CMakeCache.txt") -or (Test-Path (Join-Path $dir "Telegram.sln")) -or (Test-Path (Join-Path $dir "build.ninja")) {
+    $hasCache = Test-Path (Join-Path $dir "CMakeCache.txt")
+    $hasSln = Test-Path (Join-Path $dir "Telegram.sln")
+    $hasNinja = Test-Path (Join-Path $dir "build.ninja")
+    if ($hasCache -or $hasSln -or $hasNinja) {
         $actualBuildDir = $dir
         break
     }
