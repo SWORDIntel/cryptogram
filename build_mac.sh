@@ -107,26 +107,22 @@ export CMAKE_PREFIX_PATH="$(brew --prefix qt6 2>/dev/null || echo /opt/homebrew)
 
 print_section "CMake Configuration"
 
-mkdir -p "$BUILD_DIR"
-cd "$BUILD_DIR"
+cd "$CRYPTOGRAM_ROOT"
 
-print_progress "Configuring CMake..."
-if ! cmake \
-    -G Ninja \
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+print_progress "Running configure.py..."
+if ! python3 "$CRYPTOGRAM_ROOT/Telegram/configure.py" \
     -DDESKTOP_APP_DISABLE_AUTOUPDATE=ON \
     -DDESKTOP_APP_DISABLE_CRASH_REPORTS=ON \
     -DDESKTOP_APP_USE_PACKAGED=ON \
     -DTDESKTOP_API_ID="${TDESKTOP_API_ID:-17349}" \
-    -DTDESKTOP_API_HASH="${TDESKTOP_API_HASH:-344583e45741c457fe1862106095a5eb}" \
-    "$CRYPTOGRAM_ROOT/Telegram"; then
+    -DTDESKTOP_API_HASH="${TDESKTOP_API_HASH:-344583e45741c457fe1862106095a5eb}"; then
     fail "CMake configuration failed"
 fi
 
 print_section "Building"
 
 print_progress "Building with $JOBS jobs..."
-if ! cmake --build . --parallel "$JOBS"; then
+if ! cmake --build "$CRYPTOGRAM_ROOT/build" --parallel "$JOBS"; then
     fail "Build failed"
 fi
 
