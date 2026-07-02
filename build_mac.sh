@@ -11,7 +11,8 @@ set -Eeuo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CRYPTOGRAM_ROOT="${CRYPTOGRAM_ROOT:-$SCRIPT_DIR}"
 BUILD_TYPE="${BUILD_TYPE:-Release}"
-BUILD_DIR="${BUILD_DIR:-$CRYPTOGRAM_ROOT/build_${BUILD_TYPE,,}}"
+BUILD_TYPE_LOWER=$(echo "$BUILD_TYPE" | tr '[:upper:]' '[:lower:]')
+BUILD_DIR="${BUILD_DIR:-$CRYPTOGRAM_ROOT/build_${BUILD_TYPE_LOWER}}"
 JOBS="${JOBS:-$(sysctl -n hw.ncpu)}"
 LOG_DIR="/tmp/cryptogram_builds_root"
 BUILD_DATE=$(date +%Y%m%d_%H%M%S)
