@@ -157,7 +157,7 @@ jobs:
             libboost-dev libboost-regex-dev \
             libasound2-dev libxi-dev libxtst-dev \
             libdav1d-dev libxxhash-dev \
-            libpipewire-0.3-dev libdrm-dev \
+            libpipewire-0.3-dev libdrm-dev libgl1-mesa-dev \
             libcmark-dev 2>/dev/null || true
           sudo apt-get install -y --fix-broken 2>/dev/null || true
 
@@ -438,12 +438,14 @@ jobs:
       - name: Install CMake and Ninja
         uses: lukka/get-cmake@latest
 
-      - name: Install Qt6 via aqtinstall
-        run: |
-          pip install aqtinstall
-          aqt install-qt windows desktop 6.5.3 win64_msvc2022_64
-          echo "QT_DIR=$PWD\Qt\6.5.3\msvc2022_64" >> $GITHUB_ENV
-          echo "CMAKE_PREFIX_PATH=$PWD\Qt\6.5.3\msvc2022_64" >> $GITHUB_ENV
+      - name: Install Qt6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtimageformats qtmultimedia qtdeclarative'
 
       - name: Install NuGet CLI
         run: |
