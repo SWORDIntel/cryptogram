@@ -48,13 +48,17 @@ jobs:
 
       - name: Setup Android SDK
         run: |
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/16.0/bin:$ANDROID_HOME/tools/bin:$PATH
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/cmdline-tools/16.0/bin" >> $GITHUB_PATH
 
       - name: Install Android NDK and CMake
         run: |
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/cmdline-tools/16.0/bin:$PATH
           sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
           echo "ANDROID_NDK=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
@@ -156,6 +160,7 @@ jobs:
             libboost-dev libboost-regex-dev \
             libasound2-dev libxi-dev libxtst-dev \
             libdav1d-dev libxxhash-dev \
+            libpipewire-0.3-dev \
             libcmark-dev 2>/dev/null || true
           sudo apt-get install -y --fix-broken 2>/dev/null || true
 
@@ -309,8 +314,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python3 -m pip install --upgrade pip --break-system-packages
-          python3 -m pip install --break-system-packages grpcio grpcio-tools cryptography pyyaml requests sqlalchemy protobuf
+          python3 -m pip install --break-system-packages grpcio grpcio-tools cryptography pyyaml requests sqlalchemy protobuf || python3 -m pip install --user grpcio grpcio-tools cryptography pyyaml requests sqlalchemy protobuf
 
       - name: Cache ccache
         uses: actions/cache@v4
@@ -440,7 +444,7 @@ jobs:
       - name: Install Qt6 via aqtinstall
         run: |
           pip install aqtinstall
-          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64 -m qt_imageformats qt_multimedia qt_declarative
+          aqt install-qt windows desktop 6.7.3 win64_msvc2022_64
           echo "QT_DIR=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
           echo "CMAKE_PREFIX_PATH=$PWD\Qt\6.7.3\msvc2022_64" >> $GITHUB_ENV
 
