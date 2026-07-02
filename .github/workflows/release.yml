@@ -158,6 +158,7 @@ jobs:
             libasound2-dev libxi-dev libxtst-dev \
             libdav1d-dev libxxhash-dev \
             libpipewire-0.3-dev libdrm-dev libgl1-mesa-dev \
+            libopenh264-dev \
             libcmark-dev 2>/dev/null || true
           sudo apt-get install -y --fix-broken 2>/dev/null || true
 
@@ -441,11 +442,10 @@ jobs:
       - name: Install Qt6
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.5.3'
+          version: '6.2.4'
           host: 'windows'
           target: 'desktop'
-          arch: 'win64_msvc2022_64'
-          modules: 'qtimageformats qtmultimedia qtdeclarative'
+          arch: 'win64_msvc2019_64'
 
       - name: Install NuGet CLI
         run: |
